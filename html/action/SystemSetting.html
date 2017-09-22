@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>系统管理</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		
+		<link rel="stylesheet"  href="/enjoyRedEnvelopeManager/css/inputstyle.css"  />
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_tab.css" />
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/validform.css" />
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/validform1.css" />
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js-->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/basepath.js"></script>
+		<!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+		<!--验证js-->
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/md5.js"></script>
+		<style>
+			
+			.inputyuan{
+				width: 20%; 
+				height: 3%;
+				margin-top: -1%;
+				margin-bottom: -1%;
+				
+			}
+			
+			.tiship{
+				margin-top: -22px;
+				height: 10px;
+				color:#707070;
+				opacity: 0.8;
+				text-align: center;
+				float:right;
+				width:70%;
+			}
+			
+		</style>
+	</head>
+	<body>
+		<div class="widget-header" style="background:#307ECC ;">
+				<h4 id="form_title" style="color: white;" >设置信息</h4>
+		</div>
+		<div id="allsetting" class="tabPanel">
+			<ul style="width: 99.5%; " id="alltab">
+			</ul>
+			<div class="panes" id="allpanes">
+			</div>
+		</div>
+		
+	</body>
+	
+	
+	
+</html>
+<script>
+	
+	var token = sessionStorage.getItem("token");
+	$(function(){
+		loadAll();
+	});
+	
+	function setPanel(){
+		$("#alltab li:first-child").attr("class","hit");
+		$("#allpanes div:first-child").css("display","block");
+		/*进行选项卡设置*/
+		$('.tabPanel ul li').click(function(){
+			$(this).addClass('hit').siblings().removeClass('hit');
+			$('.panes>div:eq('+$(this).index()+')').show().siblings().hide();	
+		});	
+	}
+	
+	//加载分类表单
+	function loadAll(){
+				$("#alltab").empty();
+				$("#allpanes").empty();
+				$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/systemSetting/getAllSetting',
+				        data:  'token=' + token, 
+				        //dataType:"text",
+				        success: function(data) {
+				        	if(data.code==0||data.code==200){
+				        		$.each(data.result, function(index,obj) {
+				        			 if(null!=obj.groupType){
+				        			 	 if($("#tab_"+obj.groupType).length == 0){
+				        			 	 	var html="<li style='width: 100px;' id='tab_"+obj.groupType+"'>"+obj.groupType+"</li>";
+											$("#alltab").html($("#alltab").html()+html);
+											html="<div class='pane' id='grid_tab_"+obj.groupType+"'>"+
+											   		"<table id='grid_"+obj.groupType+"'></table>"+
+											   		"<div id='grid_pager_"+obj.groupType+"'></div>"+
+											   "</div>";
+											$("#allpanes").html($("#allpanes").html()+html);
+				        			 	 }
+				        			 }
+				        		});
+				        		
+				        		
+				        		$.each(data.result, function(index,obj) {
+				        			 if(null!=obj.groupType){
+				        			 	 if($("#form_"+obj.groupType).length == 0){
+				        			 	 	var html="<form id='form_"+obj.groupType+"'><table class='table table-striped  table-bordered' style='text-align: center;  ' id='"+obj.groupType+"'><input id='i_"+obj.groupType+"' type='hidden' value='1'/>"+
+														"<input id='indexType_"+obj.groupType+"' type='hidden' value='0'/><thead>"+
+															"<tr style='height: 20px; '>"+
+																"<th colspan='4'>"+obj.groupType+"</th>"+
+															"</tr>"+
+														"</thead>"+
+														"<tbody id='tbody_"+obj.groupType+"'>"+
+															"<tr id='save_"+obj.groupType+"'>"+
+																"<td colspan='4'><input id='canshusave' type='button'  value='保存' style='border-radius: 5px; background-color:#00E573 ; border: 0px; height: 40px; width: 100px; font-size: 20px; color: white;' onclick='saveSubmit(\"form_"+obj.groupType+"\")'></td>"+
+															"</tr>"+
+														"</tbody>"+
+													"</table></form>";
+											$("#grid_tab_"+obj.groupType).html($("#grid_tab_"+obj.groupType).html()+html);
+				        			 	 }
+				        			 }
+				        		});
+				        		
+				        		
+				        		var html="";
+				        		$.each(data.result, function(index,obj) {
+				        			if(null!=obj.groupType){
+				        				if($("#tbody_"+obj.groupType).length > 0){
+				        					var i= parseInt($("#i_"+obj.groupType).val());
+				        					if(i==1){
+				        						var inorch="";
+				        						if("boolean"==obj.kind){
+				        							inorch="<td><label  class='iosCheck col-md-2' style=' margin-bottom: -20px;   margin-left: 10px;'><input class='inputyuan' name='submit_"+obj.id+"'  type='checkbox' "+(obj.value=='1'?"checked='checked'":"")+"><i></i></label><p class='tiship' style='margin-top: 0px;'>"+obj.remark+"</p></td>";
+				        						}else{
+				        							inorch="<td  width='38%'><input ype='text'  class='form-control inputyuan'  name='submit_"+obj.id+"' data='verify_"+obj.kind+"' onchange='changeVal(this)' placeholder='' value='"+obj.value+"'><p class='tiship'  >&nbsp;"+obj.remark+"</p></td>";
+				        						}
+					        					html="<tr>"+
+					        					"<td width='12%'>"+obj.title+"</td>"+
+													inorch+
+													"<td width='12%' id='replace12_"+index+"_"+obj.groupType+"'></td>"+
+													"<td width='38%' id='replace38_"+index+"_"+obj.groupType+"'></td>"+
+												"</tr>";
+													$("#i_"+obj.groupType).val(""+(++i));
+													$("#indexType_"+obj.groupType).val(index);
+													$("#save_"+obj.groupType).before(html);
+					        				}else if(i==2){
+					        					var indexType=$("#indexType_"+obj.groupType).val();
+					        					$("#replace12_"+indexType+"_"+obj.groupType).html(obj.title+"<input id='canshuId' type='hidden'>");
+					        					if("boolean"==obj.kind){
+					        						$("#replace38_"+indexType+"_"+obj.groupType).html("<label  class='iosCheck col-md-2' style=' margin-bottom: -20px;   margin-left: 10px;'><input class='inputyuan'  name='submit_"+obj.id+"'  type='checkbox' "+(obj.value=='1'?"checked='checked'":"")+"><i></i></label><p class='tiship' style='margin-top: 0px;'>"+obj.remark+"</p>");
+					        					}else{
+						        					$("#replace38_"+indexType+"_"+obj.groupType).html("<input type='text'   class='form-control inputyuan' name='submit_"+obj.id+"' data='verify_"+obj.kind+"' onchange='changeVal(this)'  placeholder='' value='"+obj.value+"'><p class='tiship'  >&nbsp;"+obj.remark+"</p>");
+					        					}
+												$("#i_"+obj.groupType).val("1");
+					        				}
+				        				}
+				        			}
+				        		});
+				        		
+				        		setPanel();
+				           	}else{
+				        		alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';				           		
+				           	}
+				        }
+				});	
+			}
+	//提交相应表单
+	function saveSubmit(id){
+		var parma=[];
+		var isok=true;
+		$("#"+id+" input[name^=submit_]").each(function(index,obj){
+			if(isok){
+				isok=verify(obj);
+			}else{
+				verify(obj);
+			}
+			var id=$(obj).attr("name").split("_")[1];
+			var value="";
+			if($(obj).attr("type")=="checkbox"){
+				if($(obj).prop("checked")){
+					value="1";
+				}else{
+					value="0";
+				}
+			}else{
+				value=$(obj).val();
+			}
+			var jsonone={'id':id,'value':value};
+			parma.push(jsonone);
+		})
+		if(!isok){
+			return false;
+		}
+		$.ajax({
+			type:"POST",
+			url: $base_path + 'manage/systemSetting/saveSetting',
+			headers: {'Content-Type': 'application/json',"token":token},
+			data: JSON.stringify(parma),
+			success:function(data){ 
+					if(data.code==0||data.code==200){
+						alert("保存成功");
+						loadAll();
+					}else{
+				        alert(data.msg);
+						if(data.code==-2)//跳转到登录页面
+						top.location.href='/enjoyRedEnvelopeManager/html/login.html';				           		
+				    }
+				}, 
+				error:function(res){ 
+					alert("服务器跑丢了......");
+				} 		
+		});	
+	}
+		
+		//参数验证  是否符合规则  
+		//varchar(1,1000) 不允许为空并且限制字符串长度  varchar  允许为空的字符串
+		//int(0,1000)不允许为空并且限制最大最小值  int 只要为int就允许保存
+		//decimal(5,2)不允许为空并且限制总位数与小数位数  decimal 只要为小数或整数就允许保存
+		function verify(obj){
+			var inputvalue=$(obj).val();
+			if($(obj).attr("type")!="checkbox"){
+				var data=$(obj).attr("data").split("_")[1];
+				if(data.indexOf("varchar")>=0){
+					if(data.indexOf("(")>=0&&data.indexOf(")")>=0){
+						var cs=data.split("(");
+						var cs1=cs[1].replace(")","");
+						var value=cs1.split(",");//数组0位为最小值,数组1位为最大值
+						if(inputvalue.length>=parseInt(value[0])&&inputvalue.length<=parseInt(value[1])){
+							return true;
+						}else{
+							$(obj).next().css("color","red");
+							return false;
+						}
+					}else{
+						return true; 
+					}
+				}else if(data.indexOf("decimal")>=0){
+					if(""==inputvalue){
+						$(obj).next().css("color","red");
+						return false;
+					}
+					if(inputvalue.indexOf(".")==-1){
+							inputvalue=inputvalue+".00"
+							$(obj).val(inputvalue);
+					}
+					if(data.indexOf("(")>=0&&data.indexOf(")")>=0){
+						var cs=data.split("(");
+						var cs1=cs[1].replace(")","");
+						var value=cs1.split(",");//数组0位为整数位最高位数,数组1位为小数保留位数
+						var decimalcheck=inputvalue.split(".");
+						if(decimalcheck[0].length<=(parseInt(value[0])-parseInt(value[1]))&&decimalcheck[1].length<=parseInt(value[1])){
+							return true;
+						}else{
+							$(obj).next().css("color","red");
+							return false;
+						}
+					}else if(parseFloat(inputvalue)>0||parseFloat(inputvalue)<=0){
+						return true;
+					}else{
+						$(obj).next().css("color","red");
+						return false;
+					}
+				}else if(data.indexOf("int")>=0){
+					if(""==inputvalue){
+						$(obj).next().css("color","red");
+						return false;
+					}
+					if(data.indexOf("(")>=0&&data.indexOf(")")>=0){
+						var cs=data.split("(");
+						var cs1=cs[1].replace(")","");
+						var value=cs1.split(",");//数组0位为最小值,数组1位为最大值
+						if(parseInt(inputvalue)>=parseInt(value[0])&&parseInt(inputvalue)<=parseInt(value[1])){
+							return true;
+						}else{
+							$(obj).next().css("color","red");
+							return false;
+						}
+					}else if(inputvalue.indexOf(".")>=0){
+						$(obj).next().css("color","red");
+						return false;
+					}else if(parseInt(inputvalue)>0||parseInt(inputvalue)<=0){
+						return true;
+					}else{
+						$(obj).next().css("color","red");
+						return false;
+					}
+				}else{
+					return true;
+				}
+			}else{
+				return true;
+			}
+		}
+	
+		function  changeVal(obj){ 
+			var isok=verify(obj);
+			if(isok){
+				$(obj).next().css("color","black");
+			}
+		}
+</script>

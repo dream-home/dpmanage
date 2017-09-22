@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>充值订单</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/css/grid_form.css" />
+		
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js-->
+		<script src="/js/bootstrap.min.js"></script>
+		<script src="/js/ace.min.js"></script>
+		<!--grid事件机制-->
+		<script src="/js/grid.js"></script>
+		<script src="/js/basepath.js"></script>
+		<!--cookiejs-->
+		<script src="/js/jquery-cookie.js"></script>
+		<!--验证js-->
+		<script src="/js/Validform_v5.3.2_min.js"></script>
+		<script src="/js/md5.js"></script>
+		
+		<script>
+			var token = sessionStorage.getItem("token");
+			var grid_user = "#grid_user";
+			var grid_pager_user = "#grid_pager_user";
+			var mUsers=null;
+			
+			$(function() {
+				var date = new Date();
+				var now = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+((date.getDate())<=9?("0"+date.getDate()):date.getDate());
+				 
+				 var topData = {
+				 	status:0,
+				 	token:sessionStorage.getItem("token")
+				 }
+				
+				$.autoByWindow(grid_user);
+				$.jqGrid(grid_user, $base_path + 'manage/scoreManage/exchangeRecords', topData, colNames_user, fd_user, grid_pager_user, "提现审核", gridUserComplete,true,true,15);
+				
+				$("#t_grid_user").append($("#grid_user_tbar").html());
+				/*$("#datestart").val(now);		
+				$("#dateend").val(now);*/
+			});
+			
+			var colNames_user = ['ID','会员UID','手机号','账户名称', '银行账号', '银行', '提现金额','手续费','实际金额','订单号','提交时间','最后审核时间','状态',"status",'操作'];
+			var fd_user = [
+				{name:'id', index:'id', align:'center',width:25, sorttype:"int",key:true,hidden:true},
+				{name:'uid', index:'uid', align:'center',width:25, },
+				{name:'phone', index:'phone',align:'center', width:30, },
+				{name:'userName', index:'userName',align:'center', width:40},
+				{name:'cardNo', index:'cardNo',align:'center', width:80},
+				{name:'bankName', index:'bankName',align:'center', width:50},
+				{name:'score', index:'score',width:25},
+				{name:'poundage', index:'poundage', align:'center',width:35},
+				{name:'confirmScore',index:'confirmScore',align:'center',width:25},
+				{name:'orderNo',index:'orderNo',align:'center',width:50,key:true},
+				{name:'createTime',index:'ccAuditTime',align:'center',width:40},
+				{name:'updateTime',index:'ccAuditTime',align:'center',width:40},
+				{name:'status', index:'status',align:'center',width:20,formatter:getStatusName},
+				{name:'status', index:'status',align:'center',width:20,hidden:true},	
+				{name:'func',index:'func', width:40, align: 'center'}
+			];
+			
+			function gridUserComplete(){
+				var ids = $(grid_user).jqGrid('getDataIDs');
+				for (var i = 0; i < ids.length; i++) {
+					var id = ids[i];
+					var rowData = $(grid_user).getRowData(id);
+					var funcBtn = '<div class="action-buttons">';
+					var passBtn = "";
+					var stopBtn = "";
+					
+					if(rewData.status==0){
+						 passBtn = '<a class="blue" href="javascript:_edit('+ id +')"></i>通过</a>';
+						 stopBtn = '<a class="blue" href="javascript:_edit2('+ id +')"></i>不通过</a>';	
+					}
+					
+					
+					
+					
+					funcBtn += passBtn+stopBtn + '</div>';
+	         		$(grid_user).setRowData(id, {func: funcBtn});
+	      		}
+			}
+			
+			
+			function getIsDisable(v,o,row){
+				//alert(row.isForbidden);
+				if(row.isForbidden == '1'){
+					return "是";
+				}else if(row.isForbidden == '0'){
+					return "否";
+				}
+					
+			}
+			
+			
+			function getStatusName(v){
+				if(v=='0'){
+					return "<span style='color:red'>待审核</span>";
+				}else if(v=="1"){
+					return "审核通过";
+				}else if(v=="2"){
+					return "审核不通过";
+				}else if(v=="3"){
+					return "兑换成功";
+				}else if(v=='4'){
+					return "兑换失败";
+				}
+			}
+			
+			
+			function gridUserComplete(){
+				var ids = $(grid_user).jqGrid('getDataIDs');
+				for (var i = 0; i < ids.length; i++) {
+					var id = ids[i];
+					var rowData = $(grid_user).getRowData(id);
+					
+					
+					
+					
+					
+					var funcBtn = '<div class="action-buttons">';
+					var passBtn = "";
+					var stopBtn = "";
+					
+					if(rowData.status=='0'){
+						 passBtn = '<a class="blue" href="javascript:_edit(&quot;'+ id +'&quot;)"></i>通过</a>';
+						 stopBtn = '<a class="blue" href="javascript:_edit2(&quot;'+ id +'&quot;)"></i>不通过</a>';	
+					}
+					if(rowData.status=='1'){
+						 passBtn = '<a class="blue" href="javascript:_success(&quot;'+ id +'&quot;)"></i>确认提现</a>';
+						 stopBtn = ' ';	
+					}
+					
+					funcBtn += passBtn+stopBtn + '</div>';
+	         		$(grid_user).setRowData(id, {func: funcBtn});
+	      		}
+			}
+			
+			
+			
+			
+			
+			
+			
+			function _search(){
+				var uid = $("#uid").val().trim();
+				var mobile = $("#phone").val().trim();
+				var status = $("#status").val().trim();
+				
+				if($("#uid").val()!=null){
+					if($("#uid").val().trim().length>32){
+						alert("uid最多只有输入32个字符");
+						$("#uid").val("");
+						return;
+					}
+				}
+				if($("#phone").val()!=null){
+					if($("#phone").val().trim().length>32){
+						alert("手机号码最多只有输入32个字符");
+						$("#phone").val("");
+						return;
+					}	
+				}
+				
+				
+				
+				
+				if($("#datestart").val()!=""){
+					var datestart =new Date($("#datestart").val().trim()).Format("yyyy-MM-dd hh:mm:ss");
+					
+				}
+				if($("#dateend").val()!=""){
+					var dateend =new Date($("#dateend").val().trim()).Format1("yyyy-MM-dd hh:mm:ss");
+				}
+			
+				//var datestart = $("#datestart").val().trim();
+				//var dateend =  $("#dateend").val().trim();
+				//alert(JSON.stringify(datestart+":"+dateend));
+				//$.setPostData(grid_user, {uid: uid, phone: mobile, status: status, fromTime: datestart,endTime:dateend});
+				$.setPostData(grid_user,{uid:uid,status:status,phone:mobile,fromTime: datestart,stopTime:dateend});
+			    $.refresh(grid_user);
+			}
+			
+			function _edit(id){
+				var person = {
+					status:1,
+					id:id
+				}
+				
+					$.ajax({
+							type:"get",
+							url:$base_path+"manage/exchange/check", 
+							data: person,
+							beforeSend: function(request) {
+			                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+			                },
+							success:function(res){ 
+								if(res.code==200){
+									alert("修改成功");
+									$.refresh(grid_user);
+								}else if(res.code==1403){
+									overTime();
+								}else{
+									//alert(res.msg);
+								}
+							}, 
+							error:function(res){ 
+								alert("服务器跑丢了......");
+							} 
+							
+					});					
+			}
+			
+			function _edit2(id){
+				var person = {
+					status:2,
+					id:id
+				}
+				
+				$.ajax({
+						type:"get",
+						url:$base_path+"manage/exchange/check", 
+						data: person,
+						beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		                },
+						success:function(res){ 
+							if(res.code==200){
+								alert("修改成功");
+								$.refresh(grid_user);
+							}else if(res.code==1403){
+								overTime();
+							}else{
+								//alert(res.msg);
+							}
+						}, 
+						error:function(res){ 
+							alert("服务器跑丢了......");
+						} 
+						
+				});	
+				
+				
+				
+				
+			}
+			
+			function _success(id){
+				
+				var tishi="确认是否提现通过？";
+				if(confirm(tishi)){
+					
+					var person = {
+						exchangeId:id
+					}
+					
+					
+					$.ajax({
+						type:"post",
+						url:$base_path+"manage/exchange/extMoney", 
+						data: person,
+						beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		                },
+						success:function(res){ 
+							//alert(res.msg);
+							if(res.code==200){
+								alert("提现成功");
+								
+							}else if(res.code==1403){
+								overTime();
+							}else{
+								//alert("");
+								alert(res.msg);
+							}
+							$.refresh(grid_user);
+						}, 
+						error:function(res){ 
+							alert("服务器跑丢了......");
+						} 
+						
+					});	
+					
+					
+					
+					
+				}
+			}
+			
+			
+			
+			function _del(){
+				var ids = $(grid_user).getGridParam('selarrrow');
+				if($('#div_dialog').html() != ''){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'ManagerUser/delSysManUser',
+				        data: 'delIds=' + ids + '&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==0){
+								$.refresh(grid_user);
+								$.closeDelDailog();
+					          	alert('删除成功！');
+					       	}else{					       		
+								//alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/html/login.html';
+					       	}
+				        }
+				    });
+			   }
+			}
+			
+			
+			
+			
+			
+			
+			/*function _select(id){
+				$.ajax({
+			        type: 'POST',
+			        async: false,
+			        url: $base_path + 'mUser_managerController/getConnectionByUser',
+			        data: 'token=' + token + '&id=' + id,
+			        success: function(data) {
+			        	if(data != null){
+			        		mUsers=eval(data.result.rows);
+			        	}else{
+			        		alert("查询人脉关系失败");
+			        		//$.refresh(grid_user);
+			        	}
+			        }
+			    });
+			    
+			    if(mUsers != null){
+			    	//alert(mUsers[0].id1);
+			    	if(mUsers[0].id1 !=null){
+			    		$("#id1").val(mUsers[0].id1);
+			        	$("#nickName1").val(mUsers[0].nickName1);
+			    	}else{
+			    		$("#id1").val("");
+			        	$("#nickName1").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id2 !=null){
+			    		$("#id2").val(mUsers[0].id2);
+			        	$("#nickName2").val(mUsers[0].nickName2);
+			    	}else{
+			    		$("#id2").val("");
+			        	$("#nickName2").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id3 !=null){
+			    		$("#id3").val(mUsers[0].id3);
+			        	$("#nickName3").val(mUsers[0].nickName3);
+			    	}else{
+			    		$("#id3").val("");
+			        	$("#nickName3").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id4 !=null){
+			    		$("#id4").val(mUsers[0].id4);
+			        	$("#nickName4").val(mUsers[0].nickName4);
+			    	}else{
+			    		$("#id4").val("");
+			        	$("#nickName4").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id5 !=null){
+			    		$("#id5").val(mUsers[0].id5);
+			        	$("#nickName5").val(mUsers[0].nickName5);
+			    	}else{
+			    		$("#id5").val("");
+			        	$("#nickName5").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id6 !=null){
+			    		$("#id6").val(mUsers[0].id6);
+			        	$("#nickName6").val(mUsers[0].nickName6);
+			    	}else{
+			    		$("#id6").val("");
+			        	$("#nickName6").val("");
+			    	}
+			    	
+			    	//显示六度人脉信息框
+			    	$.show("edit_user");
+			    }
+			}*/
+			
+			
+			
+		</script>
+	</head>
+	<body>
+		<div>
+			<table id="grid_user"></table>
+			<div id="grid_pager_user"></div>
+		</div>
+		
+		<!--user筛选工具栏-->
+		<div id="grid_user_tbar" style="display:none;">
+			<div class="action-buttons" style="margin-left: 10px; padding: 5px;">
+				UID: <input id="uid" onblur="_search()"/>
+				手机号: <input id="phone" onblur="_search()"/>
+				状态: <select id="status" onblur="_search()">
+						<option value="">全部</option>
+						<option value="0" selected="selected">待审核</option>
+						<option value="1">审核通过</option>
+						<option value="2">兑换成功</option>
+						<option value="3">审核不通过</option>
+						
+				    </select>
+				日期: <input type="date" id="datestart"  onblur="_search()"/>至<input type="date" id="dateend" onblur="_search()"/>
+				<a class="blue" href="javascript:_search()"><i class="icon-search bigger-130"></i>查询</a>
+			</div>
+		</div>
+		
+		<!-- 六度人脉信息窗口 -->
+		<form id="edit_user" class="grid_from checkform">
+			<div class="widget-header">
+				<h4 id="form_title">六度人脉信息</h4>
+				<span class="widget-toolbar">
+					<a href="#" data-action="close" onclick="closeForm('edit_user')">
+						<i class="icon-remove"></i>
+					</a>
+				</span>
+			</div>
+			<div class="form_content">
+			
+			</div>
+		</form>
+		
+		<div id="div_dialog"></div>
+		<div id="hidebg"></div>
+	</body>
+	
+</html>

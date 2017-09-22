@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>积分赠送订单</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js-->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/basepath.js"></script>
+		<!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+		<!--验证js-->
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/md5.js"></script>
+		
+		<script>
+			var token = sessionStorage.getItem("token");
+			var grid_user = "#grid_user";
+			var grid_pager_user = "#grid_pager_user";
+			var mUsers=null;
+			
+			$(function() {
+				var date = new Date();
+				var now = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+((date.getDate())<=9?("0"+date.getDate()):date.getDate());
+				
+				$.autoByWindow(grid_user);
+				$.jqGrid(grid_user, $base_path + 'manage/OrderManage/donateRecords', false,colNames_user, fd_user, grid_pager_user, "积分赠送订单", null, true,true,15);
+				$("#t_grid_user").append($("#grid_user_tbar").html());
+				
+				
+				/*$("#datestart").val(now);		
+				$("#dateend").val(now);*/
+				
+				
+			});
+			
+			var colNames_user = ['ID','订单号',"donateUid",'赠送会员/商家','获赠会员', '赠送数量', '赠送时间', '领取时间','状态'];
+			var fd_user = [
+				{name:'id', index:'id', width:60, key: true,hidden:true},
+				{name:'orderNo', index:'orderNo', width:100},
+				{name:'donateUid', index:'donateUid', width:50,hidden:true},
+				{name:'storeName', index:'storeName', width:100,formatter:getStoreName},
+				{name:'userName', index:'userName', width:100,formatter:getUserName},
+				{name:'score', index:'score', width:100},
+				{name:'createTime', index:'createTime', width:100},
+				{name:'updateTime', index:'updateTime', width:70,hidden:true},
+				{name:'status',index:'status', width:100, align: 'center',formatter:getScoreStatus}
+			];
+			
+			
+			
+			function getStoreName(v,o,row){
+				if(v == null){
+					return row.donateUid;
+				}else{
+					return v;
+				}
+			}
+			
+			function getUserName(v,o,row){
+				if(row.userName == null){
+					return row.uid;
+				}else{
+					return v;
+				}
+			}
+			
+			
+			
+			function getScoreStatus(v){
+				if(v=='0'){
+					return "未领取";
+				}else if(v=="1"){
+					return "已领取";
+				}
+				
+			}
+			
+			
+			function getfashion(v){
+				if(v=='0'){
+					return "网银";
+				}else if(v=='1'){
+					return "支付宝";
+				}else if(v=='2'){
+					return "微信";
+				}else if(v=='3'){
+					return "苹果支付";
+				}else if(v=='4'){
+					return "后台充值";
+				}
+			}
+			
+			function getStatus(v){
+				if(v=='0'){
+					return "待付款";
+				}else if(v=='1'){
+					return "已付款";
+				}else if(v=='2'){
+					return "充值成功";
+				}
+			}
+			
+			
+			
+			
+			
+			function getIsDisable(v,o,row){
+				//alert(row.isForbidden);
+				if(row.isForbidden == '1'){
+					return "是";
+				}else if(row.isForbidden == '0'){
+					return "否";
+				}
+					
+			}
+			
+			function gridUserComplete(){
+				var ids = $(grid_user).jqGrid('getDataIDs');
+				for (var i = 0; i < ids.length; i++) {
+					var id = ids[i];
+					var rowData = $(grid_user).getRowData(id);
+					var funcBtn = '<div class="action-buttons">';
+					var bianjiBtn = '<a class="blue" href="javascript:_select('+ id +')">编辑</a>';
+					var shanchuBtn = '<a class="blue" href="javascript:_del('+ id +')">删除</a>';
+					funcBtn += selectBtn + '</div>';
+	         		$(grid_user).setRowData(id, {func: funcBtn});
+	      		}
+			}
+			
+			
+			
+			function _search(){
+				var storeName = $("#storeName").val().trim();
+				var mobile = $("#mobile").val().trim();
+				var status = $("#status").val().trim();
+				if($("#uid").val()!=null){
+					if($("#storeName").val().trim().length>32){
+						alert("商家名称最多只有输入32个字符");
+						$("#uid").val("");
+						return;
+					}
+				}
+				if($("#mobile").val()!=null){
+					if($("#mobile").val().trim().length>32){
+						alert("手机号码最多只有输入32个字符");
+						$("#mobile").val("");
+						return;
+					}	
+				}
+				
+				
+				
+				
+				if($("#datestart").val()!=""){
+					var datestart =new Date($("#datestart").val().trim()).Format("yyyy-MM-dd hh:mm:ss");
+					
+				}
+				if($("#dateend").val()!=""){
+					var dateend =new Date($("#dateend").val().trim()).Format1("yyyy-MM-dd hh:mm:ss");
+				}
+			
+				
+				//alert(JSON.stringify({uid:uid,phone:mobile,status:status}));
+				//var datestart = $("#datestart").val().trim();
+				//var dateend =  $("#dateend").val().trim();
+				//alert(JSON.stringify(datestart+":"+dateend));
+				//$.setPostData(grid_user, {uid: uid, phone: mobile, status: status, fromTime: datestart,endTime:dateend});
+				$.setPostData(grid_user,{storeName:storeName,phone:mobile,status:status,fromTime:datestart,stopTime:dateend});
+			    $.refresh(grid_user);
+			}
+			
+			
+			function _del(){
+				var ids = $(grid_user).getGridParam('selarrrow');
+				if($('#div_dialog').html() != ''){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'ManagerUser/delSysManUser',
+				        data: 'delIds=' + ids + '&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==0){
+								$.refresh(grid_user);
+								$.closeDelDailog();
+					          	alert('删除成功！');
+					       	}else{					       		
+								alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';
+					       	}
+				        }
+				    });
+			   }
+			}
+			
+			
+			
+			
+			
+			
+			function _select(id){
+				$.ajax({
+			        type: 'POST',
+			        async: false,
+			        url: $base_path + 'mUser_managerController/getConnectionByUser',
+			        data: 'token=' + token + '&id=' + id,
+			        success: function(data) {
+			        	if(data != null){
+			        		mUsers=eval(data.result.rows);
+			        	}else{
+			        		alert("查询人脉关系失败");
+			        		//$.refresh(grid_user);
+			        	}
+			        }
+			    });
+			    
+			    if(mUsers != null){
+			    	//alert(mUsers[0].id1);
+			    	if(mUsers[0].id1 !=null){
+			    		$("#id1").val(mUsers[0].id1);
+			        	$("#nickName1").val(mUsers[0].nickName1);
+			    	}else{
+			    		$("#id1").val("");
+			        	$("#nickName1").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id2 !=null){
+			    		$("#id2").val(mUsers[0].id2);
+			        	$("#nickName2").val(mUsers[0].nickName2);
+			    	}else{
+			    		$("#id2").val("");
+			        	$("#nickName2").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id3 !=null){
+			    		$("#id3").val(mUsers[0].id3);
+			        	$("#nickName3").val(mUsers[0].nickName3);
+			    	}else{
+			    		$("#id3").val("");
+			        	$("#nickName3").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id4 !=null){
+			    		$("#id4").val(mUsers[0].id4);
+			        	$("#nickName4").val(mUsers[0].nickName4);
+			    	}else{
+			    		$("#id4").val("");
+			        	$("#nickName4").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id5 !=null){
+			    		$("#id5").val(mUsers[0].id5);
+			        	$("#nickName5").val(mUsers[0].nickName5);
+			    	}else{
+			    		$("#id5").val("");
+			        	$("#nickName5").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id6 !=null){
+			    		$("#id6").val(mUsers[0].id6);
+			        	$("#nickName6").val(mUsers[0].nickName6);
+			    	}else{
+			    		$("#id6").val("");
+			        	$("#nickName6").val("");
+			    	}
+			    	
+			    	//显示六度人脉信息框
+			    	$.show("edit_user");
+			    }
+			}
+			
+			
+			
+		</script>
+	</head>
+	<body>
+		<div>
+			<table id="grid_user"></table>
+			<div id="grid_pager_user"></div>
+		</div>
+		
+		<!--user筛选工具栏-->
+		<div id="grid_user_tbar" style="display:none;">
+			<div class="action-buttons" style="margin-left: 10px; padding: 5px;">
+				赠送会员/商家: <input id="storeName" onblur="_search()"/>
+				获赠会员手机号: <input id="mobile" onblur="_search()"/>
+				状态: <select id="status" onblur="_search()">
+						<option value="" >全部</option>
+						<option value="1">已领取</option>
+						<option value="0">未领取</option>
+						
+						
+				    </select>
+				日期: <input type="date" id="datestart" onblur="_search()" />至<input type="date" id="dateend" onblur="_search()"/>
+				<a class="blue" href="javascript:_search()"><i class="icon-search bigger-130"></i>查询</a>
+			</div>
+		</div>
+		
+		<!-- 六度人脉信息窗口 -->
+		<form id="edit_user" class="grid_from checkform">
+			<div class="widget-header">
+				<h4 id="form_title">六度人脉信息</h4>
+				<span class="widget-toolbar">
+					<a href="#" data-action="close" onclick="closeForm('edit_user')">
+						<i class="icon-remove"></i>
+					</a>
+				</span>
+			</div>
+			<div class="form_content">
+				<!--<div class="form_content_table">
+					<table border="1">
+						<tr>
+							<th align="center">人脉</th>
+							<th align="center">会员ID</th>
+							<th align="center">会员昵称</th>
+						</tr>
+						
+						<tr>
+							<td>一度人脉: </td>
+							<td><input type="text" id="id1" placeholder="暂无此人脉id" readonly="readonly" /></td>
+							<td><input type="text" id="nickName1" placeholder="暂无此人脉昵称" readonly="readonly" /></td>
+						</tr>
+						
+						<tr>
+							<td>二度人脉: </td>
+							<td><input type="text" id="id2" placeholder="暂无此人脉id" readonly="readonly" /></td>
+							<td><input type="text" id="nickName2" placeholder="暂无此人脉昵称" readonly="readonly" /></td>
+						</tr>
+						
+						<tr>
+							<td>三度人脉: </td>
+							<td><input type="text" id="id3" placeholder="暂无此人脉id" readonly="readonly" /></td>
+							<td><input type="text" id="nickName3" placeholder="暂无此人脉昵称" readonly="readonly" /></td>
+						</tr>
+						
+						<tr>
+							<td>四度人脉: </td>
+							<td><input type="text" id="id4" placeholder="暂无此人脉id" readonly="readonly" /></td>
+							<td><input type="text" id="nickName4" placeholder="暂无此人脉昵称" readonly="readonly" /></td>
+						</tr>
+						
+						<tr>
+							<td>五度人脉: </td>
+							<td><input type="text" id="id5" placeholder="暂无此人脉id" readonly="readonly" /></td>
+							<td><input type="text" id="nickName5" placeholder="暂无此人脉昵称" readonly="readonly" /></td>
+						</tr>
+						
+						<tr>
+							<td>六度人脉: </td>
+							<td><input type="text" id="id6" placeholder="暂无此人脉id" readonly="readonly" /></td>
+							<td><input type="text" id="nickName6" placeholder="暂无此人脉昵称" readonly="readonly" /></td>
+						</tr>
+					</table>
+				</div>-->
+			</div>
+		</form>
+		
+		<div id="div_dialog"></div>
+		<div id="hidebg"></div>
+	</body>
+	
+</html>

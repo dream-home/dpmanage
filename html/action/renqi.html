@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>幻灯片管理</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js-->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/basepath.js"></script>
+		<!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+		<!--验证js-->
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/md5.js"></script>
+		
+		<script>
+			var token = sessionStorage.getItem("token");
+			var grid_user = "#grid_user";
+			var grid_pager_user = "#grid_pager_user";
+			var roles = null;
+			
+			$(function() {
+				
+				
+				 
+				
+				$.autoByWindow(grid_user);
+				$.jqGrid(grid_user, $base_path + 'manage/goods/goodsRec/list', false, colNames_user, fd_user, grid_pager_user, "人气推荐", gridUserComplete, true,true,15);
+				$("#t_grid_user").append($("#grid_user_tbar").html());
+				
+				$.navGrid(grid_user, grid_pager_user);
+				$.navButtonAdd(grid_user, grid_pager_user, 'icon-plus-sign purple', '<font color="purple">添加</font>', '添加', add);
+				$.navButtonAdd(grid_user, grid_pager_user, 'icon-plus-sign purple', '<font color="purple">筛选添加</font>', '筛选添加', selectAdd);
+				$.navButtonAdd(grid_user, grid_pager_user, 'icon-trash red', '<font color="red">删除</font>', '删除', beforeDel);
+				
+				
+				$(".checkform").Validform({
+					tiptype:function(msg, o, cssctl){
+						var objtip = $("#msgspan");
+						cssctl(objtip,o.type);
+						objtip.text(msg);
+					},
+					callback: function(){
+						edit_submit();
+						return false;
+					}
+				});
+				
+				/*$.ajax({
+			        type: 'POST',
+			        async: false,
+			        url: $base_path + 'sysRole/getAllSysRole',
+			        data: 'token=' + token,
+			        success: function(data) {
+			        	if(data != null){
+			        		roles = eval(data.result.rows);
+			        	}
+			        }
+			    });*/
+			    
+			    var length =(roles==null)?0:roles.length;
+        		for(var i = 0; i<length; i++){
+	        		$("#mu_roleId").append("<option value='"+roles[i].roId+"'>"+roles[i].roName+"</option>")
+	        		$("#role").append("<option value='"+roles[i].roId+"'>"+roles[i].roName+"</option>")
+        		}
+			});
+			
+			var colNames_user = ['序号', '商品名称','商品介绍', '商品编号', '更新时间'];
+			
+			//key选中的默认传值
+			//hidden：隐藏该列数值
+			var fd_user = [
+				{name:'id', index:'id', width:60, key: true,hidden:true},
+				{name:'name', index:'muName', width:200},
+				{name:'detail', index:'detail', width:200},
+				{name:'curIssueId', index:'muPrice', width:200},
+				{name:'updateTime', index:'muSum', width:100}
+			];
+			
+			function getRoles(v, o, row){
+        		for(var i = 0; i < roles.length; i++){
+        			if(row.muRoleId == roles[i].roId){
+        				return roles[i].roName;
+        				break;
+        			}
+        		}
+        		return '';
+			}
+			
+			function gridUserComplete(){
+				var ids = $(grid_user).jqGrid('getDataIDs');
+				for (var i = 0; i < ids.length; i++) {
+					var id = ids[i];
+					var rowData = $(grid_user).getRowData(id);
+					var funcBtn = '<div class="action-buttons">';
+					var editBtn = '<a class="blue" href="javascript:_edit('+ id +')"><i class="icon-pencil bigger-130"></i>删除</a>';
+					
+					var muIsDisable = rowData.muIsDisable;
+					var delBtn = '<input type="checkbox" id="checkbox-yn-' + i + '"'
+							+ (muIsDisable == 1 ? 'checked' : '')
+							+ ' onclick="_disable(' + id + ', ' + (muIsDisable == 0 ? 1 : 0) 
+							+')" /><label for="checkbox-yn-' + i + '"></label>';
+					funcBtn += editBtn + '</div>';
+	         		$(grid_user).setRowData(id, {func: funcBtn});
+	         		$(grid_user).setRowData(id, {IsDisable: delBtn});
+	      		}
+			}
+			
+			function _search(){
+				var name = $("#name").val().trim();
+				var account = $("#account").val().trim();
+				var phone = $("#phone").val().trim();
+				var role=$("#role").val().trim();
+				$.setPostData(grid_user, {muName: name, muAccount: account, muPhone: phone, muRoleId: role});
+			    $.refresh(grid_user);
+			}
+			
+			
+			function add(){
+				_edit('');
+				$("#form_title").html('添加人气商品');
+				$.show("edit_user");
+				$("#ifm2").html('<iframe name="frm_cusInfo" scrolling="yes" style="width:1100px;" height="630px" frameborder="0" src="renqituijian.html"></iframe>');
+			}
+			function beforeDel(){
+				var ids = $(grid_user).getGridParam('selarrrow');
+				if(ids == ''){
+					$.reminderDailog("div_dialog", '<i class="icon-warning-sign"></i>警告', '请选中行!');
+				}else{
+					$.openDelDailog("div_dialog", del);
+				}
+			}
+			
+			function selectAdd(){
+				_edit('');
+				$("#form_title").html('筛选添加人气商品');
+				$.show("edit_user");
+				$("#ifm2").html('<iframe name="frm_cusInfo" scrolling="yes" style="width:1200px;" height="700px" frameborder="0" src="projectSelect.html"></iframe>');
+				
+				
+				
+				
+			}
+			
+			
+			
+			
+			
+			function del(){
+				var ids = $(grid_user).getGridParam('selarrrow');
+				
+				if($('#div_dialog').html() != ''){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/goods/goodsRec/delete',
+				        data: 'id=' + ids + '&token=' + sessionStorage.getItem("token"), 
+				        success: function(data) {
+				        	if(data.code==200){
+								$.refresh(grid_user);
+								$.closeDelDailog();
+					          	alert('删除成功！');
+					       	}else if(data.code==1403){					       		
+								//alert(data.msg);
+								overTime();
+					       	}
+				        }
+				    });
+			   }
+			}
+			
+			function _edit(id){
+				$("#form_title").html('编辑幻灯片');
+				$("#msgspan").text('');
+				$("#tr_pwd").hide(); 
+				$("#mu_pwd").attr('ignore', 'ignore'); 
+				var model = $(grid_user).getRowData(id); 
+				$("#mu_id").val(model.muId); 
+				$("#mu_name").val(model.muName); 
+				$("#mu_account").val(model.muAccount); 
+				$("#mu_phone").val(model.muPhone); 
+				$("#mu_qq").val(model.muQq); 
+				$("#mu_isDisable").val(model.muIsDisable); 
+				$("#mu_roleId").val(model.muRoleId); 
+				$.show("edit_user");
+			}
+			
+			//重置
+			function resetForm(){
+				var muId=$("#mu_id").val();
+				if(muId == ''){
+					_edit(muId);
+					$("#form_title").html('添加幻灯片');
+					$("#tr_pwd").show(); 
+					$("#mu_pwd").attr('ignore', ''); 
+					$("#msgspan").text('');
+					$("#mu_roleId").val(1000);
+				}else{
+					_edit(muId);
+					$("#form_title").html('编辑幻灯片');
+					$("#msgspan").text('');
+					$("#tr_pwd").hide(); 
+					$("#mu_pwd").attr('ignore', 'ignore'); 
+				}
+			}
+			
+			//提交编辑表单
+			function edit_submit(){
+				if($("#mu_pwd").val()!='')
+					$("#mu_pwd").val(hex_md5($("#mu_pwd").val()));
+				var form = $("#edit_user").serialize();
+				var id = $("#mu_id").val();
+				$.ajax({
+			        type: 'POST',
+			        url: $base_path + (id == '' ? 'ManagerUser/addSysManUser' : 'ManagerUser/editSysManUser'),
+			        data: form + '&token=' + token,
+			        success: function(data) {
+			        	if(data.code == 0){
+						    $.hide("edit_user");
+						    $.refresh(grid_user);
+						    alert(data.msg);
+			        	}else if(data.code==1403){
+			        		overTime();
+			        	}else{
+			        		//alert(data.msg);
+			        	}
+			        },
+			        error:function(data){ 
+						alert("服务器跑丢了......");
+					} 
+			    });
+			}
+	
+			//是否禁用
+			function _disable(id, v){
+				
+				var tishi="";
+				
+				if(v == 1){
+					tishi="是否禁用该幻灯片";
+				}else if(v == 0){
+					tishi="是否解除该禁用幻灯片";
+				}
+				
+				if(confirm(tishi)){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'ManagerUser/editSysManUser',
+				        data: 'muId=' + id + '&muIsDisable=' + v + '&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==0)
+				           		alert(v == 1 ? '已禁用！' : '禁用已解除.');
+				           	else{
+				        		//alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';			           			
+			           		}
+				        }
+				    });
+				    $.refresh(grid_user);
+				}
+				
+			    $.refresh(grid_user);
+			}
+			
+			/*function closeForm(edit_user){
+				//$.refresh(grid_user);
+				//$.closeDelDailog();
+				//$.hide(edit_user);
+				alert("fuck");
+			}*/
+			
+			
+			
+			//重置密码
+			function _reset(id){
+				if(confirm("是否重置密码")){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'ManagerUser/resetSysManUserPwd',
+				        data: 'muId=' + id + '&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==0)
+				           		alert('密码重置成功！');
+				           	else{
+				        		alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';				           		
+				           	}
+				        }
+				    });					
+				}
+			}
+			
+		
+		</script>
+	</head>
+	<body>
+		<div>
+			<table id="grid_user"></table>
+			<div id="grid_pager_user"></div>
+		</div>
+		
+		<!--user筛选工具栏-->
+		<!--<div id="grid_user_tbar" style="display:none;">
+			<div class="action-buttons" style="margin-left: 10px; padding: 5px;">
+				昵称: <input id="name" onblur="_search()"/>
+				账户: <input id="account" onblur="_search()"/>
+				电话: <input id="phone" onblur="_search()"/>
+				角色：<select id="role" onchange="_search()" style="width:100px;">
+					<option value=''>全部</option>
+				</select>
+				<a class="blue" href="javascript:_search()"><i class="icon-search bigger-130"></i>查询</a>
+			</div>
+		</div>
+		-->
+		<!-- 编辑幻灯片信息窗口 -->
+		<div id="edit_user" class="grid_from checkform">
+			<div class="widget-header">
+				<h4 id="form_title">添加人气商品</h4>
+				<span class="widget-toolbar">
+					<a href="#" data-action="close" onclick="closeForm('edit_user')">
+						<i class="icon-remove"></i>
+					</a>
+				</span>
+			</div>
+			<div id="ifm2">
+				
+			</div>
+		</div>
+		<div id="div_dialog"></div>
+		<div id="hidebg"></div>
+	</body>
+	
+	<script>
+		
+	</script>
+</html>

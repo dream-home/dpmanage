@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>系统管理</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		
+		<link rel="stylesheet"  href="/enjoyRedEnvelopeManager/css/inputstyle.css"  />
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js-->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/basepath.js"></script>
+		<!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+		<!--验证js-->
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/md5.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/action/xitongguanli.js"></script>
+		<style>
+			
+			.inputyuan{
+				width: 20%; 
+				height: 3%;
+				margin-top: -1%;
+				margin-bottom: -1%;
+				
+			}
+			
+			.tiship{
+				margin-top: -22px;
+				height: 10px;
+				color:#707070;
+				opacity: 0.8;
+				text-align: center;
+			}
+			
+		</style>
+	</head>
+	<body>
+		<div class="widget-header" style="background:#307ECC ;">
+				<h4 id="form_title" style="color: white;" >编辑系统设置</h4>
+		</div>
+		<div>
+			<table class="table table-striped  table-bordered" style="text-align: center;  ">
+				<thead>
+					<!--<tr style="height: 20px; ">
+						<th >参数</th>
+						<th>参数值</th>
+						<th >参数</th>
+						<th >参数值</th>
+					</tr>-->
+				</thead>
+				<tbody>
+					<tr>
+						<td width="12%">开奖分配比例下限</td>
+						<td  width="38%"><input id="canshu1" type="text"  class="form-control inputyuan" placeholder=""><p class="tiship" id="canshu1s" >&nbsp; *玩家开奖最少能到积分数量，默认0.01，此项谨慎修改</p></td>
+						<td width="12%">免费开店条件<input id="canshuId" type="hidden"></td>
+						<td width="38%"><input id="canshu28" type="text"  class="form-control inputyuan" placeholder=""><p class="tiship" id="canshu28s" >&nbsp; *累计消费积分数量</p></td>
+					</tr>
+					<tr style="display: none;">
+						<td>幸运中拍奖金比例下限</td>
+						<td><input type="text" id="canshu2" class="form-control inputyuan" placeholder=""><p class="tiship" id="canshu2s" >*幸运玩家奖金分配比例下限，默认0.06，不可大于1</p></td>
+						<td>幸运中拍奖金比例上限</td>
+						<td><input type="text" id="canshu3" class="form-control inputyuan" placeholder=""><p class="tiship" id="canshu3s">*幸运玩家奖金分配比例上限，默认0.08，不可大于1</p></td>
+						
+					</tr>
+					<tr>
+						<td>系统分销比例</td>
+						<td><input id="canshu4" type="text" class="form-control inputyuan" placeholder=""><p class="tiship" id="canshu4s">*系统分销比例，默认0.01，不可大于0.1</p></td>
+						<td>Android App版本号</td>
+						<td><input id="canshu5" type="text" class="form-control inputyuan" placeholder="单行输入"><p class="tiship" id="canshu5s" >*每次Android版本有更新时，修改Android app 版本号</p></td>
+					</tr>
+					<tr>
+						<td>一度人脉分销比例</td>
+						<td><input id="canshu6" type="text" class="form-control inputyuan" placeholder=""><p class="tiship" id="canshu6s" >*一度人脉分销比例，默认0.02不可大于0.1</p></td>
+						<td>Android下载地址</td>
+						<td><input id="canshu7" type="text" class="form-control inputyuan" placeholder="单行输入"><p class="tiship" id="canshu7s">*每次Android版本有更新时，修改Android下载地址</p></td>
+					</tr>
+					<tr>
+						<td>二度人脉分销比例</td>
+						<td><input id="canshu8" type="text" class="form-control inputyuan" placeholder=""><p class="tiship" id="canshu8s">*二度人脉分销比例，默认0.03不可大于0.1</p></td>
+						<td>Android更新说明</td>
+						<td><input id="canshu9" type="text" class="form-control inputyuan" placeholder="单行输入"><p class="tiship" id="canshu9s">*每次Android版本有更新时，修改Android更行说明</p></td>
+					</tr>
+					<tr>
+						<td>三度人脉分销比例</td>
+						<td><input id="canshu10" type="text" class="form-control inputyuan" placeholder=""><p class="tiship" id="canshu10s">*三度人脉分销比例，默认0.04不可大于0.1</p></td>
+						<td>Android是否强制更新</td>
+						<td><label  class="iosCheck col-md-2" style=" margin-bottom: -20px;   margin-left: 10px;"><input id="canshu11" class="inputyuan" type="checkbox" checked="checked"><i></i></label><p class="tiship" style="margin-top: 0px;">*强制则必须更新，否则强制退出app;不强制时也会检查版本，但可以选择不更新</p></td>
+					</tr>
+					<tr>
+						
+						<td>vip中奖率</td>
+						<td><input id="canshu30" type="text" class="form-control inputyuan" placeholder=""><p id="canshu30s" class="tiship">*vip中奖率默认0.10</p></td>
+						<!--<td><input type="text" class="form-control inputyuan" placeholder=""></td>-->
+						<td>ios APP版本号</td>
+						<td><input type="text" id="canshu12"  class="form-control inputyuan" placeholder="单行输入"><p id="canshu12s" class="tiship">*每次ios版本有更新时，修改ios app版本号</p></td>
+					</tr>
+					<tr>
+						<td>最小开奖人数</td>
+						<td><input type="text" id="canshu13" class="form-control inputyuan" placeholder=""><p id="canshu13s" class="tiship"  >*默认为2,不可小于2</p></td>
+						<td>ios下载地址</td>
+						<td><input type="text" id="canshu14" class="form-control inputyuan" placeholder="单行输入"><p id="canshu14s" class="tiship">*每次ios版本有更新时，修改ios下载地址</p></td>
+					</tr>
+					<tr>
+						<td>排行榜上榜数</td>
+						<td><input type="text" id="canshu15" class="form-control inputyuan" placeholder=""><p id="canshu15s" class="tiship">*排行榜上榜数，默认10，不可小于1或大于50</p></td>
+						<td>ios更新说明</td>
+						<td><input type="text" id="canshu16" class="form-control inputyuan" placeholder="单行输入"><p id="canshu16s" class="tiship">*每次ios版本有更新时，修改ios更新说明</p></td>
+					</tr>
+					<tr>
+						<td>转账开关</td>
+						<td><label  class="iosCheck col-md-2" style=" margin-bottom: -20px;   margin-left: 10px;"><input id="canshu17" class="inputyuan" type="checkbox" ><i></i></label><p class="tiship" style="margin-top: 0px;">*控制客户端用户间转账的开关，默认关</p></td>
+						<td>ios是否强制更新</td>
+						<td><label  class="iosCheck col-md-2" style=" margin-bottom: -20px;   margin-left: 10px;"><input id="canshu18" class="inputyuan" type="checkbox" checked="checked"><i></i></label><p class="tiship" style="margin-top: 0px;">*强制则必须更新，否则强制退出app;不强制时也会检查版本，但可以选择不更新</p></td>
+					</tr> 
+					<tr>
+						<td>积分兑换开关</td>
+						<td><label  class="iosCheck col-md-2" style=" margin-bottom: -20px;   margin-left: 10px;"><input id="canshu19" class="inputyuan" type="checkbox"><i></i></label><p class="tiship" style="margin-top: 0px;">*控制客户端用户间积分兑换的开关，默认关</p></td>
+						<td>积分兑换手续费</td>
+						<td><input id="canshu20" type="text" class="form-control inputyuan" placeholder=""><p id="canshu20s" class="tiship">*积分兑换提现收取手续费默认0.05最大不能超过0.10</p></td>
+					</tr>
+					<tr>
+						<td>积分兑换下限</td>
+						<td><input id="canshu21" type="text" class="form-control inputyuan" placeholder=""><p id="canshu21s" class="tiship">*兑换最低值100</p></td>
+						<td>积分兑换上限</td>
+						<td><input id="canshu22" type="text" class="form-control inputyuan" placeholder=""><p id="canshu22s" class="tiship">*兑换最高值10000，不能小于兑换下限</p></td>
+					</tr>
+					<tr>
+						<td>系统版权设置</td>
+						<td><input id="canshu23" type="text" class="form-control inputyuan" placeholder=""><p id="canshu23s" class="tiship">*设置系统版权</p></td>
+						<td>官网域名设置</td>
+						<td><input id="canshu24" type="text" class="form-control inputyuan" placeholder=""><p id="canshu24s" class="tiship">*设置系统官网域名</p></td>
+					</tr>
+					<tr>
+						<td>会员赠送积分最高限制</td>
+						<td><input id="canshu25" type="text" class="form-control inputyuan" placeholder=""><p id="canshu25s" class="tiship">*限制赠送最高积分，赠送必须大于等于10</p></td>
+						<td>商家商品发布数量限制</td>
+						<td><input id="canshu26" type="text" class="form-control inputyuan" placeholder=""><p id="canshu26s" class="tiship">*商家发布商品数量限制</p></td>
+					</tr>
+					<tr>
+						<td>注册邀请码开关</td>
+						<td><label  class="iosCheck col-md-2" style=" margin-bottom: -20px;   margin-left: 10px;"><input id="canshu29" class="inputyuan" type="checkbox" checked="checked"><i></i></label><p class="tiship" style="margin-top: 0px;">*设置注册是否需要输入邀请码</p></td>
+						<td>商品库存数量限制</td>
+						<td><input id="canshu27" type="text" class="form-control inputyuan" placeholder=""><p id="canshu27s" class="tiship">*商家发布商品库存数量限制</p></td>
+					</tr>
+					<!--赠送ep屏蔽-->
+					<tr style="display: none;">
+						<td >注册赠送EP</td>
+						<td><input id="canshu32" type="text" class="form-control inputyuan" placeholder=""><p id="canshu32s" class="tiship">*注册赠送EP必须大于或等于0</p></td>
+						<td>邀请人赠送EP</td>
+						<td><input id="canshu33" type="text" class="form-control inputyuan" placeholder=""><p id="canshu33s" class="tiship">*邀请人赠送EP必须大于或等于0</p></td>
+					</tr>
+					<tr>
+						<td >注册赠送斗斗</td>
+						<td><input id="canshu42" type="text" class="form-control inputyuan" placeholder=""><p id="canshu42s" class="tiship">*注册赠送斗斗必须大于或等于0</p></td>
+						<td>邀请人赠送斗斗</td>
+						<td><input id="canshu43" type="text" class="form-control inputyuan" placeholder=""><p id="canshu43s" class="tiship">*邀请人赠送斗斗必须大于或等于0</p></td>
+					</tr>
+					
+					<tr>
+						<td>层级数量限制</td>
+						<td><input id="canshu31" type="text" class="form-control inputyuan" placeholder=""><p id="canshu31s" class="tiship">*层级数量限制</p></td>
+						<!--赠送ep屏蔽-->
+						<td style="display: none;">赠送EP最大限制</td>
+						<td style="display: none;"><input id="canshu34" type="text" class="form-control inputyuan" placeholder=""><p id="canshu34s" class="tiship">*赠送EP最大限制</p></td>
+						<td >累计最多赠送斗斗</td>
+						<td ><input id="canshu44" type="text" class="form-control inputyuan" placeholder=""><p id="canshu44s" class="tiship">*累计最多赠送斗斗</p></td>
+					</tr>
+					<tr>
+						<td>分享标题</td>
+						<td><input id="canshu35" type="text" class="form-control inputyuan" placeholder=""><p id="canshu35s" class="tiship">*分享标题</p></td>
+						<td>分享内容</td>
+						<td><input id="canshu36" type="text" class="form-control inputyuan" placeholder=""><p id="canshu36s" class="tiship">*分享内容</p></td>
+					</tr>
+					<tr>
+						<td>邮箱推送指定人</td>
+						<td><input id="canshu37" type="text" class="form-control inputyuan" placeholder=""><p id="canshu37s" class="tiship">*邮箱推送指定人</p></td>
+						<td>区域维护比例</td>
+						<td><input id="canshu38" type="text" class="form-control inputyuan" placeholder=""><p id="canshu38s" class="tiship">*交易手续费比例,数值不能超过1</p></td>
+					</tr>
+					<tr>
+						<td>android是否弹框更新</td>
+						<td><label  class="iosCheck col-md-2" style=" margin-bottom: -20px;   margin-left: 10px;"><input id="canshu40" class="inputyuan" type="checkbox" ><i></i></label><p class="tiship" style="margin-top: 0px;">*android是否关闭首页弹框</p></td>
+						<td>ios是否弹框更新</td>
+						<td><label  class="iosCheck col-md-2" style=" margin-bottom: -20px;   margin-left: 10px;"><input id="canshu41" class="inputyuan" type="checkbox" checked="checked"><i></i></label><p class="tiship" style="margin-top: 0px;">*ios是否关闭首页弹框</p></td>
+					</tr>
+					
+					
+					<tr>
+						<td>客服电话</td>
+						<td><input id="canshu39" type="text" class="form-control inputyuan" placeholder=""><p id="canshu39s" class="tiship">*客服电话</p></td>
+						<td></td>
+						<td></td>
+					</tr>
+					
+					
+					<tr>
+						<td colspan="4"><input id="canshusave" type="button"  value="保存" style="border-radius: 5px; background-color:#00E573 ; border: 0px; height: 40px; width: 100px; font-size: 20px; color: white;"></td>
+						
+					</tr>
+
+				</tbody>
+			</table>
+		</div>
+		
+	</body>
+	
+	
+	
+</html>
+<script>
+	$(function(){
+		
+		
+		
+		
+		
+		
+	})
+	
+	
+</script>

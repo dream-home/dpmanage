@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>系统抽取商家费用</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js-->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/basepath.js"></script>
+		<!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+		<!--验证js-->
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/md5.js"></script>
+		
+		<script>
+			var token = sessionStorage.getItem("token");
+			var grid_user = "#grid_user";
+			var grid_pager_user = "#grid_pager_user";
+			var mUsers=null;
+			
+			$(function() {
+				var date = new Date();
+				var now = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+((date.getDate())<=9?("0"+date.getDate()):date.getDate()); 
+				$.autoByWindow(grid_user);
+				$.jqGrid(grid_user, $base_path + 'manage/logs/systemExpenses?recordType=22', false, colNames_user, fd_user, grid_pager_user, "系统抽取商家费用", null, true,true,15);
+				$("#t_grid_user").append($("#grid_user_tbar").html());
+				/*$("#datestart").val(now);		
+				$("#dateend").val(now);*/
+				$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/city/list',
+				        data: 'level=1&token='+sessionStorage.getItem("token"), 
+				        success: function(data) {
+				        	//alert(data.result.rows);
+				        	var str = "";
+				        	
+				        	str+="<option  value = ''>全部</option>";
+				        	for(var i = 0 ; i<data.result.rows.length;i++){
+				        		str+="<option  title='"+data.result.rows[i].name+"'   value = '"+data.result.rows[i].code+"'>"+data.result.rows[i].name+"</option>";
+				        	}
+				        	$("#province1").html(str);
+				        }
+				    });
+				
+				
+				
+				
+				
+				
+				
+			});
+			
+			var colNames_user = ['流水号','日志内容', '金额','时间','购买者','userName','nickName','商品','商铺','省','市','区'];
+			var fd_user = [
+				{name:'orderNo', index:'remark', width:30,},
+				{name:'remark', index:'remark', width:30,},
+				{name:'score', index:'score', width:40},
+				{name:'createTime',index:'createTime',width:30},
+				{name:'uid',index:'uid',width:30,formatter:getUser},
+				{name:'userName',index:'userName',width:30,hidden:true},
+				{name:'nickName',index:'nickName',width:30,hidden:true},
+				{name:'goodsName',index:'goodsName',width:30},
+				{name:'storeName',index:'storeName',width:30},
+				{name:'province',index:'province',width:30},
+				{name:'city',index:'city',width:30},
+				{name:'county',index:'county',width:30}
+			];
+			
+			
+			
+			
+			function getUser(v,o,row){
+				
+				if(row.nickName==null){	
+					return row.userName+"("+row.uid+")";	
+				}else{
+					return row.nickName+"("+row.uid+")";
+				}
+				
+				
+				
+				
+				
+			}
+			
+			function getIsDisable(v,o,row){
+				//alert(row.isForbidden);
+				if(row.isForbidden == '1'){
+					return "是";
+				}else if(row.isForbidden == '0'){
+					return "否";
+				}
+					
+			}
+			
+			
+			
+			function getScore(v){
+				if(v>=0){
+					return "收入";
+				}else if(v<0){
+					return "支出";
+				}
+				
+			}
+			
+			function gridUserComplete(){
+				var ids = $(grid_user).jqGrid('getDataIDs');
+				for (var i = 0; i < ids.length; i++) {
+					var id = ids[i];
+					var rowData = $(grid_user).getRowData(id);
+					var funcBtn = '<div class="action-buttons">';
+					var bianjiBtn = '<a class="blue" href="javascript:_select('+ id +')">通过</a>';
+					var shanchuBtn = '<a class="blue" href="javascript:_del('+ id +')">不通过</a>';
+					funcBtn += selectBtn + '</div>';
+	         		$(grid_user).setRowData(id, {func: funcBtn});
+	      		}
+			}
+			
+			Date.prototype.Format = function(fmt)   
+			{ //author: meizz   
+			  var o = {   
+			    "M+" : this.getMonth()+1,                 //月份   
+			    "d+" : this.getDate(),                    //日   
+			    "h+" : this.getHours()-8,                   //小时   
+			    "m+" : this.getMinutes(),                 //分   
+			    "s+" : this.getSeconds(),                 //秒   
+			    "q+" : Math.floor((this.getMonth()+3)/3), //季度   
+			    "S"  : this.getMilliseconds()             //毫秒   
+			  };   
+			  if(/(y+)/.test(fmt))   
+			    fmt=fmt.replace(RegExp.$1, (this.getFullYear()+"").substr(4 - RegExp.$1.length));   
+			  for(var k in o)   
+			    if(new RegExp("("+ k +")").test(fmt))   
+			  	fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (("00"+ o[k]).substr((""+ o[k]).length)));   
+			  return fmt;   
+			}  
+			
+			
+			
+			
+			function _search(){
+				var uid = $("#uid").val().trim();
+				
+				
+				
+				if($("#uid").val()!=null){
+					if($("#uid").val().trim().length>32){
+						alert("uid最多只有输入32个字符");
+						$("#uid").val("");
+						return;
+					}
+				}
+				
+				
+				
+				
+				
+				if($("#datestart").val()!=""){
+					var datestart =new Date($("#datestart").val().trim()).Format("yyyy-MM-dd hh:mm:ss");
+					
+				}
+				if($("#dateend").val()!=""){
+					var dateend =new Date($("#dateend").val().trim()).Format1("yyyy-MM-dd hh:mm:ss");
+				}
+				
+				var one = $("#province1 option:selected").text();
+				var two = $("#city1 option:selected").text();
+				var there = $("#county1 option:selected").text();
+				
+				
+				if($("#province1 option:selected").text()=="全部"){
+						one = "";
+				}
+				if($("#city1 option:selected").text()=="全部"){
+						two = "";
+				}
+				if($("#county1 option:selected").text()=="全部"){
+					there = "";
+				}
+
+				//var datestart = $("#datestart").val().trim();
+				//var dateend =  $("#dateend").val().trim();
+				//alert(JSON.stringify(datestart+":"+dateend));
+				//$.setPostData(grid_user, {uid: uid, phone: mobile, status: status, fromTime: datestart,endTime:dateend});
+				$.setPostData(grid_user,{uid:uid,fromTime:datestart,stopTime:dateend,province:one,city:two,county:there});
+			    $.refresh(grid_user);
+			}
+			
+			
+			function  _search1(){
+				//alert($("#province1").val());
+				$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/city/list',
+				        data: 'parentCode='+$("#province1").val()+'&token='+sessionStorage.getItem("token"), 
+				        success: function(data) {
+				        	//alert(data.result.rows);
+				        	var str = "";
+				        	
+				        	str+="<option  value = ''>全部</option>";
+				        	for(var i = 0 ; i<data.result.rows.length;i++){
+				        		str+="<option  value = '"+data.result.rows[i].code+"'>"+data.result.rows[i].name+"</option>";
+				        	}
+				        	$("#city1").html(str);
+				        }
+				});
+
+			}
+			
+			
+			function  _search2(){
+				
+				$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/city/list',
+				        data: 'parentCode='+$("#city1").val()+'&token='+sessionStorage.getItem("token"), 
+				        success: function(data) {
+				        	//alert(data.result.rows);
+				        	var str = "";
+				        	
+				        	str+="<option  value = ''>全部</option>";
+				        	for(var i = 0 ; i<data.result.rows.length;i++){
+				        		str+="<option  value = '"+data.result.rows[i].code+"'>"+data.result.rows[i].name+"</option>";
+				        	}
+				        	$("#county1").html(str);
+				        }
+				});
+
+			}
+			
+			
+			
+			function _del(){
+				var ids = $(grid_user).getGridParam('selarrrow');
+				if($('#div_dialog').html() != ''){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'ManagerUser/delSysManUser',
+				        data: 'delIds=' + ids + '&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==0){
+								$.refresh(grid_user);
+								$.closeDelDailog();
+					          	alert('删除成功！');
+					       	}else{					       		
+								alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';
+					       	}
+				        }
+				    });
+			   }
+			}
+			
+			
+			
+			
+			
+			
+			function _select(id){
+				$.ajax({
+			        type: 'POST',
+			        async: false,
+			        url: $base_path + 'mUser_managerController/getConnectionByUser',
+			        data: 'token=' + token + '&id=' + id,
+			        success: function(data) {
+			        	if(data != null){
+			        		mUsers=eval(data.result.rows);
+			        	}else{
+			        		alert("查询人脉关系失败");
+			        		//$.refresh(grid_user);
+			        	}
+			        }
+			    });
+			    
+			    if(mUsers != null){
+			    	//alert(mUsers[0].id1);
+			    	if(mUsers[0].id1 !=null){
+			    		$("#id1").val(mUsers[0].id1);
+			        	$("#nickName1").val(mUsers[0].nickName1);
+			    	}else{
+			    		$("#id1").val("");
+			        	$("#nickName1").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id2 !=null){
+			    		$("#id2").val(mUsers[0].id2);
+			        	$("#nickName2").val(mUsers[0].nickName2);
+			    	}else{
+			    		$("#id2").val("");
+			        	$("#nickName2").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id3 !=null){
+			    		$("#id3").val(mUsers[0].id3);
+			        	$("#nickName3").val(mUsers[0].nickName3);
+			    	}else{
+			    		$("#id3").val("");
+			        	$("#nickName3").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id4 !=null){
+			    		$("#id4").val(mUsers[0].id4);
+			        	$("#nickName4").val(mUsers[0].nickName4);
+			    	}else{
+			    		$("#id4").val("");
+			        	$("#nickName4").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id5 !=null){
+			    		$("#id5").val(mUsers[0].id5);
+			        	$("#nickName5").val(mUsers[0].nickName5);
+			    	}else{
+			    		$("#id5").val("");
+			        	$("#nickName5").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id6 !=null){
+			    		$("#id6").val(mUsers[0].id6);
+			        	$("#nickName6").val(mUsers[0].nickName6);
+			    	}else{
+			    		$("#id6").val("");
+			        	$("#nickName6").val("");
+			    	}
+			    	
+			    	//显示六度人脉信息框
+			    	$.show("edit_user");
+			    }
+			}
+			
+			
+			
+		</script>
+	</head>
+	<body>
+		<div>
+			<table id="grid_user"></table>
+			<div id="grid_pager_user"></div>
+		</div>
+		
+		<!--user筛选工具栏-->
+		<div id="grid_user_tbar" style="display:none;">
+			<div class="action-buttons" style="margin-left: 10px; padding: 5px;">
+				UID: <input id="uid" onblur="_search()"/>
+				省: <select id="province1" onchange="_search1()">
+					<option selected="selected" value="">全部</option>
+				    </select>
+				市: <select id="city1" onchange="_search2()">
+					<option selected="selected" value="">全部</option>
+				    </select>
+				区: <select id="county1" onchange="_search()">
+					<option selected="selected" value="">全部</option>
+				    </select>
+				日期: <input type="date" id="datestart" onblur="_search()" />至<input type="date" id="dateend" onblur="_search()"/>
+				<a class="blue" href="javascript:_search()"><i class="icon-search bigger-130"></i>查询</a>
+			</div>
+		</div>
+
+		<div id="div_dialog"></div>
+		<div id="hidebg"></div>
+	</body>
+	
+</html>

@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>竞拍记录</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		<!-- 导入选项卡样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_tab.css" />
+
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js -->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--验证js-->
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<!--
+        	引进路径
+        -->
+        <script type="text/javascript" src="/enjoyRedEnvelopeManager/js/basepath.js" ></script>
+        <!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+
+		<script>
+		var token = sessionStorage.getItem("token");
+		var grid_user= "#grid_user";
+		var grid_pager_user = "#grid_pager_user";
+		$(function() {
+			
+			
+			
+			
+					function GetRequest() {
+  
+					  var url = location.search; //获取url中"?"符后的字串
+					   var theRequest = new Object();
+					   if (url.indexOf("?") != -1) {
+					      var str = url.substr(1);
+					      strs = str.split("&");
+					      for(var i = 0; i < strs.length; i ++) {
+					         theRequest[strs[i].split("=")[0]]=(strs[i].split("=")[1]);
+					      }
+					   }
+					   return theRequest;
+					}
+					
+					var business = GetRequest()['goodsId']; 
+					
+			
+					var date = new Date();
+					var now = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+((date.getDate())<=9?("0"+date.getDate()):date.getDate()); 
+					
+					$.autoByWindow(grid_user);
+					/*url传参*/
+					
+					if(business==undefined){
+						$.jqGrid(grid_user, $base_path + 'manage/scoreManage/goodsIssueDetail',false, colNames_user, fd_user, grid_pager_user, "竞拍记录", gridUserComplete,true,true,15);	
+					}else{
+						var person = {
+							goodsId:business,
+							token:sessionStorage.getItem("token")
+						}
+						
+						$.jqGrid(grid_user, $base_path + 'manage/scoreManage/goodsIssueDetail',person,colNames_user, fd_user, grid_pager_user, "竞拍记录", gridUserComplete,true,true,15);
+						//alert(business);
+					}
+					
+					$("#t_grid_user").append($("#grid_user_tbar").html());
+					/*$("#datestart").val(now);		
+					$("#dateend").val(now);*/
+					
+					$.navGrid(grid_user, grid_pager_user);
+					/*$.navButtonAdd(grid_user, grid_pager_user, 'icon-plus-sign purple', '<font color="purple">添加</font>', '添加', add);
+					$.navButtonAdd(grid_user, grid_pager_user, 'icon-trash red', '<font color="red">删除</font>', '删除', beforeDel);*/
+					
+					
+					$(".checkform").Validform({
+						tiptype:function(msg, o, cssctl){
+							var objtip = $("#msgspan");
+							cssctl(objtip,o.type);
+							objtip.text(msg);
+						},
+						callback: function(){
+							edit_submit();
+							return false;
+						}
+					});
+					//匿名form表单
+					$("#uploadImg").click(function(){					
+						/*alert(JSON.stringify(new FormData($('#edit_user')[0])));*/
+						$.ajax({
+						    url: $base_path+"manage/image/upload",
+						    type: 'POST',
+						    cache: false,
+						    data: new FormData($('#edit_user')[0]),
+						    beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		               		},
+						    processData: false,
+						    contentType: false
+						}).done(function(res) {
+							if(res.code==200){
+								$("#mu_img").attr("src",$downImg+res.result);
+								$("#adImg").val($downImg+res.result);
+							}else if(res.code==1403){
+								overTime();
+							}else{
+								alert(res.msg);
+							}
+							
+							//alert($("#mu_img").attr("src"));
+							//alert(res.result);
+						}).fail(function(res) {
+							
+						});
+	
+					})
+					
+					
+					
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+			
+				
+			});
+			
+			var colNames_user = ['记录编号','竞拍期数', '竞拍会员','手机号码','商铺名称', '商品名称', '竞拍价','竞拍时间'];
+			var fd_user = [
+				{name:'id', index:'id', width:60,key: true,hidden:true},
+				{name:'issueNo', index:'issueNo', width:60,formatter:issueNo},
+				{name:'userName', index:'userName', width:60,formatter:getstatus},
+				{name:'phone', index:'phone', width:60,hidden:true},
+				{name:'storeName', index:'storeName', width:60,formatter:getStore},
+				{name:'goodsName', index:'goodsName', width:60},
+				{name:'drawPrice', index:'drawPrice', width:60},
+				{name:'createTime', index:'createTime', width:60},
+			];
+
+			function issueNo(v){
+				return "第"+v+"期";
+			}
+			
+			
+			
+			
+			function getstatus(v,o,row){
+				if(row.userName == null && row.phone == null){
+					return row.uid;
+				}
+				
+				
+				
+				if(row.userName == null){
+					row.userName = "";
+				}
+				if(row.phone == null){
+					row.phone = "";
+				}
+				
+				
+				
+				return row.phone+'('+row.userName+')';
+				
+				
+			}
+			
+			
+			function getStore(v,o,row){
+				if(v==null){
+					return "平台商品";
+				}else{
+					return v;
+				}
+			}
+			
+			
+			
+			
+			function gridUserComplete(){
+				var ids = $(grid_user).jqGrid('getDataIDs');
+				
+				for (var i = 0; i < ids.length; i++) {
+					var paramId = ids[i];
+					
+					var paramIds = ids[i];
+					var paramIds = ids[i+1];
+					var count  =  i;
+					count++;
+					if(ids.length == count){
+						//alert("dd");
+						paramIds = ids[i];
+					}
+					
+					var rowData = $(grid_user).getRowData(paramId);
+					//console.log(paramId);
+					var funcBtn = '<div class="action-buttons">';
+					//var editBtn = '<a class="blue" href="javascript:_edit(&quot;'+paramId+'&quot;)"><i class="icon-pencil bigger-130"></i>编辑</a>';
+					//var sort = '<a class="blue" href="javascript:_sort(&quot;'+paramId+'&quot;,&quot;'+paramIds+'&quot;)"><i class="icon-sort bigger-130" aria-hidden="true"></i>升序</a>';
+					var select = '<a class="blue" href="javascript:_sel(&quot;'+paramId+'&quot;)"><i class="icon-search bigger-130" aria-hidden="true"></i>查看</a>';
+					funcBtn += select+ '</div>';
+	         		$(grid_user).setRowData(paramId, {func: funcBtn});
+	      		}
+			}
+			
+			
+			function _sel(id){
+				$("#form_title").html('查看详情');
+				var rowData = $(grid_user).getRowData(id);
+				
+				sessionStorage.setItem("goodsId",rowData.goodsId);
+				sessionStorage.setItem("issueNo",rowData.issueNo);
+				$.show("edit_user");
+				$("#info").html('<iframe name="frm_cusInfo" scrolling="yes" style="width:1000px; margin:-18px -18px -18px -18px;" height="630px"  frameborder="0" src="proinfo.html"></iframe>');
+				
+			
+				/*$.ajax({
+					type:"get",
+					url:$base_path+"manage/goods/goodsIssueList", 
+					beforeSend: function(request) {
+                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+               		 },
+					
+					success:function(data){
+						sessionStorage.setItem("goodsId",data.result.rows[i].goodsId);
+								sessionStorage.setItem("issueNo",data.result.rows[i].issueNo);
+						
+						console.log(data.result.rows[i].goodsId+","+data.result.rows[i].issueNo+","+data.result.rows[i].goodsName+":");
+							if(id == data.result.rows[i].id){
+								$.show("edit_user");
+								$("#info").html('<iframe name="frm_cusInfo" scrolling="yes" style="width:1000px; margin:-18px -18px -18px -18px;" height="630px"  frameborder="0" src="proinfo.html"></iframe>');				
+								break;
+						
+					}, 
+					error:function(data){ 
+					} 
+					
+				});*/
+				
+				
+				
+				
+				
+				
+			}
+			
+			function _search(){
+				var goodsName = $("#goodsName").val().trim();
+				
+				var issueNo = $("#issueNo").val().trim();
+				
+				var phone = $("#phone").val().trim();
+				if(goodsName.trim().length>32){
+					alert("商品名称最多只有输入32个字符");
+					$("#goodsName").val("");
+					return;
+				}
+				if(phone.trim().length>11){
+					alert("手机号码最多只有输入11个字符");
+					$("#phone").val("");
+					return;
+				}
+				
+				
+				
+			
+				$.setPostData(grid_user, {goodsName: goodsName, phone: phone, issueNo: issueNo});
+			    $.refresh(grid_user);
+			}
+			
+			function _sort(id,ids){
+				//alert(id+ids);
+				/*if(id == ids){
+					
+				}*/
+			var person  = {
+				downId:id,
+				upId:ids
+			}
+				
+				
+			$.ajax({
+					type:"get",
+					url:$base_path+"manage/ad/exchangeOrder", 
+					async:true,
+					data:person,
+					beforeSend: function(request) {
+                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+               		 },
+					
+					success:function(data){
+						alert("修改成功");
+						$.refresh(grid_user);
+					}, 
+					error:function(data){ 
+					} 
+					
+			});
+				
+				/*alert(JSON.stringify($(grid_user)));*/
+				//console.log(JSON.stringify($(grid_user).get));
+				/*$("#form_title").html('编辑幻灯片');
+				$("#msgspan").text(''); 
+				var model = $(grid_user).getRowData(id); 
+				$("#mu_id").val(model.id); 
+				
+				
+				$("#mu_img").attr("src",model.adImg);
+				$("#adImg").val(model.adImg);
+				$("#mu_title").val(model.title); 
+				$("#mu_rank").val(model.rank); 				 
+				$.show("edit_user");
+				*/
+				
+				
+			}
+			
+			
+			
+			function add(){
+				_edit('');
+				$("#form_title").html('添加幻灯片');
+				$("#tr_pwd").show(); 
+				$("#mu_pwd").attr('ignore', ''); 
+				$("#msgspan").text('');
+				$("#mu_img").prop("src","/enjoyRedEnvelopeManager/image/logoImg.png");
+				$("#mu_roleId").val('');
+				$.show("edit_user");
+			}
+			function beforeDel(){
+				var ids = $(grid_user).getGridParam('selarrrow');
+				if(ids == ''){
+					$.reminderDailog("div_dialog", '<i class="icon-warning-sign"></i>警告', '请选中行!');
+				}else{
+					$.openDelDailog("div_dialog", del);
+				}
+			}
+			function del(){
+				
+				var ids = $(grid_user).getGridParam('selarrrow');
+				//alert(ids);
+				if($('#div_dialog').html() != ''){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/ad/delete',
+				        data: 'adId=' + ids + '&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==200){
+								$.refresh(grid_user);
+								$.closeDelDailog();
+					          	alert('删除成功！');
+					       	}else{					       		
+								alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';
+					       	}
+				        }
+				    });
+			   }
+			}
+			
+			function _edit(id){
+				
+				//alert(id);title  mu_rank
+				$("#form_title").html('编辑幻灯片');
+				$("#msgspan").text(''); 
+				var model = $(grid_user).getRowData(id); 
+				$("#mu_id").val(model.id); 
+				
+				//$("#mu_img").attr("src",$downImg+res.result);
+				$("#mu_img").attr("src",model.adImg);
+				$("#adImg").val(model.adImg);
+				$("#mu_title").val(model.title); 
+				$("#mu_rank").val(model.rank); 				 
+				$.show("edit_user");
+				
+				
+			}
+			
+			//重置
+			function resetForm(){
+				var muId=$("#mu_id").val();
+				if(muId == ''){
+					_edit(muId);
+					$("#form_title").html('添加幻灯片');
+					$("#tr_pwd").show(); 
+					$("#mu_pwd").attr('ignore', ''); 
+					$("#msgspan").text('');
+					$("#mu_roleId").val(1000);
+				}else{
+					_edit(muId);
+					$("#form_title").html('编辑幻灯片');
+					$("#msgspan").text('');
+					//$("#tr_pwd").hide(); 
+					$("#mu_pwd").attr('ignore', 'ignore'); 
+				}
+			}
+			
+			//提交编辑表单
+			function edit_submit(){
+				
+				
+				var form = $("#edit_user").serialize();
+				
+				
+				
+				var id = $("#mu_id").val();
+				$.ajax({
+			        type: 'POST',
+			        url: $base_path + (id == '' ? 'manage/ad/create' : 'manage/ad/update'),
+			        beforeSend: function(request) {
+                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+               		},
+			        data: form,
+			        success: function(data) {
+			        	if(data.code == 200){
+						    $.hide("edit_user");
+						    $.refresh(grid_user);
+						    if(id == ''){
+						    	alert("添加成功");
+						    }else{
+						    	alert("修改成功");	
+						    }
+						    
+			        	}else{
+			        		alert(data.msg);
+							if(data.code==-2)//跳转到登录页面
+								top.location.href='/enjoyRedEnvelopeManager/html/login.html';
+			        	}
+			        },
+			    });
+			}
+	
+			//是否禁用
+			function _disable(id, v){
+				
+				var tishi="";
+				
+				if(v == 1){
+					tishi="是否禁用该幻灯片";
+				}else if(v == 0){
+					tishi="是否解除该禁用幻灯片";
+				}
+				
+				if(confirm(tishi)){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'ManagerUser/editSysManUser',
+				        data: 'muId=' + id + '&muIsDisable=' + v + '&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==0)
+				           		alert(v == 1 ? '已禁用！' : '禁用已解除.');
+				           	else{
+				        		alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';			           			
+			           		}
+				        }
+				    });
+				    $.refresh(grid_user);
+				}
+				
+			    $.refresh(grid_user);
+			}
+			
+			//重置密码
+			function _reset(id){
+				if(confirm("是否重置密码")){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'ManagerUser/resetSysManUserPwd',
+				        data: 'muId=' + id + '&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==0)
+				           		alert('密码重置成功！');
+				           	else{
+				        		alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';				           		
+				           	}
+				        }
+				    });					
+				}
+			}
+		
+		</script>
+	</head>
+	<body>
+		
+		<div>
+			<table id="grid_user"></table>
+			<div id="grid_pager_user"></div>
+		</div>
+		<div id="grid_user_tbar" style="display:none;">
+			<div class="action-buttons" style="margin-left: 10px; padding: 5px;">
+				竞拍期数: <input id="issueNo" onblur="_search()"/>
+				手机：<input id="phone" onblur="_search()"/>
+				竞拍商品名称：<input id="goodsName" onblur="_search()"/>
+				<a class="blue" href="javascript:_search()"><i class="icon-search bigger-130"></i>查询</a>
+			</div>
+		</div>
+		<!--<div id="ifm2">
+				
+		</div>-->
+		
+		
+		
+		<!-- 编辑商品信息窗口 -->
+		<form id="edit_user" class="grid_from checkform">
+			<div class="widget-header">
+				<h4 id="form_title">商品信息</h4>
+				<span class="widget-toolbar">
+					<a href="#" data-action="close" onclick="closeForm('edit_user')">
+						<i class="icon-remove"></i>
+					</a>    
+				</span>
+			</div>
+			
+			<div class="form_content" id="info" >
+				<input type="hidden" id="mu_id" name="id"/>
+				<div class="form_content_table">
+					<span id="msgspan" style="color:red;"></span>
+					<table>
+						<!--<form id="uploadform" >-->
+						<tr>
+							<td>图片</td>
+							<td><input type="file" name="file" style="height: 30px;width: 100px;" id="mu_img1"  placeholder="图片"  nullmsg="请选择图片" errormsg="请选择图片" ></input></td>
+							<td><input type="button" id="icon" style="height: 30px;width: 70px; margin-left: -80px;" class="btn-warning" value="上传"></input></td>
+						</tr>
+						<tr>
+							<td></td>
+							<td></td>
+						</tr> 
+						<!--</form>-->
+						<tr>
+							<td><input type="hidden" name="adImg" id="adImg"></td>
+							<td><img style="width: 170px;height: 100px;" src="/enjoyRedEnvelopeManager/image/logoImg.png" id="mu_img"></td>
+						</tr> 
+						<tr>
+							<td>标题</td>
+							<td><input type="text" id="mu_title" name="title" placeholder="标题" datatype="s6-18" nullmsg="请输入标题" errormsg="请输入标题" /></td>
+						</tr>
+						<tr id="tr_pwd">
+							<td>排序</td>
+							<td><input type="text" id="mu_rank" name="rank" placeholder="序号" datatype="n1-2" nullmsg="请输入序号！" errormsg="幻灯片顺序不能重复，必须按照次序添加"/></td>
+						</tr>
+					</table>
+					
+					
+					
+				</div>
+				<div>
+					<button class="btn btn-info button-left" type="submit">
+						<i class="icon-ok bigger-110"></i>
+						提交
+					</button>
+					<button class="btn button-right" type="button" onclick="resetForm()">
+						<i class="icon-undo bigger-110"></i>
+						重置
+					</button>
+				</div>
+			</div>
+		</form>
+		
+		<div id="div_dialog"></div>
+		<div id="hidebg"></div>
+	</body>
+</html>

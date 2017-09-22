@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>公告列表</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		<link rel="stylesheet" type="text/css" href="/enjoyRedEnvelopeManager/css/wangEditor.min.css">
+		<script type="text/javascript" src="/enjoyRedEnvelopeManager/js/jquery-1.10.2.min.js"></script>
+    	<script type="text/javascript" src="/enjoyRedEnvelopeManager/js/wangEditor.js"></script>
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js-->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/basepath.js"></script>
+		<!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+		<!--验证js-->
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/md5.js"></script>
+		<style>
+			
+			#editor-trigger {
+            	height: 120px;
+	            /*max-height: 500px;*/
+	        }
+	        .container {
+	            width: 100%;
+	            margin: 0 auto;
+	            position: relative;
+	            margin-left: -10px;
+	        }
+		</style>
+		
+		<script>
+			var token = sessionStorage.getItem("token");
+			var grid_user = "#grid_user";
+			var grid_pager_user = "#grid_pager_user";
+			var mUsers=null;
+			
+			$(function() {
+				var date = new Date();
+				var now = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+((date.getDate())<=9?("0"+date.getDate()):date.getDate()); 
+				$.autoByWindow(grid_user);
+				$.jqGrid(grid_user, $base_path + 'manage/notice/list', false, colNames_user, fd_user, grid_pager_user, "公告列表", gridUserComplete,true,true,15);
+				
+				$("#t_grid_user").append($("#grid_user_tbar").html());
+				/*$("#datestart").val(now);		
+				$("#dateend").val(now);*/
+			});
+			
+			var colNames_user = ['ID','编号','类型','标题', '内容', '发送人员', '时间','操作'];
+			var fd_user = [
+				{name:'id', index:'id', align:'center',width:25, sorttype:"int",key:true,hidden:true},
+				{name:'orderNo', index:'orderNo', align:'center',width:40},
+				{name:'type', index:'type',align:'center', width:30,formatter:getStatusName },
+				{name:'title', index:'title',align:'center', width:40},
+				{name:'detail', index:'detail',align:'center', width:100},
+				{name:'userId', index:'userId',align:'center', width:50},
+				{name:'createTime', index:'createTime',align:'center',width:30},
+					
+				{name:'func',index:'func', width:40, align: 'center'}
+			];
+			
+			function gridUserComplete(){
+				var ids = $(grid_user).jqGrid('getDataIDs');
+				for (var i = 0; i < ids.length; i++) {
+					var id = ids[i];
+					var rowData = $(grid_user).getRowData(id);
+					var funcBtn = '<div class="action-buttons">';
+					var passBtn = "";
+					var passBtn1 = "";
+					var stopBtn = "";
+					
+					
+					passBtn = '<a class="blue" href="javascript:_edit(&quot;'+ id +'&quot;)"></i>删除</a>';
+					
+					passBtn1 = '<a class="blue" href="javascript:_detail(&quot;'+ id +'&quot;)"></i>详情</a>';
+					
+					
+					
+					
+					
+					funcBtn += passBtn1+passBtn+'</div>';
+	         		$(grid_user).setRowData(id, {func: funcBtn});
+	      		}
+			}
+			
+			
+			function getIsDisable(v,o,row){
+				//alert(row.isForbidden);
+				if(row.isForbidden == '1'){
+					return "是";
+				}else if(row.isForbidden == '0'){
+					return "否";
+				}
+					
+			}
+			
+			
+			function getStatusName(v){
+				if(v=='0'){
+					return "系统消息";
+				}else if(v=="1"){
+					return "消费消息";
+				}else if(v=="2"){
+					return "中拍消息";
+				}else{
+					return "";
+				}
+			}
+			
+			
+		/*	function gridUserComplete(){
+				var ids = $(grid_user).jqGrid('getDataIDs');
+				for (var i = 0; i < ids.length; i++) {
+					var id = ids[i];
+					var rowData = $(grid_user).getRowData(id);
+					
+					
+					
+					
+					
+					var funcBtn = '<div class="action-buttons">';
+					var passBtn = "";
+					var stopBtn = "";
+					
+					if(rowData.status=='0'){
+						 passBtn = '<a class="blue" href="javascript:_edit(&quot;'+ id +'&quot;)"></i>通过</a>';
+						 stopBtn = '<a class="blue" href="javascript:_edit2(&quot;'+ id +'&quot;)"></i>不通过</a>';	
+					}
+					if(rowData.status=='1'){
+						 passBtn = '<a class="blue" href="javascript:_success(&quot;'+ id +'&quot;)"></i>确认提现</a>';
+						 stopBtn = ' ';	
+					}
+					
+					funcBtn += passBtn+stopBtn + '</div>';
+	         		$(grid_user).setRowData(id, {func: funcBtn});
+	      		}
+			}
+			*/
+			
+			
+			function _detail(id){
+				
+				
+				
+					
+							
+					$("#form_title").html('查看公告详情');
+					$("#msgspan").text(''); 
+					
+					var model = $(grid_user).getRowData(id); 
+					
+					
+					//editor-trigger
+					$("#Title").val(model.title);
+					$("#createTime").val(model.createTime);
+					$("#editor-trigger").html(model.detail);
+					
+					
+					
+					$.show("edit_user");
+					
+			
+			
+			}
+			
+			
+			function _search(){
+				var uid = $("#uid").val().trim();
+				var title = $("#title").val().trim();
+				var status = $("#status").val().trim();
+				
+				if($("#uid").val()!=null){
+					if($("#uid").val().trim().length>32){
+						alert("uid最多只有输入32个字符");
+						$("#uid").val("");
+						return;
+					}
+				}
+				if($("#title").val()!=null){
+					if($("#title").val().trim().length>32){
+						alert("标题最多只有输入32个字符");
+						$("#title").val("");
+						return;
+					}	
+				}
+				
+				
+				
+				
+				if($("#datestart").val()!=""){
+					var datestart =new Date($("#datestart").val().trim()).Format("yyyy-MM-dd hh:mm:ss");
+					
+				}
+				if($("#dateend").val()!=""){
+					var dateend =new Date($("#dateend").val().trim()).Format1("yyyy-MM-dd hh:mm:ss");
+				}
+			
+				//var datestart = $("#datestart").val().trim();
+				//var dateend =  $("#dateend").val().trim();
+				//alert(JSON.stringify(datestart+":"+dateend));
+				//$.setPostData(grid_user, {uid: uid, phone: mobile, status: status, fromTime: datestart,endTime:dateend});
+				$.setPostData(grid_user,{userId:uid,type:status,title:title,fromTime: datestart,stopTime:dateend});
+			    $.refresh(grid_user);
+			}
+			
+			function _edit(id){
+				var person = {
+					id:id
+				}
+				
+				$.ajax({
+						type:"get",
+						url:$base_path+"manage/notice/delete", 
+						data: person,
+						beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		                },
+						success:function(res){ 
+							if(res.code==200){
+								alert("删除成功");
+								$.refresh(grid_user);
+							}else if(res.code==1403){
+								overTime();
+							}else{
+								//alert(res.msg);
+							}
+						}, 
+						error:function(res){ 
+							alert("服务器跑丢了......");
+						} 
+						
+				});					
+			}
+			
+			function _edit2(id){
+				var person = {
+					status:3,
+					id:id
+				}
+				
+				$.ajax({
+						type:"get",
+						url:$base_path+"manage/exchange/check", 
+						data: person,
+						beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		                },
+						success:function(res){ 
+							if(res.code==200){
+								alert("修改成功");
+								$.refresh(grid_user);
+							}else if(res.code==1403){
+								overTime();
+							}else{
+								//alert(res.msg);
+							}
+						}, 
+						error:function(res){ 
+							alert("服务器跑丢了......");
+						} 
+						
+				});	
+				
+				
+				
+				
+			}
+			
+			function _success(id){
+				
+				var tishi="确认是否提现通过？";
+				if(confirm(tishi)){
+					
+					var person = {
+						exchangeId:id
+					}
+					
+					
+					$.ajax({
+						type:"post",
+						url:$base_path+"manage/exchange/extMoney", 
+						data: person,
+						beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		                },
+						success:function(res){ 
+							if(res.code==200){
+								alert("提现成功");
+								$.refresh(grid_user);
+							}else if(res.code==1403){
+								overTime();
+							}else{
+								//alert(res.msg);
+							}
+						}, 
+						error:function(res){ 
+							alert("服务器跑丢了......");
+						} 
+						
+					});	
+					
+					
+					
+					
+				}
+			}
+			
+			
+			
+			function _del(){
+				var ids = $(grid_user).getGridParam('selarrrow');
+				if($('#div_dialog').html() != ''){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'ManagerUser/delSysManUser',
+				        data: 'delIds=' + ids + '&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==0){
+								$.refresh(grid_user);
+								$.closeDelDailog();
+					          	alert('删除成功！');
+					       	}else{					       		
+								//alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';
+					       	}
+				        }
+				    });
+			   }
+			}
+			
+			
+			
+			
+			
+			
+			/*function _select(id){
+				$.ajax({
+			        type: 'POST',
+			        async: false,
+			        url: $base_path + 'mUser_managerController/getConnectionByUser',
+			        data: 'token=' + token + '&id=' + id,
+			        success: function(data) {
+			        	if(data != null){
+			        		mUsers=eval(data.result.rows);
+			        	}else{
+			        		alert("查询人脉关系失败");
+			        		//$.refresh(grid_user);
+			        	}
+			        }
+			    });
+			    
+			    if(mUsers != null){
+			    	//alert(mUsers[0].id1);
+			    	if(mUsers[0].id1 !=null){
+			    		$("#id1").val(mUsers[0].id1);
+			        	$("#nickName1").val(mUsers[0].nickName1);
+			    	}else{
+			    		$("#id1").val("");
+			        	$("#nickName1").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id2 !=null){
+			    		$("#id2").val(mUsers[0].id2);
+			        	$("#nickName2").val(mUsers[0].nickName2);
+			    	}else{
+			    		$("#id2").val("");
+			        	$("#nickName2").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id3 !=null){
+			    		$("#id3").val(mUsers[0].id3);
+			        	$("#nickName3").val(mUsers[0].nickName3);
+			    	}else{
+			    		$("#id3").val("");
+			        	$("#nickName3").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id4 !=null){
+			    		$("#id4").val(mUsers[0].id4);
+			        	$("#nickName4").val(mUsers[0].nickName4);
+			    	}else{
+			    		$("#id4").val("");
+			        	$("#nickName4").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id5 !=null){
+			    		$("#id5").val(mUsers[0].id5);
+			        	$("#nickName5").val(mUsers[0].nickName5);
+			    	}else{
+			    		$("#id5").val("");
+			        	$("#nickName5").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id6 !=null){
+			    		$("#id6").val(mUsers[0].id6);
+			        	$("#nickName6").val(mUsers[0].nickName6);
+			    	}else{
+			    		$("#id6").val("");
+			        	$("#nickName6").val("");
+			    	}
+			    	
+			    	//显示六度人脉信息框
+			    	$.show("edit_user");
+			    }
+			}*/
+			
+			
+			
+		</script>
+	</head>
+	<body>
+		<div>
+			<table id="grid_user"></table>
+			<div id="grid_pager_user"></div>
+		</div>
+		
+		<!--user筛选工具栏-->
+		<div id="grid_user_tbar" style="display:none;">
+			<div class="action-buttons" style="margin-left: 10px; padding: 5px;">
+				发送人员: <input id="uid" onblur="_search()"/>
+				标题: <input id="title" onblur="_search()"/>
+				状态: <select id="status" onblur="_search()">
+						<option value="">全部</option>
+						<option value="0">系统消息</option>
+						<option value="1">消费消息</option>
+						<option value="2">中拍消息</option>
+						<option value="3">直接购买</option>
+						<option value="4">充值提醒</option>
+						<option value="5">兑换提醒</option>
+						<option value="6">获赠提醒</option>
+						<option value="7">发货通知</option>
+				    </select>
+				日期: <input type="date" id="datestart"  onblur="_search()"/>至<input type="date" id="dateend" onblur="_search()"/>
+				<a class="blue" href="javascript:_search()"><i class="icon-search bigger-130"></i>查询</a>
+			</div>
+		</div>
+		
+		<!-- 六度人脉信息窗口 -->
+		<!-- 编辑商品信息窗口 -->
+		<form id="edit_user" class="grid_from checkform" style="width: 800px;">
+			<div class="widget-header">
+				<h4 id="form_title">商品信息</h4>
+				<span class="widget-toolbar">
+					<a href="#" data-action="close" onclick="closeForm('edit_user')">
+						<i class="icon-remove"></i>
+					</a>    
+				</span>
+			</div>
+			<div class="form_content">
+				<input type="hidden" id="id" name="id"/>
+				<div class="form_content_table">
+					<span id="msgspan" style="color:red;"></span>
+					<table>
+						
+						<tr>
+							<td style="width: 100px;">标题</td>
+							<td><input type="text" id="Title" name="Title" placeholder="标题" datatype="s1-18" nullmsg="请输入标题" errormsg="标题有误" /></td>
+						</tr>
+						
+						<tr>
+							<td>时间</td>
+							<td><input type="text" id="createTime" name="createTime" placeholder="时间" datatype="s1-18" nullmsg="请输入时间" errormsg="时间有误" /></td>
+						</tr>
+						
+						<tr>
+							<td>商品介绍</td>
+							
+							<td >
+								 <div id="editor-container" class="container" >
+							        <div id="editor-trigger"><p>请输入内容</p></div>
+							        <!-- <textarea id="editor-trigger" style="display:none;">
+							            <p>请输入内容...</p>
+							        </textarea> -->
+							    </div>
+							
+							</td>
+						</tr>
+						
+						
+						
+						
+					</table>
+					
+					
+					
+				</div>
+				<div>
+					<!--<button class="btn btn-info button-left" type="submit">
+						<i class="icon-ok bigger-110"></i>
+						提交
+					</button>
+					<button class="btn button-right" type="button" onclick="resetForm()">
+						<i class="icon-undo bigger-110"></i>
+						重置
+					</button>-->
+				</div>
+			</div>
+		</form>
+		
+		<div id="div_dialog"></div>
+		<div id="hidebg"></div>
+	</body>
+	<script type="text/javascript">
+        // 阻止输出log
+        // wangEditor.config.printLog = false;
+
+        var editor = new wangEditor('editor-trigger');
+
+        // 上传图片
+        editor.config.uploadImgUrl = '/upload';
+        editor.config.uploadParams = {
+            // token1: 'abcde',
+            // token2: '12345'
+        };
+        editor.config.uploadHeaders = {
+            // 'Accept' : 'text/x-json'
+        }
+        // editor.config.uploadImgFileName = 'myFileName';
+
+        // 隐藏网络图片
+        // editor.config.hideLinkImg = true;
+
+        // 表情显示项
+        editor.config.emotionsShow = 'value';
+        editor.config.emotions = {
+            'default': {
+                title: '默认',
+                data: './emotions.data'
+            },
+            'weibo': {
+                title: '微博表情',
+                data: [
+                    {
+                        icon: 'http://img.t.sinajs.cn/t35/style/images/common/face/ext/normal/7a/shenshou_thumb.gif',
+                        value: '[草泥马]'    
+                    },
+                    {
+                        icon: 'http://img.t.sinajs.cn/t35/style/images/common/face/ext/normal/60/horse2_thumb.gif',
+                        value: '[神马]'    
+                    },
+                    {
+                        icon: 'http://img.t.sinajs.cn/t35/style/images/common/face/ext/normal/bc/fuyun_thumb.gif',
+                        value: '[浮云]'    
+                    },
+                    {
+                        icon: 'http://img.t.sinajs.cn/t35/style/images/common/face/ext/normal/c9/geili_thumb.gif',
+                        value: '[给力]'    
+                    },
+                    {
+                        icon: 'http://img.t.sinajs.cn/t35/style/images/common/face/ext/normal/f2/wg_thumb.gif',
+                        value: '[围观]'    
+                    },
+                    {
+                        icon: 'http://img.t.sinajs.cn/t35/style/images/common/face/ext/normal/70/vw_thumb.gif',
+                        value: '[威武]'
+                    }
+                ]
+            }
+        };
+
+        // 插入代码时的默认语言
+        // editor.config.codeDefaultLang = 'html'
+
+        // 只粘贴纯文本
+        editor.config.pasteText = true;
+
+        // 跨域上传
+           editor.config.uploadImgUrl = 'http://localhost:8020/upload';
+
+        // 第三方上传
+        // editor.config.customUpload = true;
+
+        // 普通菜单配置
+        // editor.config.menus = [
+        //     'img',
+        //     'insertcode',
+        //     'eraser',
+        //     'fullscreen'
+        // ];
+        // 只排除某几个菜单（兼容IE低版本，不支持ES5的浏览器），支持ES5的浏览器可直接用 [].map 方法
+        // editor.config.menus = $.map(wangEditor.config.menus, function(item, key) {
+        //     if (item === 'insertcode') {
+        //         return null;
+        //     }
+        //     if (item === 'fullscreen') {
+        //         return null;
+        //     }
+        //     return item;
+        // });
+
+        // onchange 事件
+        editor.onchange = function () {
+            //console.log(this.$txt.html());
+        };
+
+        // 取消过滤js
+        // editor.config.jsFilter = false;
+
+        // 取消粘贴过来
+        // editor.config.pasteFilter = false;
+
+        // 设置 z-index
+        // editor.config.zindex = 20000;
+
+        // 语言
+        // editor.config.lang = wangEditor.langs['en'];
+
+        // 自定义菜单UI
+        // editor.UI.menus.bold = {
+        //     normal: '<button style="font-size:20px; margin-top:5px;">B</button>',
+        //     selected: '.selected'
+        // };
+        // editor.UI.menus.italic = {
+        //     normal: '<button style="font-size:20px; margin-top:5px;">I</button>',
+        //     selected: '<button style="font-size:20px; margin-top:5px;"><i>I</i></button>'
+        // };
+        editor.create();
+		
+		/*$("#test").click(function(){
+				 alert($("#editor-trigger").html()); 
+		
+		})*/
+		
+		
+
+  	
+	
+	  		
+	  		
+	 
+			
+	  	
+		
+		
+		
+		
+		
+    </script>
+</html>

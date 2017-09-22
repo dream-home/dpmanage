@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>商品审核</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		<!-- 导入选项卡样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_tab.css" />
+
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js -->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--验证js-->
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<!--
+        	引进路径
+        -->
+        <script type="text/javascript" src="/enjoyRedEnvelopeManager/js/basepath.js" ></script>
+        <!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+		<script>
+			$(function(){
+				
+				var businessId = sessionStorage.getItem("businessId");
+				//alert(businessId);
+				
+				var person = {
+					id:businessId
+				}
+				
+				
+				
+				$.ajax({
+					type:"get",
+					url:$base_path+"manage/storeManage/list", 
+					async:true,
+					data:person,
+					beforeSend: function(request) {
+                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+               		 },
+					
+					success:function(data){
+						if(data.code ==200){
+								$("#businessName").html(data.result.rows[0].storeName);
+								$("#phone").html(data.result.rows[0].phone);
+								$("#addr").html(data.result.rows[0].addr);
+								$("#userName").html(data.result.rows[0].userName);
+								$("#inviteCode").html(data.result.rows[0].inviteCode);
+								$("#businessScope").html(data.result.rows[0].businessScope);
+								$("#detail").html(data.result.rows[0].detail);
+								$("#image").prop("src",data.result.rows[0].icon);		
+						}
+					
+						
+						
+					}, 
+					error:function(data){ 
+					} 
+					
+				});
+				
+				$("#pass").click(function(){
+					var person = {
+						id:businessId,
+						status:1
+					}
+					$.ajax({
+						type:"get",
+						url:$base_path+"manage/storeManage/check", 
+						async:true,
+						data:person,
+						beforeSend: function(request) {
+	                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+	               		 },
+						
+						success:function(data){
+							if(data.code==200){
+								alert("审核通过");
+								//$.refresh(grid_user);
+								parent.location.href= "/enjoyRedEnvelopeManager/html/union/businessmanage.html";
+							}
+						}, 
+						error:function(data){ 
+						} 
+						
+					});
+				})
+				
+				
+				$("#unpass").click(function(){
+					var person = {
+						id:businessId,
+						status:2
+					}
+					$.ajax({
+						type:"get",
+						url:$base_path+"manage/storeManage/check", 
+						async:true,
+						data:person,
+						beforeSend: function(request) {
+	                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+	               		 },
+						
+						success:function(data){
+							if(data.code==200){
+								alert("审核不通过");		
+								parent.location.href= "/enjoyRedEnvelopeManager/html/union/businessmanage.html";
+							}
+						}, 
+						error:function(data){ 
+						} 
+						
+					});
+				})
+				
+				
+				
+				
+				
+				
+			})
+			
+			
+		</script>
+		
+	</head>
+	<body>
+			<table class="table table-striped  table-bordered" style="text-align: center; border: 0px; font-size: 18px; font-weight: bold; color:#707070 ;">
+				<thead>
+					<tr style="height: 50px; ">
+						<th colspan="3" width="80%" style="text-align: center;font-size: 30px;" id="businessName"></th>
+						
+					</tr>
+				</thead>
+				<tbody >
+					
+					<tr>
+						<td rowspan="5" width="360px" height="250px"><img id="image" style="height: 248px; width:360px;"></td>
+						<td width="360px" >真实姓名:</td>
+						<td width="360px" id="userName"></td>
+					</tr>
+					<tr>
+						<td>商家联系方式:</td>
+						<td id="phone">13800138000</td>
+					</tr>
+					<tr>
+						<td>商铺地址:</td>
+						<td id="addr">广东省珠海市唐家湾下村</td>
+					</tr>
+					<tr>
+						<td>商铺邀请码:</td>
+						<td id="inviteCode">FR4564</td>
+					</tr>
+					<tr>
+						<td>经营类别:</td>
+						<td id="businessScope"></td>
+					</tr>
+					<tr>
+						<td colspan="3">
+						<h3 style="text-align: left; color:#707070 ;">商铺介绍：</h3>
+						<textarea style="width: 1050px;height: 170px; margin-left: 0px;" id="detail">
+							
+						</textarea>
+						</td>
+						
+					</tr>
+					<tr>
+						<td>&nbsp;</td>
+						<td><input type="button" class="btn btn-success" id="pass" value="审核通过">&nbsp;&nbsp;&nbsp;&nbsp;<input type="button" class="btn btn-warning" id="unpass" value="审核不通过"></td>
+						<td>&nbsp;</td>
+					</tr>
+					
+				</tbody>
+			</table>
+	</body>
+</html>

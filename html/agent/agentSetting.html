@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>代理提成设置</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		
+		<link rel="stylesheet"  href="/enjoyRedEnvelopeManager/css/inputstyle.css"  />
+		
+		
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js-->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/basepath.js"></script>
+		<!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+		
+		
+		
+		
+		<style>
+			
+			.inputyuan{
+				width: 20%; 
+				height: 3%;
+				margin-top: 0%;
+				margin-bottom: 0%;
+				
+			}
+			
+			.tiship{
+				margin-top: -22px;
+				height: 10px;
+				color:#707070;
+				opacity: 0.8;
+				text-align: center;
+			}
+			
+		</style>
+	</head>
+	<body>
+		<div class="widget-header" style="background:#307ECC ;">
+				<h4 id="form_title" style="color: white;" >代理提成设置</h4>
+		</div>
+		<div>
+			<form class="duanxin"  method="post">
+			<table class="table table-striped  table-bordered" style="text-align: center;  ">
+				<thead>
+					<tr style="height: 20px; ">
+						<th width="20%"><input type="hidden" id="ids"></th>
+						<th width="30%"></th>
+						<th width="10%"></th>
+						<th width="30%"></th>
+						<th width="10%"></th>
+					</tr>
+				</thead>
+				<tbody>
+					
+					<tr>
+						<td>省代理</td>
+						<td>区销售业绩提成比例(%)</td>
+						<td><input id="canshu1" type="text"  class="form-control inputyuan" placeholder="" style="width: 60%;"><p class="tiship">%</p></td>
+						<td>区商家EP赠送提成比例(%)<input id="canshuId" type="hidden"></td>
+						<td><input id="canshu2" type="text"  class="form-control inputyuan" placeholder=""  style="width: 60%;"/><p class="tiship">%</p></td>
+					</tr>
+					
+					<tr>
+						<td>市代理</td>
+						<td>区销售业绩提成比例(%)</td>
+						<td><input id="canshu3" type="text"  class="form-control inputyuan" placeholder="" style="width: 60%;"><p class="tiship">%</p></td>
+						<td>区商家EP赠送提成比例(%)<input id="canshuId" type="hidden"></td>
+						<td><input id="canshu4" type="text"  class="form-control inputyuan" placeholder=""  style="width: 60%;"/><p class="tiship">%</p></td>
+					</tr>
+					<tr>
+						<td>区/县代理</td>
+						<td>区销售业绩提成比例(%)</td>
+						<td><input id="canshu5" type="text"  class="form-control inputyuan" placeholder="" style="width: 60%;"><p class="tiship">%</p></td>
+						<td>区商家EP赠送提成比例(%)<input id="canshuId" type="hidden"></td>
+						<td><input id="canshu6" type="text"  class="form-control inputyuan" placeholder=""  style="width: 60%;"/><p class="tiship">%</p></td>
+					</tr>
+					
+					
+					<tr>
+						<td colspan="5"><input id="canshusave" type="button"  value="保存" style="border-radius: 5px; background-color:#00E573 ; border: 0px; height: 40px; width: 100px; font-size: 20px; color: white;"></td>
+					</tr>
+					<tr>
+						<td colspan="5" style="color: red; text-align: left;">
+							1.区销售业绩提成比例：必填，按百分比，精确保留两位小数；<br/>
+							2.区商家EP赠送提成比例：必填，按百分比，精确保留两位小数；<br/>
+							3.代理地区商家销售业绩：所代理地区商家商品销售总额*百分比；<br/>
+							4.代理地区商家ep销售业绩：所代理地区商家ep赠送总额*百分比；<br/>
+							5.代理开通的第二天开始算起， 满一个月结算一次代理业绩；
+						</td>
+					</tr>
+					
+				</tbody>
+			</table>
+			</form>
+			<br/><br/>
+
+		</div>
+		
+	</body>
+	
+	<script>
+		
+		$(function(){
+			
+			
+			
+			
+			
+			
+			
+			$.ajax({
+					type:"get",
+					url:$base_path+"manage/sys/detail",
+					beforeSend: function(request) {
+                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+               		},
+               		
+					success:function(data){
+						if(data.code==200){
+							$("#canshu1").val(Number(data.result.provinceBalanceScale*100).toFixed(2));
+							$("#canshu2").val(Number(data.result.provinceEPScale*100).toFixed(2));
+							$("#canshu3").val(Number(data.result.cityBalanceScale*100).toFixed(2));
+							$("#canshu4").val(Number(data.result.cityEPScale*100).toFixed(2));
+							$("#canshu5").val(Number(data.result.countryBalanceScale*100).toFixed(2));
+							$("#canshu6").val(Number(data.result.countryEPScale*100).toFixed(2));
+							$("#ids").val(data.result.id);
+							
+							
+
+						}else if(data.code==1403){
+							overTime();
+						}else{
+							//alert(data.msg);
+						}
+
+					}, 
+					error:function(data){ 
+						alert("服务器跑丢了......");
+					} 
+					
+			});	
+			
+			
+			
+			
+			
+			
+			
+			$("#canshusave").click(function(){
+				
+				if($("#canshu1").val().trim()>=0 && $("#canshu2").val().trim()>=0 && $("#canshu3").val().trim()>=0 && $("#canshu4").val().trim()>=0 && $("#canshu5").val().trim()>=0 && $("#canshu6").val().trim()>=0){
+						
+						
+						var person = {
+							provinceBalanceScale:parseFloat($("#canshu1").val())*0.01,
+							provinceEPScale:parseFloat($("#canshu2").val())*0.01,
+							cityBalanceScale:parseFloat($("#canshu3").val())*0.01,
+							cityEPScale:parseFloat($("#canshu4").val())*0.01,
+							countryBalanceScale:parseFloat($("#canshu5").val())*0.01,
+							countryEPScale:parseFloat($("#canshu6").val())*0.01,
+							id:$("#ids").val()
+						}
+						
+					
+						
+					
+					
+						$.ajax({
+								type:"get",
+								url:$base_path+"manage/sys/update", 
+								async:true,
+								data:person,
+								beforeSend: function(request){
+			                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+			               		 },
+								
+								success:function(data){
+									alert("修改成功");
+								
+								}, 
+								error:function(data){ 
+								} 
+								
+						});
+					
+					
+					
+					
+					
+				}else{
+					alert("参数设置有误,请检查参数");
+				}
+				
+				
+			})
+			
+			
+			
+			
+		})
+	</script>
+
+	
+	
+</html>
+

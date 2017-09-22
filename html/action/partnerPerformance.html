@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>系统管理</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		
+		<link rel="stylesheet"  href="/enjoyRedEnvelopeManager/css/inputstyle.css"  />
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_tab.css" />
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/validform.css" />
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/validform1.css" />
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js-->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/basepath.js"></script>
+		<!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+		<!--验证js-->
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/md5.js"></script>
+		<style>
+			
+			.inputyuan{
+				width: 20%; 
+				height: 3%;
+				margin-top: -1%;
+				margin-bottom: -1%;
+				
+			}
+			
+			.tiship{
+				margin-top: -22px;
+				height: 10px;
+				color:#707070;
+				opacity: 0.8;
+				text-align: center;
+				float:right;
+				width:70%;
+			}
+			
+		</style>
+		<script>
+			var token =sessionStorage.getItem("token");
+			var grid_partner = "#grid_partner";
+			var grid_pager_partner = "#grid_pager_partner";
+			
+			var colNames_partner = ['ID','uid','姓名','手机号','业绩统计','scale', '业绩提成','EP业绩统计','EPScale','EP业绩提成','业绩合计','日期','状态'];
+			var fd_partner = [
+				{name:'id',  width:60,hidden:true},
+				{name:'uid', index:'uid', width:30,},
+				{name:'userName', index:'userName', width:40},
+				{name:'phone', index:'phone', width:50},
+				{name:'balance', index:'balance', width:30},
+				{name:'balanceScale', index:'balanceScale',width:30,hidden:true},
+				{name:'balanceScale', index:'balanceScale',width:30,formatter:balanceScaleVal},
+				{name:'ep', index:'ep',width:30},
+				{name:'epscale', index:'epscale',width:30,hidden:true},
+				{name:'epscale', index:'epscale',width:30,formatter:EPScaleVal},
+				{name:'totalAmount', index:'totalAmount',width:30},
+				{name:'createTime', index:'createTime',width:30,formatter:timeVal},
+				{name:'status', index:'status',width:30,formatter:statusVal},
+			];
+			$(function(){
+				$.autoByWindow(grid_partner);
+				$.jqGrid(grid_partner, $base_path + 'manage/partnerBill/list', false, colNames_partner, fd_partner, grid_pager_partner, "合伙人业绩", gridPartnerComplete, false,true,15);
+				$("#t_grid_partner").append($("#grid_partner_tbar").html());
+				getYearSelect();
+			});
+			function gridPartnerComplete(){
+				var ids = $(grid_partner).jqGrid('getDataIDs');
+				for (var i = 0; i < ids.length; i++) {
+					var id = ids[i];
+					var rowData = $(grid_partner).getRowData(id);
+	      		}
+			}
+			function balanceScaleVal(v,o,row){
+				return (row.balance*row.balanceScale).toFixed(2);
+			}
+			function EPScaleVal(v,o,row){
+				return (row.ep*row.epscale).toFixed(2);
+			}
+			function statusVal(v,o,row){
+				if(row.status==1){
+					return "已发放";
+				}else if(row.status==2){
+					return "已取消";
+				}else if(row.status==3){
+					return "未满足结算日期";
+				}
+			}
+			function timeVal(v,o,row){
+				if(null!=row.createTime&&""!=row.createTime){
+					return row.createTime.split(" ")[0];
+				}else{
+					return "";
+				}
+			}
+			function getYearSelect(){
+				var mydate = new Date();
+				var month=(mydate.getMonth()+1);
+				for(var nowMonth=1;nowMonth<=12;nowMonth++){
+					$("#MounthSelect").html($("#MounthSelect").html()+"<option value='"+(nowMonth<10?"0"+nowMonth:nowMonth)+"' "+(nowMonth==month?"selected='selected'":"")+">"+nowMonth+"月</option>");
+				}
+			}
+			function search(){
+				var mydate = new Date();
+				var search=$("#search").val();
+				var year=mydate.getFullYear();
+				var month=$("#MounthSelect").val();
+				if(month>(mydate.getMonth()+1)){
+					year=year-1;
+				}
+				$.setPostData(grid_partner,{'search':search,'year':year,'month':month});
+			    $.refresh(grid_partner);
+			}
+			function extPartnerBill(){
+				var mydate = new Date();
+				var year=mydate.getFullYear();
+				var month=$("#MounthSelect").val();
+				if(month>(mydate.getMonth()+1)){
+					year=year-1;
+				}
+				location.href=$base_path + 'manage/partnerBill/extPartnerBill?year='+year+'&month='+month+'&token=' + token;
+			}
+		</script>
+	</head>
+	<body>
+		<div>
+			<table id="grid_partner"></table>
+			<div id="grid_pager_partner"></div>
+		</div>
+		<!--user筛选工具栏-->
+				<div id="grid_partner_tbar" style="display:none;">
+					<div class="action-buttons" style="margin-left: 10px; padding: 5px;">
+						UID/手机号/姓名: <input id="search" onblur=""/>
+						月份：
+							<select id="MounthSelect" style="width:120px" onchange="search()">
+								<option value="">全部</option>
+							</select>
+						<a class="blue" href="javascript:search()"><i class="icon-search bigger-130"></i>查询</a>
+						&nbsp;&nbsp;
+						<a class="blue" href="javascript:extPartnerBill()"><i class="icon-search bigger-130"></i>下载业绩报表</a>
+					</div>
+				</div>		
+	</body>
+	
+	
+	
+</html>

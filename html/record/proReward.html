@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>商品中奖购买记录</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js-->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/basepath.js"></script>
+		<!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+		<!--验证js-->
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/md5.js"></script>
+		
+		<script>
+			var token = sessionStorage.getItem("token");
+			var grid_user = "#grid_user";
+			var grid_pager_user = "#grid_pager_user";
+			var mUsers=null;
+			
+			$(function() {
+				var date = new Date();
+				var now = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+((date.getDate())<=9?("0"+date.getDate()):date.getDate()); 
+				
+				/*var topData = {
+					orderType:0,
+					token:sessionStorage.getItem("token")
+				}*/
+				
+				
+				$.autoByWindow(grid_user);
+				
+				/*4不能直接使用*/
+				var person1 = {
+					status:4,
+					orderType:0,
+					saleSwitch:1,
+					token:sessionStorage.getItem("token")
+					
+				}
+				
+				
+				
+				$.jqGrid(grid_user, $base_path + 'manage/scoreManage/winProducts', person1, colNames_user, fd_user, grid_pager_user, "商品中奖购买记录", gridUserComplete, true,true,15);
+				$("#t_grid_user").append($("#grid_user_tbar").html());
+				
+				
+				/*	$("#starttime").val(now);		
+					$("#endtime").val(now);
+				*/
+				
+				$("#nickName").click(function(){
+					location.href = "/enjoyRedEnvelopeManager/html/action/userxiugai.html";
+					
+				})
+				
+			});
+			
+			var colNames_user = ['记录编号','订单编号','购买账户','手机号','商铺名称','中奖期数','商品名称', '支付积分','购买时间'];
+			var fd_user = [
+				{name:'id', index:'id', width:60, key: true,hidden:true},
+				{name:'orderNo', index:'orderNo', width:100},
+				{name:'userName', index:'userName',width:100,formatter:getstatus},
+				{name:'phone', index:'phone',width:100,hidden:true},
+				{name:'storeName', index:'storeName', width:100,formatter:getStore},
+				{name:'issueNo', index:'issueNo', width:100,formatter:getissueNo,hidden:true},
+				{name:'goodsName', index:'goodsName', width:100},
+				{name:'needScore', index:'needScore',width:100,formatter:getNeedScore},
+				{name:'updateTime', index:'updateTime', width:100},
+			];
+			
+			function getissueNo(v){
+				return "第"+v+"期";
+			}
+			
+			function getstatus(v,o,row){
+				
+				if(row.userName == null && row.phone == null){
+					return row.uid;
+				}
+				
+				if(row.userName == null){
+					row.userName = "";
+				}
+				if(row.phone == null){
+					row.phone = "";
+				}
+				return row.userName+'('+row.phone+')';
+				
+				
+			}
+			
+			function getStore(v,o,row){
+				if(v==null){
+					return "平台商品";
+				}else{
+					return v;
+				}
+			}
+			
+			
+			
+			
+			function  getNeedScore(v){
+				
+				return v.toFixed(2);
+			}
+			
+			
+			
+			function getIsDisable(v,o,row){
+				//alert(row.isForbidden);
+				if(row.isForbidden == '1'){
+					return "是";
+				}else if(row.isForbidden == '0'){
+					return "否";
+				}
+					
+			}
+			
+			function gridUserComplete(){
+				var ids = $(grid_user).jqGrid('getDataIDs');
+				for (var i = 0; i < ids.length; i++) {
+					var id = ids[i];
+					var rowData = $(grid_user).getRowData(id);
+					var funcBtn = '<div class="action-buttons">';
+					//var bianjiBtn = '<a class="blue" href="javascript:_selectById('+ id +')">详情</a>';
+					//var shanchuBtn = '<a class="blue" href="javascript:_del('+ id +')">删除</a>';
+					funcBtn += '</div>';
+	         		$(grid_user).setRowData(id, {func: funcBtn});
+	      		}
+			}
+			
+			function _search(){
+				//var uid = $("#uid").val().trim();
+				var phone = $("#phone").val().trim();
+				var goodsName = $("#goodsName").val().trim();
+				
+				
+				
+				
+				
+				if(goodsName.trim().length>32){
+					alert("商品名称最多只有输入32个字符");
+					$("#goodsName").val("");
+					return;
+				}
+				if(phone.trim().length>32){
+					alert("会员手机号最多只有输入32个字符");
+					$("#phone").val("");
+					return;
+				}
+				
+				
+				if($("#phone").val().trim().length>=11){
+					var person = {phone:phone,goodsName:goodsName};	
+				}else{
+					var person = {uid:phone,goodsName:goodsName};
+				}
+				
+				
+				
+				
+				var datestart ="";
+				var dateend ="";
+				/*if($("#datestart").val()!=""){
+					var datestart =new Date($("#datestart").val().trim()).Format("yyyy-MM-dd hh:mm:ss");
+					
+				}
+				if($("#dateend").val()!=""){
+					var dateend =new Date($("#dateend").val().trim()).Format1("yyyy-MM-dd hh:mm:ss");
+				}
+				*/
+				//$.setPostData(grid_user,{uid:uid,phone:phone,status:status,fromTime:datestart,stopTime:dateend});
+				$.setPostData(grid_user,person);
+			    $.refresh(grid_user);
+			}
+			
+			
+			function _del(){
+				var ids = $(grid_user).getGridParam('selarrrow');
+				if($('#div_dialog').html() != ''){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'ManagerUser/delSysManUser',
+				        data: 'delIds=' + ids + '&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==0){
+								$.refresh(grid_user);
+								$.closeDelDailog();
+					          	alert('删除成功！');
+					       	}else{					       		
+								alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';
+					       	}
+				        }
+				    });
+			   }
+			}
+			
+			
+			function _selectById(id){
+				//获取当前选中行
+				
+				/*var rowData = $(grid_cususer).getRowData(id);
+				usUserId = id;
+				shengId=rowData.usShengId;
+				shiId=rowData.usShiId;*/
+				
+				$("#ifm").html('<iframe name="frm_cusInfo" scrolling="yes" style="width:1100px;" height="630px" frameborder="0" src="userxiangqing.html"></iframe>');
+				//$.setPostData(grid_, {usUid:uid});
+				$.show("edit_user");
+			}
+			
+			
+			
+			
+			
+			
+			
+			function _select(id){
+				
+				$.ajax({
+			        type: 'POST',
+			        async: false,
+			        url: $base_path + 'mUser_managerController/getConnectionByUser',
+			        data: 'token=' + token + '&id=' + id,
+			        success: function(data) {
+			        	if(data != null){
+			        		mUsers=eval(data.result.rows);
+			        	}else{
+			        		alert("查询人脉关系失败");
+			        		//$.refresh(grid_user);
+			        	}
+			        }
+			    });
+			    
+			    if(mUsers != null){
+			    	//alert(mUsers[0].id1);
+			    	if(mUsers[0].id1 !=null){
+			    		$("#id1").val(mUsers[0].id1);
+			        	$("#nickName1").val(mUsers[0].nickName1);
+			    	}else{
+			    		$("#id1").val("");
+			        	$("#nickName1").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id2 !=null){
+			    		$("#id2").val(mUsers[0].id2);
+			        	$("#nickName2").val(mUsers[0].nickName2);
+			    	}else{
+			    		$("#id2").val("");
+			        	$("#nickName2").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id3 !=null){
+			    		$("#id3").val(mUsers[0].id3);
+			        	$("#nickName3").val(mUsers[0].nickName3);
+			    	}else{
+			    		$("#id3").val("");
+			        	$("#nickName3").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id4 !=null){
+			    		$("#id4").val(mUsers[0].id4);
+			        	$("#nickName4").val(mUsers[0].nickName4);
+			    	}else{
+			    		$("#id4").val("");
+			        	$("#nickName4").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id5 !=null){
+			    		$("#id5").val(mUsers[0].id5);
+			        	$("#nickName5").val(mUsers[0].nickName5);
+			    	}else{
+			    		$("#id5").val("");
+			        	$("#nickName5").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id6 !=null){
+			    		$("#id6").val(mUsers[0].id6);
+			        	$("#nickName6").val(mUsers[0].nickName6);
+			    	}else{
+			    		$("#id6").val("");
+			        	$("#nickName6").val("");
+			    	}
+			    	
+			    	//显示六度人脉信息框
+			    	$.show("edit_user");
+			    }
+			}
+		</script>
+	</head>
+	<body>
+		<div>
+			<table id="grid_user"></table>
+			<div id="grid_pager_user"></div>
+		</div>
+		
+		<!--user筛选工具栏-->
+		<div id="grid_user_tbar" style="display:none;">
+			<div class="action-buttons" style="margin-left: 10px; padding: 5px;">
+				
+				会员手机号: <input id="phone" onblur="_search()" placeholder="请输入手机号"/>
+				商品名称: <input id="goodsName" onblur="_search()" placeholder="请输入商品名称"/>
+			
+				竞拍日期: <input id="datestart" type="date" onblur="_search()"/>至<input type="date" id="dateend" onblur="_search()"/>
+				<a class="blue" href="javascript:_search()"><i class="icon-search bigger-130"></i>查询</a>
+			</div>
+		</div>
+		
+		<!--点击根据id查询会员的基本信息-->
+		<div id="edit_user" class="grid_from" >
+			<div class="widget-header" >
+				<h4>显示会员信息</h4>
+				<span class="widget-toolbar">
+					<a href="#" data-action="close" onclick="closeForm('edit_user')">
+						<i class="icon-remove"></i>
+					</a>
+				</span>
+			</div>
+			<div id="ifm"></div>
+		</div>
+		
+		<div id="div_dialog"></div>
+		<div id="hidebg"></div>
+	</body>
+	
+</html>

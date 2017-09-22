@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>扫码支付订单</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js-->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/basepath.js"></script>
+		<!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+		<!--验证js-->
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/md5.js"></script>
+		
+		<script>
+			var token = sessionStorage.getItem("token");
+			var grid_user = "#grid_user";
+			var grid_pager_user = "#grid_pager_user";
+			var mUsers=null;
+			
+			$(function() {
+				var date = new Date();
+				var now = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+((date.getDate())<=9?("0"+date.getDate()):date.getDate());
+				
+				$.autoByWindow(grid_user);
+				$.jqGrid(grid_user, $base_path + 'manage/scoreManage/addScoreRecords2', false,colNames_user, fd_user, grid_pager_user, "扫码支付订单", gridUserComplete, true,true,15);
+				$("#t_grid_user").append($("#grid_user_tbar").html());
+				
+				
+				/*$("#datestart").val(now);		
+				$("#dateend").val(now);*/
+				
+				
+			});
+			
+			var colNames_user = ['记录编号','交易订单','uid','购买会员','phone','积分数量', '支付方式','商家用户id','商家赠送ep','一级分销','二级分销','三级分销','生成时间','修改时间','状态','详情'];
+			var fd_user = [
+				{name:'id', index:'id', width:60, key: true,hidden:true},
+				{name:'orderNo', index:'orderNo', width:100},
+				{name:'uid', index:'uid',width:60},
+				{name:'userName', index:'userName',width:100,formatter:getstatus},
+				{name:'phone', index:'phone',width:100,hidden:true},
+				{name:'score', index:'score', width:50},
+				{name:'source', index:'source', width:100,formatter:getfashion},
+				{name:'storeUserId', index:'storeUserId', width:180},
+				{name:'businessSendEp', index:'businessSendEp', width:50},
+				{name:'firstReferrerScale', index:'firstReferrerScale', width:40},
+				{name:'secondReferrerScale', index:'secondReferrerScale', width:40},
+				{name:'thirdReferrerScale', index:'thirdReferrerScale', width:40},
+				
+				{name:'createTime', index:'createTime',width:100},
+				{name:'updateTime', index:'updateTime',width:100},
+				
+				{name:'status', index:'status', width:100,formatter:getStatus},
+				{name:'func',index:'func', width:40, align: 'center'}
+			];
+			
+			function getstatus(v,o,row){
+				
+				if(row.userName==null && row.phone==null ){
+					return row.uid;
+				}
+				
+				
+				
+				if(row.userName == null){
+					row.userName = "";
+				}
+				if(row.phone == null){
+					row.phone = "";
+				}
+				
+				
+				
+				return row.userName+'('+row.phone+')';
+				
+				
+			}
+			
+			
+			
+			function getfashion(v){
+				if(v=='0'){
+					return "网银";
+				}else if(v=='1'){
+					return "支付宝";
+				}else if(v=='2'){
+					return "微信";
+				}else if(v=='3'){
+					return "余额支付";
+				}else if(v=='99'||v=='4'){
+					return "后台充值";
+				}else if(v=='11'){
+					return "支付宝扫码支付";
+				}else if(v=='12'){
+					return "支付宝分享支付";
+				}else if(v=='13'){
+					return "直接购买之支付宝支付";
+				}else if(v=='14'){
+					return "商家二维码APP支付宝支";
+				}else if(v=='15'){
+					return "商家二维码网页支付宝支付";
+				}else if(v=='16'){
+					return "支付宝加入合伙人支付";
+				}else if(v=='21'){
+					return "微信扫码充值";
+				}else if(v=='22'){
+					return "微信分享支付";
+				}else if(v=='23'){
+					return "直接购买之微信支付";
+				}else if(v=='24'){
+					return "商家二维码APP微信支付";
+				}else if(v=='25'){
+					return "商家二维码网页微信支付";
+				}else if(v=='26'){
+					return "微信加入合伙人支付";
+				}else if(v=='31'){
+					return "余额扫码充值";
+				}else if(v=='32'){
+					return "余额直接购买支付";
+				}else if(v=='33'){
+					return "商家二维码余额支付";
+				}else if(v=='34'){
+					return "余额加入合伙人支付";
+				}else{
+					return "";
+				}
+			}
+			
+			function getStatus(v){
+				if(v=='0'){
+					return "待付款";
+				}else if(v=='1'){
+					return "已付款";
+				}else if(v=='2'){
+					return "充值成功";
+				}else if(v=='3'){
+					return "扫码支付成功";
+				}else{
+					return "";
+				}
+			}
+			
+			
+			
+			
+			
+			function getIsDisable(v,o,row){
+				//alert(row.isForbidden);
+				if(row.isForbidden == '1'){
+					return "是";
+				}else if(row.isForbidden == '0'){
+					return "否";
+				}
+					
+			}
+			
+			function gridUserComplete(){
+				var ids = $(grid_user).jqGrid('getDataIDs');
+				for (var i = 0; i < ids.length; i++) {
+					var id = ids[i];
+					var rowData = $(grid_user).getRowData(id);
+					var funcBtn = '<div class="action-buttons">';
+					var bianjiBtn = '<a class="blue" href="javascript:_select(&quot;'+ rowData.orderNo +'&quot;,&quot;'+rowData.storeUserId+'&quot;)">详情</a>';
+					var shanchuBtn = '<a class="blue" href="javascript:_del('+ id +')">删除</a>';
+					funcBtn += bianjiBtn + '</div>';
+	         		$(grid_user).setRowData(id, {func: funcBtn});
+	      		}
+			}
+			
+			
+			
+			
+			
+			function _select(id,storeUserId){
+				
+					
+					
+					var person = {
+						
+						orderNo:id
+					}
+					
+					
+					$.ajax({
+						type:"get",
+						url:$base_path+"manage/logs/getPaymentDetail",
+						data:person,
+						beforeSend: function(request) {
+	                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+	               	},
+						success:function(data){
+							if(data.code==200){
+								var str = "<tr height='50px'><td width='20%'>订单号</td><td width='20%'>用户id</td><td width='7%'>积分</td><td width='17%'>充值类型</td><td width='17%'>备注</td><td width='7%'>状态</td><td width='35%'>生成时间</td></tr>";
+								for(var i= 0;i<data.result.length;i++){
+									str+= "<tr height='50px'><td>"+data.result[i].orderNo+"</td><td>"+data.result[i].userId+"</td><td>"+data.result[i].score+"</td><td>"+data.result[i].typeName+"</td><td>"+data.result[i].remark+"</td><td>"+data.result[i].status+"</td><td>"+data.result[i].createTime+"</td></tr>";
+								}
+								
+								$("#rechargeDetail").html(str);
+								
+								
+							}else if(data.code==1403){
+								overTime();
+							}else{
+								//alert(data.msg);
+							}
+	
+						}, 
+						error:function(data){ 
+							alert("服务器跑丢了......");
+						} 
+						
+					});
+					
+					
+					var users = {
+						userId:storeUserId
+					}
+					
+					
+					$.ajax({
+						type:"get",
+						url:$base_path+"manage/member/detail",
+						data:users,
+						beforeSend: function(request) {
+	                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+	               	},
+						success:function(data){
+							if(data.code==200){
+							var str = "<tr height='50px'><td width='30%'>商铺用户uid</td><td width='40%'>商铺用户名字</td><td width='30%'>商铺用户手机号码</td>";	
+							str+="<tr height='50px'><td width='30%'>"+data.result.uid+"</td><td width='40%'>"+data.result.userName+"</td><td width='30%'>"+data.result.phone+"</td>";
+							    $("#storeIdDetail").html(str);	
+							}else if(data.code==1403){
+								overTime();
+							}else{
+								//alert(data.msg);
+							}
+	
+						}, 
+						error:function(data){ 
+							alert("服务器跑丢了......");
+						} 
+						
+					});
+					
+					
+					
+					
+					$("#form_title").html('查看订单详情');
+					$("#msgspan").text(''); 
+					
+					var model = $(grid_user).getRowData(id); 
+					$.show("edit_user");
+					
+					
+					
+				
+			}
+			
+			
+			
+			
+			function _search(){
+				//var uid = $("#uid").val().trim()==""?null:$("#uid").val().trim();
+				var mobile = $("#mobile").val().trim();
+				var status = $("#status").val().trim();
+				
+				
+				
+				
+				
+				
+				if($("#datestart").val()!=""){
+					var datestart =new Date($("#datestart").val().trim()).Format("yyyy-MM-dd hh:mm:ss");
+					
+				}
+				if($("#dateend").val()!=""){
+					var dateend =new Date($("#dateend").val().trim()).Format1("yyyy-MM-dd hh:mm:ss");
+				}
+			
+				
+				//alert(JSON.stringify({uid:uid,phone:mobile,status:status}));
+				//var datestart = $("#datestart").val().trim();
+				//var dateend =  $("#dateend").val().trim();
+				//alert(JSON.stringify(datestart+":"+dateend));
+				//$.setPostData(grid_user, {uid: uid, phone: mobile, status: status, fromTime: datestart,endTime:dateend});
+				$.setPostData(grid_user,{phone:mobile,source:status,fromTime:datestart,stopTime:dateend});
+			    $.refresh(grid_user);
+			}
+			
+			function _download(){
+				
+				
+				
+				$.ajax({
+					type:"get",
+					url:$base_path+"manage/scoreManage/addScoreRecords",
+					//data:person,
+					beforeSend: function(request) {
+                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+               		},
+               		
+					success:function(data){
+						if(data.code==200){
+							
+							location.href=$base_path+"manage/scoreManage/extScoreRecords?pageSize="+data.result.totalSize+"&status=2&token="+sessionStorage.getItem("token");
+							
+							
+
+						}else if(data.code==1403){
+							overTime();
+						}else{
+							//alert(data.msg);
+						}
+
+					}, 
+					error:function(data){ 
+						alert("服务器跑丢了......");
+					} 
+					
+				});
+				
+				
+				
+				
+				
+				
+				
+			}
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+		</script>
+	</head>
+	<body>
+		<div>
+			<table id="grid_user"></table>
+			<div id="grid_pager_user"></div>
+		</div>
+		
+		<!--user筛选工具栏-->
+		<div id="grid_user_tbar" style="display:none;">
+			<div class="action-buttons" style="margin-left: 10px; padding: 5px;">
+				<!--UID: <input id="uid" onblur="_search()"/>-->
+				会员手机号: <input id="mobile" onblur="_search()"/>
+				
+				支付方式: <select id="status" onblur="_search()">
+						<option value="" >全部</option>
+						<option value="1">支付宝</option>
+						<option value="2">微信</option>
+						<option value="0">网银</option>
+						<option value="3">苹果支付</option>
+						<option value="4">手工充值</option>
+						<option value="11">支付宝扫码充值</option>
+						<option value="21">微信扫码充值</option>
+						
+						
+						<option value="5">微信发起扫码支付</option>
+						<option value="12">支付宝分享支付</option>
+						<option value="13">直接购买之支付宝支付</option>
+						<option value="14">商家二维码APP支付宝支付</option>
+						<option value="15">商家二维码网页支付宝支付</option>
+						<option value="16">支付宝加入合伙人支付</option>
+						<option value="22">微信分享支付</option>
+						<option value="23">直接购买之微信支付</option>
+						<option value="24">商家二维码APP微信支付</option>
+						<option value="25">商家二维码网页微信支付</option>
+						<option value="26">微信加入合伙人支付</option>
+						<option value="31">余额扫码支付</option>
+						<option value="32">余额直接购买支付</option>
+						<option value="33">商家二维码余额支付</option>
+						<option value="34">余额加入合伙人支付</option>
+
+				    </select>
+				支付日期: <input type="date" id="datestart" onblur="_search()" />至<input type="date" id="dateend" onblur="_search()"/>
+				<a class="blue" href="javascript:_search()"><i class="icon-search bigger-130"></i>查询</a>
+				<a class="blue" href="javascript:_download()"><i class="icon-download bigger-130"></i>下载订单记录</a>
+			</div>
+		</div>
+		
+		<form id="edit_user" class="grid_from checkform" style="width:900px; height: 700px;">
+			<div class="widget-header">
+				<h4 id="form_title">商品信息</h4>
+				<span class="widget-toolbar">
+					<a href="#" data-action="close" onclick="closeForm('edit_user')">
+						<i class="icon-remove"></i>
+					</a>    
+				</span>
+			</div>
+			<div class="form_content">
+				<input type="hidden" id="id" name="id"/>
+				<div class="form_content_table">
+					<span id="msgspan" style="color:red;"></span>
+					
+					<table id="storeIdDetail" class="table table-striped  table-bordered" style="text-align: center;  width: 890px; margin-left: -4%; font-size: 5px;">	
+						
+					</table>
+					
+					<table id="rechargeDetail" class="table table-striped  table-bordered" style="text-align: center;  width: 890px; margin-left: -4%; font-size: 5px;">	
+						
+					</table>
+					
+					
+					
+				</div>
+				<div>
+					<!--<button class="btn btn-info button-left" type="submit">
+						<i class="icon-ok bigger-110"></i>
+						提交
+					</button>
+					<button class="btn button-right" type="button" onclick="resetForm()">
+						<i class="icon-undo bigger-110"></i>
+						重置
+					</button>-->
+				</div>
+			</div>
+		</form>
+		
+		<div id="div_dialog"></div>
+		<div id="hidebg"></div>
+	</body>
+	
+</html>

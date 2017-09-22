@@ -1,0 +1,511 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>图片审查</title>
+
+<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js" type="text/javascript"></script>
+<script type="text/javascript" src="/enjoyRedEnvelopeManager/js/basepath.js" type="text/javascript" ></script>
+<style>
+@charset "utf-8";
+/*基本框架CSS*/
+body, ul, dl, dd, dt, ol, li, p, h1, h2, h3, h4, h5, h6, textarea, form, select, fieldset, table, td, div, input {margin:0;padding:0;-webkit-text-size-adjust:none}
+h1, h2, h3, h4, h5, h6{font-size:12px;font-weight:normal}
+body>div{margin:0 auto}
+div {text-align:left}
+a img {border:0}
+body{color:#333;text-align:center;font:12px "宋体";}
+ul, ol, li {list-style-type:none;vertical-align:0}
+a {outline-style:none;color:#535353;text-decoration:none}
+a:hover{color:#D40000;text-decoration:none}
+
+
+.hidden{display:none}
+.cor_bs,.cor_bs:hover{color:#ffffff;}
+.keBody{background:url(../images/bodyBg.jpg) repeat #333;}
+.msKeimgBox{margin:0px auto;width:1300px;overflow:hidden;position:relative;padding-top:30px;height:93px;}
+.msKeimgBox ul{width:1300px;}
+.mskeLayBg{background:#000;width:100%;position:absolute;left:0px;top:0px;z-index:10;opacity:0.7;filter:alpha(opacity=70);display:none;_display:none!important }
+.mskelayBox{height:488px;width:974px;margin-top:-251px;margin-left:-494px;position:fixed;left:50%;top:50%;border:7px solid #FFF;z-index:20;display:none;_display:none!important }
+.mskeImgBg{height:57px;width:100%;position:absolute;left:0px;bottom:0px;}
+.mskeClaose{position:absolute;top:-17px;right:-17px;cursor:pointer;}
+.mske_downIco{position:absolute;left:0px;top:0px;}
+.mske_imgDown{background:url(../images/mke_imgMbg.png) repeat;height:57px;width:818px;position:absolute;right:0px;bottom:0px;font:13px/57px "微软雅黑";color:#FFF;}
+.mske_imgDown a{margin-left:34px;}
+.msKeimgBox ul li{float:left;height:93px;margin:0 10px 10px 0;width:185px;cursor:pointer;}
+.mskeTogBtn{background:url(../images/mke_moreImg.jpg) no-repeat;height:93px;width:185px;position:absolute;z-index:1;right:0px;cursor:pointer;bottom:0px;}
+.mskeTogBtn2{background:url(../images/mke_moreImg2.jpg) no-repeat;bottom:10px;}
+.msKeimgBox2{height:auto;}	
+
+a{ text-decoration:none;}
+a:hover{ text-decoration:none;}
+.tcdpage{padding: 15px 20px;text-align: left;color: #ccc;text-align:center;}
+.tcdpage a{display: inline-block;color: #428bca;display: inline-block;height: 25px;	line-height: 25px;	padding: 0 10px;border: 1px solid #ddd;	margin: 0 2px;border-radius: 4px;vertical-align: middle;}
+.tcdpage a:hover{text-decoration: none;border: 1px solid #428bca;}
+.tcdpage span.current{display: inline-block;height: 25px;line-height: 25px;padding: 0 10px;margin: 0 2px;color: #fff;background-color: #428bca;	border: 1px solid #428bca;border-radius: 4px;vertical-align: middle;}
+.tcdpage span.disabled{	display: inline-block;height: 25px;line-height: 25px;padding: 0 10px;margin: 0 2px;	color: #bfbfbf;background: #f2f2f2;border: 1px solid #bfbfbf;border-radius: 4px;vertical-align: middle;}		
+</style>
+
+
+<script type="text/javascript">
+$(function(){
+
+	//图库弹出层
+	$(".mskeLayBg").height($(document).height());
+	$(".mskeClaose").click(function(){
+		$(".mskeLayBg,.mskelayBox").hide()
+	});
+	
+	
+	$(".msKeimgBox").addClass("msKeimgBox2");
+	$(".mskeTogBtn").addClass("msKeimgBox2");
+	$(".mskeTogBtn").addClass("mskeTogBtn2");
+	
+	$("#all").click(function(){
+			$(".image").prop("checked","checked");	
+	})
+	$("#unAll").click(function(){
+			$(".image").prop("checked",false);	
+	})
+	
+	function load(obj){
+		/*var data1 = {
+		pageSize: 30,
+		}*/
+		$.ajax({
+			type:"get",
+			url:$base_path+"manage/sys/pictureList", 
+			async:true,
+			data:obj,
+			beforeSend: function(request) {
+	            request.setRequestHeader("token", sessionStorage.getItem("token"));
+	   		 },
+			
+			success:function(data){
+				if(data.code==200){
+					
+					//alert(data.result.totalPage);
+					$("#tcdPageCodeczls").createPage({
+				        pageCount: data.result.totalPage,
+						current: data.result.pageNo,
+				        backFn:function(p){
+				          
+				            
+				            pagecount = p;
+				          
+				 			           
+				        }
+				        
+					});
+					
+					
+					//parent.location.href= "/enjoyRedEnvelopeManager/html/union/imageCheck.html";
+					
+					var str = "";	
+					for(var i = 0 ; i<data.result.rows.length;i++){
+										
+						str += '<li ><div><img src="'+data.result.rows[i].path+'" width="185" height="93" /><div style="height: 80px;width: 185px; margin-top: -93px; opacity: 0.6;"><h3 style="opacity:0;text-align: center; background-color:aliceblue; height: 20px;">生肖商城</h3><h3 style="text-align: center; margin-top: 43px; background-color:aliceblue; height: 30px; text-align: left;"><input type="checkbox" class="image" value="'+data.result.rows[i].id+'" style="height: 30px; margin-left: 0px;"><img style="margin-left: 140px; margin-top: -3px;  height: 26px;" src="/enjoyRedEnvelopeManager/image/search.png" class="search"></h3></div></div><span class="hidden"><img src="'+data.result.rows[i].path+'" width="974" height="488" /></span></li>';		
+					}
+					$("#imageslist").html(str);
+			
+					$(".search").click(function(){
+						
+						$(".mske_html").html($(this).parent().parent().parent().parent().find(".hidden").html());
+						
+						$(".mskeLayBg").show();
+						$(".mskelayBox").fadeIn(300)
+					});
+					
+					
+					
+					
+				}
+			}, 
+			error:function(data){ 
+			} 
+					
+		});	
+	}
+	
+	var obj = {
+		pageSize:30,
+		pageNo:1
+	}
+	
+	load(obj);	
+	
+	
+	
+	$("#imagePass").click(function(){
+		
+		var obj = $(".image");
+		s = "";
+		for(var i = 0 ; i<obj.length;i++){
+			if(obj[i].checked){
+				s+=obj[i].value+',';
+				//$(".image")[i].parentNode.parentNode.parentNode.parentNode.style.display = "none"; 		
+				
+				
+			}
+		}
+		
+		
+		 
+		//alert($(".image:checked").parent().html());
+		
+		var person = {
+			fileIds:s
+		}
+		
+		$.ajax({
+			type:"post",
+			url:$base_path+"manage/sys/passPictures", 
+			async:true,
+			data:person,
+			beforeSend: function(request) {
+	            request.setRequestHeader("token", sessionStorage.getItem("token"));
+	   		},
+			success:function(data){
+				if(data.code==200){
+					alert("操作成功");
+					
+					for(var i = 0 ; i<obj.length;i++){
+						if(obj[i].checked){
+							//s+=obj[i].value+',';
+							$(".image")[i].parentNode.parentNode.parentNode.parentNode.style.display = "none"; 		
+							
+							
+						}
+					}
+					
+					
+				}else if(data.code==1403){
+					overTime();
+				}
+				else{
+					alert(data.msg);
+				}
+			}, 
+			error:function(data){ 
+			} 
+					
+		});
+		
+	})
+	
+	
+	
+	var storeName = "";
+	var storeUserName = "";
+	var storePhone = "";
+	
+	
+	
+	$("#imageUnpass").click(function(){
+		var obj = $(".image");
+		s = "";
+		for(var i = 0 ; i<obj.length;i++){
+			if(obj[i].checked){
+				var per = {
+					id:obj[i].value
+				}
+				$.ajax({
+					type:"post",
+					url:$base_path+"manage/sys/unPassPicture", 
+					async:true,
+					data:per,
+					beforeSend: function(request) {
+			            request.setRequestHeader("token", sessionStorage.getItem("token"));
+			   		},
+					success:function(data){
+						if(data.code==200){
+									
+								
+								var per1 = {
+									id:data.result.storeId
+								}
+								
+								$.ajax({
+									type:"post",
+									url:$base_path+"manage/storeManage/list", 
+									async:true,
+									data:per1,
+									beforeSend: function(request) {
+							            request.setRequestHeader("token", sessionStorage.getItem("token"));
+							   		},
+							   		dataType:"json",
+									success:function(data1){
+										if(data1.code==200){
+											//alert(JSON.stringify(data1.result.rows[0].storeName));
+											storeName=data1.result.rows[0].storeName;
+											storeUserName=data1.result.rows[0].userName;
+											storePhone=data1.result.rows[0].phone;
+											
+											//$("#storeName").html(storeName);
+											//$("#storeUserName").html(storeUserName);
+											//$("#storePhone").html(storePhone);
+											s+="<tr><td>"+storeName+"</td><td>"+storeUserName+"</td><td>"+storePhone+"</td></tr>";
+											
+											$("#storeDetail").html(s)
+											
+											$("#ddd").click();
+											
+											
+										}else if(data1.code==1403){
+											overTime();
+										}else{
+											
+											//alert(data1.msg);
+										}
+									}, 
+									error:function(data1){ 
+									} 
+											
+								});
+						}else if(data.code==1403){
+							overTime();
+						}else{
+							
+							//alert(data.msg);
+						}
+					}, 
+					error:function(data){ 
+					} 
+							
+				});
+				//alert(storeName+","+storeUserName+","+storePhone);
+			}
+			
+			
+			
+		}
+		
+		/*s="";
+		s="0CCF270D251A47B8BA35EFAD7DC00EC8";
+		alert(s);*/
+		
+		
+		
+		
+		
+		
+	})
+	
+	
+	 $("#tcdPageCodeczls").createPage({
+		        pageCount: 10,
+		        current:1,
+		        backFn:function(p){
+		            //pageCount  页面总数
+		            //current:当前页
+		            
+		            pagecount = p;
+		            tempDiv = "";
+		            var obj = {
+		            	
+		            	pageNo:p,
+		            	pageSize:30
+		            }
+		            
+		            
+		            load(obj);
+		            //cusrdataedit.page = p;
+		 			           
+		        }
+	});
+	
+	
+	
+	
+	
+
+});
+</script>
+
+
+</head>
+<body>
+	<h2 style="text-align: left; background-color: #307ECC; height: 30px; margin-top:1px; font-size: 14px;color: white;padding-left: 10px; padding-top: 10px;">图片审查</h2>
+	<br/>
+	<br/>
+	<br/>
+	
+	<input type="radio" name="radio" id="all">全选 <input name="radio" id="unAll" type="radio">全不选  &nbsp;&nbsp;<input type="button" id="imageUnpass" value="审查不通过">&nbsp;&nbsp;<input type="button" id="imagePass" value="审查通过">
+<br/>	
+<br/>	
+<div class="kePublic">
+
+	<!--图库弹出层 开始-->
+	<div class="mskeLayBg"></div>
+	<div class="mskelayBox">
+		<div class="mske_html"></div>
+		<img class="mskeClaose" src="/enjoyRedEnvelopeManager/image/mke_close.png" width="27" height="27" />
+	</div><!--图库弹出层 结束-->
+	
+	<div class="msKeimgBox" >
+		<ul id="imageslist">
+			
+			<!--<li> 
+				<div>
+					<img src="/enjoyRedEnvelopeManager/image/bkeImg1.jpg" width="185" height="93" />
+					<div style="height: 80px;width: 185px; margin-top: -93px; opacity: 0.6;">
+						<h3 style="text-align: center; background-color:aliceblue; height: 20px;">生肖商城</h3>
+						<h3 style="text-align: center; margin-top: 43px; background-color:aliceblue; height: 30px; text-align: left;">
+						<input type="checkbox" class="image" value="1" style="height: 30px; margin-left: 0px;"><img style="margin-left: 140px; margin-top: -3px;  height: 26px;" src="/enjoyRedEnvelopeManager/image/search.png" class="search">
+						 </h3>
+					</div>
+				</div>
+				
+				<span class="hidden">
+					<img src="/enjoyRedEnvelopeManager/image/bkeImg1.jpg" width="974" height="488" />
+					
+				</span>
+			</li>
+			<li> 
+				<div>
+					<img src="/enjoyRedEnvelopeManager/image/bkeImg.jpg" width="185" height="93" />
+					<div style="height: 80px;width: 185px; margin-top: -93px; opacity: 0.6;">
+						<h3 style="text-align: center; background-color:aliceblue; height: 20px;">生肖商城</h3>
+						<h3 style="text-align: center; margin-top: 43px; background-color:aliceblue; height: 30px; text-align: left;">
+						<input type="checkbox" class="image" value="1" style="height: 30px; margin-left: 0px;"><img style="margin-left: 140px; margin-top: -3px;  height: 26px;" src="/enjoyRedEnvelopeManager/image/search.png" class="search">
+						 </h3>
+					</div>
+				</div>
+				
+				<span class="hidden">
+					<img src="/enjoyRedEnvelopeManager/image/bkeImg.jpg" width="974" height="488" />
+					
+				</span>
+			</li>
+			<li> 
+				<div>
+					<img src="/enjoyRedEnvelopeManager/image/bkeImg.jpg" width="185" height="93" />
+					<div style="height: 80px;width: 185px; margin-top: -93px; opacity: 0.6;">
+						<h3 style="text-align: center; background-color:aliceblue; height: 20px;">生肖商城</h3>
+						<h3 style="text-align: center; margin-top: 43px; background-color:aliceblue; height: 30px; text-align: left;">
+						<input type="checkbox" class="image" value="1" style="height: 30px; margin-left: 0px;"><img style="margin-left: 140px; margin-top: -3px;  height: 26px;" src="/enjoyRedEnvelopeManager/image/search.png" class="search">
+						 </h3>
+					</div>
+				</div>
+				
+				<span class="hidden">
+					<img src="/enjoyRedEnvelopeManager/image/bkeImg.jpg" width="974" height="488" />
+					
+				</span>
+			</li>
+			<li> 
+				<div>
+					<img src="/enjoyRedEnvelopeManager/image/bkeImg.jpg" width="185" height="93" />
+					<div style="height: 80px;width: 185px; margin-top: -93px; opacity: 0.6;">
+						<h3 style="text-align: center; background-color:aliceblue; height: 20px;">生肖商城</h3>
+						<h3 style="text-align: center; margin-top: 43px; background-color:aliceblue; height: 30px; text-align: left;">
+						<input type="checkbox" class="image" value="1" style="height: 30px; margin-left: 0px;"><img style="margin-left: 140px; margin-top: -3px;  height: 26px;" src="/enjoyRedEnvelopeManager/image/search.png" class="search">
+						 </h3>
+					</div>
+				</div>
+				
+				<span class="hidden">
+					<img src="/enjoyRedEnvelopeManager/image/bkeImg.jpg" width="974" height="488" />
+					
+				</span>
+			</li>
+			<li> 
+				<div>
+					<img src="/enjoyRedEnvelopeManager/image/bkeImg.jpg" width="185" height="93" />
+					<div style="height: 80px;width: 185px; margin-top: -93px; opacity: 0.6;">
+						<h3 style="text-align: center; background-color:aliceblue; height: 20px;">生肖商城</h3>
+						<h3 style="text-align: center; margin-top: 43px; background-color:aliceblue; height: 30px; text-align: left;">
+						<input type="checkbox" class="image" value="1" style="height: 30px; margin-left: 0px;"><img style="margin-left: 140px; margin-top: -3px;  height: 26px;" src="/enjoyRedEnvelopeManager/image/search.png" class="search">
+						 </h3>
+					</div>
+				</div>
+				
+				<span class="hidden">
+					<img src="/enjoyRedEnvelopeManager/image/bkeImg.jpg" width="974" height="488" />
+					
+				</span>
+			</li>
+			<li> 
+				<div>
+					<img src="/enjoyRedEnvelopeManager/image/bkeImg.jpg" width="185" height="93" />
+					<div style="height: 80px;width: 185px; margin-top: -93px; opacity: 0.6;">
+						<h3 style="text-align: center; background-color:aliceblue; height: 20px;">生肖商城</h3>
+						<h3 style="text-align: center; margin-top: 43px; background-color:aliceblue; height: 30px; text-align: left;">
+						<input type="checkbox" class="image" value="1" style="height: 30px; margin-left: 0px;"><img style="margin-left: 140px; margin-top: -3px;  height: 26px;" src="/enjoyRedEnvelopeManager/image/search.png" class="search">
+						 </h3>
+					</div>
+				</div>
+				
+				<span class="hidden">
+					<img src="/enjoyRedEnvelopeManager/image/bkeImg.jpg" width="974" height="488" />
+					
+				</span>
+			</li>-->
+			
+			
+		</ul>
+		<!--<div class="mskeTogBtn"></div>-->
+	</div>
+	<!--效果html结束-->
+</div>
+
+<div id="pageTool"></div>
+<div id="tcdPageCodeczls" class="tcdpage"></div>
+
+
+<input type="hidden" data-toggle="modal" data-target="#myModal" id="ddd">
+<!-- 模态框（Modal） -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+					&times;
+				</button>
+				<h2 class="modal-title" id="myModalLabel">
+					图片审查不通过
+				</h2>
+			</div>
+			<div class="modal-body">
+				
+			<table class="table">
+				<caption style="font-size: 24px;">店铺详情</caption>
+			   <thead>
+			      <tr>
+			         <th>店铺名称</th>
+			         <th>用户名</th>
+			         <th>用户名手机号</th>
+			      </tr>
+			   </thead>
+			   <tbody id="storeDetail">
+			      
+			      
+			   </tbody>
+			</table>
+				
+				
+				
+				
+			</div>
+			<div class="modal-footer">
+				
+			</div>
+		</div><!-- /.modal-content -->
+	</div><!-- /.modal -->
+</div>
+<script>
+	
+	
+</script>
+
+
+</body>
+<script type="text/javascript" src="/enjoyRedEnvelopeManager/js/jquery.page.js" ></script>
+<script type="text/javascript" src="/enjoyRedEnvelopeManager/js/bootstrap.min.js" ></script>
+
+<script>
+		
+		
+	</script>
+</html>

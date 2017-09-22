@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>ep流水记录</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		<!-- project样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/project.css" />
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/loading.css" />
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js-->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/project.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/basepath.js"></script>
+		<!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+		<!--验证js-->
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/md5.js"></script>
+		
+		<script>
+			var token = sessionStorage.getItem("token");
+			var grid_user = "#grid_user";
+			var grid_pager_user = "#grid_pager_user";
+			var roles = null;
+			var folderName = "project";
+			
+			$(function() {
+				$.autoByWindow(grid_user);
+				$.jqGrid(grid_user, $base_path + 'manage/agentList/rechargeEpTable', false, colNames_user, fd_user, grid_pager_user, "ep流水记录", gridUserComplete, true,true,15);
+				$("#t_grid_user").append($("#grid_user_tbar").html());
+				
+				$.navGrid(grid_user, grid_pager_user);
+				$.navButtonAdd(grid_user, grid_pager_user, 'icon-plus-sign purple', '<font color="purple">充值</font>', '充值', add);
+				/*$.navButtonAdd(grid_user, grid_pager_user, 'icon-trash red', '<font color="red">删除</font>', '删除', beforeDel);*/
+				
+				
+				$(".checkform").Validform({
+					tiptype:function(msg, o, cssctl){
+						var objtip = $("#msgspan");
+						cssctl(objtip,o.type);
+						objtip.text(msg);
+					},
+					callback: function(){
+						edit_submit();
+						return false;
+					}
+				});
+				
+				$("#score").blur(function(){
+					if($(this).val().trim().length==0){
+						$("#msgspan").html("请输入积分");
+					}else if(!isNaN($(this).val().trim())){
+						$("#msgspan").html("");
+					}else{
+						$("#msgspan").html("积分格式有误，请重新输入");
+					}
+					
+					
+				})
+				
+			
+			});
+			
+			var colNames_user = ["订单号","会员Id" ,'会员(代理)编号',"手机号","用户名(或代理区域名)","充值ep类型", '充值ep',"流水说明", '操作员', '时间', '备注'];
+			var fd_user = [
+				{name:'orderNo', index:'orderNo', width:60,  key: true},
+				{name:'user.id', index:'user.id', width:60,  key: true,hidden:true},
+				{name:'user.uid', index:'user.uid', width:60,  key: true},
+				{name:'user.phone', index:'user.phone', width:60,  key: true},
+				{name:'user.username', index:'user.username', width:60,  key: true},
+				{name:'userType', index:'userType', width:60,  key: true,formatter:userType},
+				{name:'ep', index:'ep', width:60},
+				{name:'recordTypeDesc', index:'recordTypeDesc', width:60},
+				{name:'sendUserId', index:'sendUserId', width:60},
+				{name:'createTime', index:'createTime',width:60, sorttype:"date",formatter:getLocalTime},
+				{name:'remark',index:'remark', width:120, align: 'center',hidden:true}
+			];
+			
+			/*时间戳转时间格式*/
+			 function getLocalTime(v) {    
+			 		var date  = new Date(v);
+			       return date.Format3("yyyy-MM-dd hh:mm:ss");      
+			 }   
+			
+			
+			function userType(v,o,row){
+				if(v=="1"){
+					return "普通会员";
+				}else if(v=="3"){
+					return "代理商";
+				}else{
+					return "";
+				}
+				
+				
+			}
+			
+			function getRoles(v, o, row){
+        		for(var i = 0; i < roles.length; i++){
+        			if(row.muRoleId == roles[i].roId){
+        				return roles[i].roName;
+        				break;
+        			}
+        		}
+        		return '';
+			}
+			
+			function gridUserComplete(){
+				var ids = $(grid_user).jqGrid('getDataIDs');
+				for (var i = 0; i < ids.length; i++) {
+					var id = ids[i];
+					var rowData = $(grid_user).getRowData(id);
+					var funcBtn = '<div class="action-buttons">';
+					var editBtn = '<a class="blue" href="javascript:_edit('+ id +')"><i class="icon-pencil bigger-130"></i>编辑</a>';
+					var resetBtn = '<a class="grey" href="javascript:del()"><i class="icon-undo bigger-130"></i>删除</a>';
+					var muIsDisable = rowData.muIsDisable;
+					var delBtn = '<input type="checkbox" id="checkbox-yn-' + i + '"'
+							+ (muIsDisable == 1 ? 'checked' : '')
+							+ ' onclick="_disable(' + id + ', ' + (muIsDisable == 0 ? 1 : 0) 
+							+')" /><label for="checkbox-yn-' + i + '"></label>';
+					funcBtn += editBtn + resetBtn + '</div>';
+	         		$(grid_user).setRowData(id, {func: funcBtn});
+	         		$(grid_user).setRowData(id, {IsDisable: delBtn});
+	      		}
+			}
+			
+			function _search(){
+				
+				var mobile = $("#mobile").val().trim();
+								
+				
+				if($("#datestart").val()!=""){
+					var datestart =new Date($("#datestart").val().trim()).Format("yyyy-MM-dd hh:mm:ss").toString();
+					
+				}
+				if($("#dateend").val()!=""){
+					var dateend =new Date($("#dateend").val().trim()).Format1("yyyy-MM-dd hh:mm:ss").toString();
+				}
+			
+				
+				//alert(JSON.stringify({uid:uid,phone:mobile,status:status}));
+				//var datestart = $("#datestart").val().trim();
+				//var dateend =  $("#dateend").val().trim();
+				//alert(JSON.stringify(datestart+":"+dateend));
+				//$.setPostData(grid_user, {uid: uid, phone: mobile, status: status, fromTime: datestart,endTime:dateend});
+				$.setPostData(grid_user,{username:mobile,phone:mobile,account:mobile,fromTimeOne:datestart,stopTimeOne:dateend});
+			    $.refresh(grid_user);
+			}
+			
+			
+			function add(){
+				_edit('');
+				$("#form_title").html('后台ep充值');
+				$("#tr_pwd").show(); 
+				$("#mu_pwd").attr('ignore', ''); 
+				$("#msgspan").text('');
+				$("#id").val("");
+				$("#score").val("");
+				$("#password").val("");
+				$("#remark").val("");
+				$("#epCount").val("");
+				
+				$("#mu_roleId").val(1000);
+				$.show("edit_user");
+			}
+			function beforeDel(){
+				var ids = $(grid_user).getGridParam('selarrrow');
+				if(ids == ''){
+					$.reminderDailog("div_dialog", '<i class="icon-warning-sign"></i>警告', '请选中行!');
+				}else{
+					$.openDelDailog("div_dialog", del);
+				}
+			}
+			function del(){
+				var ids = $(grid_user).getGridParam('selarrrow');
+				if($('#div_dialog').html() != ''){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'ManagerUser/delSysManUser',
+				        data: 'delIds=' + ids + '&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==0){
+								$.refresh(grid_user);
+								$.closeDelDailog();
+					          	alert('删除成功！');
+					       	}else{					       		
+								alert(data.msg);
+								/*if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';*/
+					       	}
+				        }
+				    });
+			   }
+			}
+			
+			function _edit(id){
+				$("#form_title").html('编辑幻灯片');
+				$("#msgspan").text('');
+				$("#tr_pwd").hide(); 
+				$("#mu_pwd").attr('ignore', 'ignore'); 
+				var model = $(grid_user).getRowData(id); 
+				$("#mu_id").val(model.muId); 
+				$("#mu_name").val(model.muName); 
+				$("#mu_account").val(model.muAccount); 
+				$("#mu_phone").val(model.muPhone); 
+				$("#mu_qq").val(model.muQq); 
+				$("#mu_isDisable").val(model.muIsDisable); 
+				$("#mu_roleId").val(model.muRoleId); 
+				$.show("edit_user");
+			}
+			
+			//重置
+			function resetForm(){
+				var muId=$("#mu_id").val();
+				$("#uid").val("");
+				$("#score").val("");
+				$("#password").val("");
+				
+				if(muId == ''){
+					_edit(muId);
+					$("#form_title").html('后台充值');
+					$("#tr_pwd").show(); 
+					$("#mu_pwd").attr('ignore', ''); 
+					$("#msgspan").text('');
+					$("#mu_roleId").val(1000);
+					$.show("edit_user");
+				}else{
+					_edit(muId);
+					$("#form_title").html('后台充值');
+					$("#tr_pwd").show(); 
+					$("#mu_pwd").attr('ignore', ''); 
+					$("#msgspan").text('');
+					$("#mu_roleId").val(1000);
+					$.show("edit_user");
+				}
+			}
+			
+			//提交编辑表单
+			function edit_submit(){
+				
+				var form = $("#edit_user").serialize();
+				
+				var person = {
+					id:$("#id").val(),
+					password:$("#password").val(),
+					epCount:$("#epCount").val(),
+					remark:$("#Remark").val()
+				}
+				
+				
+				
+				$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/agentList/rechargeEp',
+				        data:JSON.stringify(person),
+				        dataType:"json",
+				        beforeSend: function(request) {
+	                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+	                        request.setRequestHeader("Content-Type", "application/json");
+	               	},
+				        success: function(data) {
+				        	if(data.code==200){
+								alert(data.msg);
+								$.refresh(grid_user);
+								closeForm('edit_user');
+								
+								
+					          	
+					       	}else{					       		
+								alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';
+					       	}
+				        }
+				});
+			}
+	
+			//是否禁用
+			function _disable(id, v){
+				
+				var tishi="";
+				
+				if(v == 1){
+					tishi="是否禁用该幻灯片";
+				}else if(v == 0){
+					tishi="是否解除该禁用幻灯片";
+				}
+				
+				if(confirm(tishi)){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'ManagerUser/editSysManUser',
+				        data: 'muId=' + id + '&muIsDisable=' + v + '&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==0)
+				           		alert(v == 1 ? '已禁用！' : '禁用已解除.');
+				           	else{
+				        		alert(data.msg);
+								          			
+			           		}
+				        }
+				    });
+				    $.refresh(grid_user);
+				}
+				
+			    $.refresh(grid_user);
+			}
+			
+			//重置密码
+			function _reset(id){
+				if(confirm("是否重置密码")){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'ManagerUser/resetSysManUserPwd',
+				        data: 'muId=' + id + '&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==0)
+				           		alert('密码重置成功！');
+				           	else{
+				        		alert(data.msg);
+										           		
+				           	}
+				        }
+				    });					
+				}
+			}
+			
+			
+			/*图片上传*/
+			function _adImgUpload(){
+				$.show("image_upload");	
+				window.frames["image_upload_iframe"].getToken(folderName);
+				image_upload_iframe.window.document.getElementById("controlId").value="editImg";
+			}
+			function setImgUrl(imgUrl){
+				var urls=imgUrl.split(";");
+				$("#sb_imgUrl_panel").empty();
+				for(var i=0;i<urls.length;i++){
+					$("#sb_imgUrl_panel").append("<img src='"+urls[i].trim()+"' class='imgUrlClass' alt='"+urls[i].trim()+"'>");
+				}
+				$("#sb_img").val(imgUrl);
+			}
+			function _adImghide(){
+				$.hide("image_upload");	
+				window.frames["image_upload_iframe"].getToken(folderName);
+				image_upload_iframe.window.document.getElementById("controlId").value="editImg";
+			}
+			
+			/*获取用户名*/
+			function chaxun(){
+				//alert($("#id").val());
+				$.ajax({
+				        type: 'get',
+				        url: $base_path + 'manage/agentList/getInfoByid',
+				        data:"id="+$("#id").val(),
+				        beforeSend: function(request) {
+	                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+	                  
+	               		},
+				        success: function(data) {
+				        	if(data.code==200){
+								
+								$("#msgName").html(data.result.name);
+					          	
+					       	}else{					       		
+								alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';
+					       	}
+				        }
+				});
+			}
+			
+
+		
+		</script>
+	</head>
+	<body>
+		<div>     
+			<table id="grid_user"></table>
+			<div id="grid_pager_user"></div>
+		</div>
+		
+		<!--user筛选工具栏-->
+		<div id="grid_user_tbar" style="display:none;">
+			<div class="action-buttons" style="margin-left: 10px; padding: 5px;">
+				
+				手机号/姓名/账号: <input id="mobile" onblur="_search()"/>
+				日期: <input type="date" id="datestart" />至<input type="date" id="dateend" onblur="_search()"/>
+				<a class="blue" href="javascript:_search()"><i class="icon-search bigger-130"></i>查询</a>
+			</div>
+		</div>
+		
+		<!-- 编辑幻灯片信息窗口 -->
+		<form id="edit_user" class="grid_from checkform" style="width: 450px;">
+			<div class="widget-header">
+				<h4 id="form_title">管理员ep充值</h4>
+				<span class="widget-toolbar">
+					<a href="#" data-action="close" onclick="closeForm('edit_user')">
+						<i class="icon-remove"></i>
+					</a>    
+				</span>
+			</div>
+			<div class="form_content">
+				
+				<div class="form_content_table">
+					<span id="msgspan" style="color:red;"></span>
+					<table>
+						<tr>
+							<td>会员ID</td>
+							<td><input type="text" id="id" name="id" onchange="chaxun()" placeholder="会员UID/代理编号" datatype="s1-12" nullmsg="请输入会员UID" errormsg="UID输入有误" /><span id="msgName" style="width: 70px; color: red;"></span></td>
+						</tr>
+						<tr>
+							<td>充值积分</td>
+							<td><input type="text" id="epCount" name="epCount" placeholder="积分"  /></td>
+						</tr>
+						<tr id="tr_pwd">
+							<td>管理员操作密码</td>
+							<td><input type="password" id="password" name="password" placeholder="管理员操作密码" datatype="s3-64" nullmsg="请输入操作密码！" errormsg="密码格式有误"/></td>
+						</tr>
+						
+						<tr id="tr_pwd">
+							<td>备注</td>
+							<td><textarea id="remark" name="remark" placeholder="备注"></textarea></td>
+						</tr>
+						<!--<tr id="tr_pwd">
+							<td>备注</td>
+							<td><input type="text" id="mu_beizhu" name="mubeizhu" placeholder="备注" datatype="s0-64" nullmsg="请输入备注！" errormsg="备注最多输入64个字符"/></td>
+						</tr>-->
+						<!--<tr>
+							<td>电话: </td>
+							<td><input id="mu_phone" name="muPhone" placeholder="Phone" datatype="m" nullmsg="请输入序号" errormsg="请输入有效电话号码！"/></td>
+						</tr>
+						<tr>
+							<td>QQ: </td>
+							<td><input id="mu_qq" name="muQq" placeholder="QQ" datatype="n" nullmsg="请输入QQ！" /></td>
+						</tr>-->
+					</table>
+					
+					
+					
+				</div>
+				<div>
+					<button class="btn btn-info button-left" type="submit">
+						<i class="icon-ok bigger-110"></i>
+						提交
+					</button>
+					<button class="btn button-right" type="button" onclick="resetForm()">
+						<i class="icon-undo bigger-110"></i>
+						重置
+					</button>
+				</div>
+			</div>
+		</form>
+		
+		<div id="image_upload" class="imageUpload_form">
+			<div class="widget-header">
+				<h4 id="form_title">文件上传</h4>
+				<span class="widget-toolbar">
+					<button type="button" class="btn btn-primary" style="width: 60px;height:40px;" onclick="_adImghide()">确定</button>
+				</span>
+			</div>
+						
+			</iframe>
+		</div>
+		
+		
+		<div id="div_dialog"></div>
+		<div id="hidebg"></div>
+	</body>
+	
+	<script>
+		
+	</script>
+</html>
+

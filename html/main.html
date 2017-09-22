@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>斗拍联盟后台管理系统</title>
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- bootstrap js 依赖注入-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace-extra.min.js"></script>
+		<!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/basepath.js"></script>
+		
+		<script>
+			var muAccount = $.cookie("muAccount");
+			var token = $.cookie("tokenenjoyRedEnvelopeManager");
+			var muRoWeight = $.cookie("muRoWeight");
+			
+			$(function() {
+				
+				
+				$.ajax({
+						type:"get",
+						url:$base_path+"manage/uploadDomain", 
+						beforeSend: function(request) {
+	                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+	               		 },
+						
+						success:function(data){
+							if(data.code==200){
+								//alert("修改成功");	
+								//imgUrl = data.result;
+								sessionStorage.setItem("imgUrl",data.result);
+							}else if(data.code==1403){
+								//overTime();
+								
+							}else{
+								//alert(data.msg);
+							}
+							
+							//$.refresh(grid_user);
+						}, 
+						error:function(data){ 
+						} 
+						
+				});
+				
+				
+				
+				$.ajax({
+						type:"get",
+						url:$base_path+"manage/admin/roles", 
+						beforeSend: function(request) {
+	                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+	               		 },
+						
+						success:function(data){
+							if(data.code==200){
+								
+								var left  = '<li><a href="#" class="dropdown-toggle"><i class="icon-home"></i><span class="menu-text">';
+								var str = "";
+								var str1 ="";
+								var str2 ="";
+								var str3 ="";
+								var str4 ="";
+								var str5 ="";
+								var str6 ="";
+								var str7 ="";
+								var str8 ="";
+								var str9 ="";
+								var str10 ="";
+								var str11 ="";
+								
+								for(var i = 0 ; i<data.result.length;i++){
+									if(data.result[i].lastNo==1){
+										str1 = left+data.result[i].remark+'</span><b class="arrow icon-angle-down"></b></a><ul class="submenu" id="menu0"></ul></li>';
+									}else if(data.result[i].lastNo==2){
+										str2 = left+data.result[i].remark+'</span><b class="arrow icon-angle-down"></b></a><ul class="submenu" id="menu1"></ul></li>';
+									}else if(data.result[i].lastNo==3){
+										str3 = left+data.result[i].remark+'</span><b class="arrow icon-angle-down"></b></a><ul class="submenu" id="menu2"></ul></li>';
+									}else if(data.result[i].lastNo==4){
+										str4 = left+data.result[i].remark+'</span><b class="arrow icon-angle-down"></b></a><ul class="submenu" id="menu3"></ul></li>';
+									}else if(data.result[i].lastNo==5){
+										str5 = left+data.result[i].remark+'</span><b class="arrow icon-angle-down"></b></a><ul class="submenu" id="menu4"></ul></li>';
+									}else if(data.result[i].lastNo==6){
+										str6 = left+data.result[i].remark+'</span><b class="arrow icon-angle-down"></b></a><ul class="submenu" id="menu5"></ul></li>';
+									}else if(data.result[i].lastNo==7){
+										str7 = left+data.result[i].remark+'</span><b class="arrow icon-angle-down"></b></a><ul class="submenu" id="menu6"></ul></li>';
+									}else if(data.result[i].lastNo==8){
+										str8 = left+data.result[i].remark+'</span><b class="arrow icon-angle-down"></b></a><ul class="submenu" id="menu7"></ul></li>';
+									}else if(data.result[i].lastNo==9){
+										str9 = left+data.result[i].remark+'</span><b class="arrow icon-angle-down"></b></a><ul class="submenu" id="menu8"></ul></li>';
+									}else if(data.result[i].lastNo==10){
+										str10 = left+data.result[i].remark+'</span><b class="arrow icon-angle-down"></b></a><ul class="submenu" id="menu9"></ul></li>';
+									}else if(data.result[i].lastNo==11){
+										str11 = left+data.result[i].remark+'</span><b class="arrow icon-angle-down"></b></a><ul class="submenu" id="menu10"></ul></li>';
+									}
+								}
+								$("#menu_roles").html(str1+str2+str3+str4+str5+str6+str7+str8+str9+str10+str11);
+								
+								
+								for(var i = 0 ; i<data.result.length;i++){
+									var str = '<li><a href="/enjoyRedEnvelopeManager/html/'+data.result[i].url+'" target="ifm_content"><i class="icon-double-angle-right"></i>'+data.result[i].name+'</a></li>';
+									//if(data.result[i].lastNo==1){
+										$("#menu"+(data.result[i].lastNo-1).toString()).append(str);
+										
+									//}else if
+									
+									
+								}
+								
+								
+								
+								
+								
+								
+								
+							}else if(data.code==1403){
+								//overTime();
+								_logoutSysManUser();
+							}else{
+								//alert(data.msg);
+								_logoutSysManUser();
+							}
+							
+							//$.refresh(grid_user);
+						}, 
+						error:function(data){ 
+						} 
+						
+				});
+				
+				
+				
+				
+				
+				
+				
+				
+				/*if(token==null){
+					window.location.href='/enjoyRedEnvelopeManager/html/login.html';
+				}		*/	
+				$("#mu_account").html(muAccount);
+				if(muRoWeight==1){
+					$("#admin").css("display","block");
+					$("#log").css("display","block");
+					$("#customer").css("display","block");
+					$("#nomal_reRedEnvelope").css("display","block");
+					$(".reRedEnvelope1").css("display","block");
+					$(".reRedEnvelope2").css("display","block");
+					$("#financial").css("display","block");					
+				}
+				else if(muRoWeight==2){
+					$("#log").css("display","block");
+					$("#customer").css("display","block");
+					$("#nomal_reRedEnvelope").css("display","block");
+					$(".reRedEnvelope1").css("display","block");
+					$(".reRedEnvelope2").css("display","block");
+					$("#financial").css("display","block");	
+				}
+				else if(muRoWeight==3){
+					$("#customer").css("display","block");
+					$("#nomal_reRedEnvelope").css("display","block");
+					$(".reRedEnvelope1").css("display","block");
+					$("#financial").css("display","block");	
+				}
+				else if(muRoWeight==4){
+					$("#financial").css("display","block");					
+				}
+				else if(muRoWeight==5){
+					$("#financial").css("display","block");
+				}
+			});
+			
+			function _logoutSysManUser(){
+				window.location.href='/enjoyRedEnvelopeManager/html/login.html';
+				/*$.ajax({
+			        type: 'POST',
+			        url: $base_path + 'ManagerUser/logoutSysManUser',
+			        data:'token=' + token,
+			        success: function(data) {
+			           if(data.code == 0){
+			           		alert(data.msg);
+							window.location.href='/enjoyRedEnvelopeManager/html/login.html';
+			        	}else{
+			        		if(data.code==-2)//跳转到登录页面
+								top.location.href='/enjoyRedEnvelopeManager/html/login.html';
+							else
+			        			alert(data.msg)
+			        	}
+			        }
+			    });*/				
+			}
+			
+		</script>
+	</head>
+
+	<body>
+		<!-- top -->
+		<div class="navbar navbar-default" id="navbar">
+			<!-- 顶部背景样式 -->
+			<div class="navbar-container" id="navbar-container">
+				<div class="navbar-header pull-left">
+					<a href="#" class="navbar-brand">
+						<small>
+							<i class="icon-leaf"></i>
+							斗拍联盟后台管理系统
+						</small>
+					</a>
+				</div>
+
+				<!-- 消息栏 -->
+				<div class="navbar-header pull-right" role="navigation">
+					<ul class="nav ace-nav">
+						<li class="grey">
+							<a data-toggle="dropdown" class="dropdown-toggle" href="#">
+								<i class="icon-tasks"></i>
+								<span class="badge badge-grey">0</span>
+							</a>
+							
+						</li>
+
+						<li class="purple">
+							<a data-toggle="dropdown" class="dropdown-toggle" href="#">
+								<i class="icon-bell-alt icon-animated-bell"></i>
+								<span class="badge badge-important">0</span>
+							</a>							
+						</li>
+
+						<li class="green">
+							<a data-toggle="dropdown" class="dropdown-toggle" href="#">
+								<i class="icon-envelope icon-animated-vertical"></i>
+								<span class="badge badge-success">0</span>
+							</a>							
+						</li>
+
+						<li class="light-blue">
+							<a data-toggle="dropdown" href="#" class="dropdown-toggle">
+								<img class="nav-user-photo" src="/enjoyRedEnvelopeManager/image/avatar2.png" alt="Jason's Photo" />
+								<span class="user-info">
+									<small>欢迎光临,</small>
+									<span id="mu_account"></span>
+								</span>
+
+								<i class="icon-caret-down"></i>
+							</a>
+							<ul class="user-menu pull-right dropdown-menu dropdown-yellow dropdown-caret dropdown-close">								
+								<li>
+									<a href="/enjoyRedEnvelopeManager/html/sysManUserInfo.html" target="ifm_content">
+										<i class="icon-user"></i> 个人资料
+									</a>
+								</li>
+								<li class="divider"></li>
+								<li>
+									<a href="javascript:_logoutSysManUser()">
+										<i class="icon-off"></i>
+										退出
+									</a>
+								</li>
+							</ul>
+						</li>
+					</ul>
+					<!-- /.ace-nav -->
+				</div>
+				<!-- /.navbar-header -->
+			</div>
+			<!-- /.container -->
+		</div>
+
+		<!-- menu & content -->
+		<div class="main-container" id="main-container">
+			<!-- menu -->
+			<div class="main-container-inner">
+				<a class="menu-toggler" id="menu-toggler" href="#">
+					<span class="menu-text"></span>
+				</a>
+				<div class="sidebar" id="sidebar">
+					<div class="sidebar-shortcuts" id="sidebar-shortcuts">
+						<div class="sidebar-shortcuts-large" id="sidebar-shortcuts-large">
+							<button class="btn btn-success">
+								<i class="icon-signal"></i>
+							</button>
+
+							<button class="btn btn-info">
+								<i class="icon-pencil"></i>
+							</button>
+
+							<button class="btn btn-warning">
+								<i class="icon-group"></i>
+							</button>
+
+							<button class="btn btn-danger">
+								<i class="icon-cogs"></i>
+							</button>
+						</div>
+
+						<div class="sidebar-shortcuts-mini" id="sidebar-shortcuts-mini">
+							<span class="btn btn-success"></span>
+							<span class="btn btn-info"></span>
+							<span class="btn btn-warning"></span>
+							<span class="btn btn-danger"></span>
+						</div>
+					</div>
+					<!-- #sidebar-shortcuts -->
+
+					<ul class="nav nav-list" id="menu_roles">
+						
+								
+						
+					</ul>
+					<!-- /.nav-list -->
+
+					<div class="sidebar-collapse" id="sidebar-collapse">
+						<i class="icon-double-angle-left" data-icon1="icon-double-angle-left" data-icon2="icon-double-angle-right"></i>
+					</div>
+
+				</div>
+				<div class="main-content">
+					<iframe name="ifm_content" width="100%;" height="888px;" frameborder="0" src="welcome.html"></iframe>
+				</div>
+				<!-- /.main-content -->
+			</div>
+			<!-- /.main-container-inner -->
+
+			<a href="#" id="btn-scroll-up" class="btn-scroll-up btn btn-sm btn-inverse">
+				<i class="icon-double-angle-up icon-only bigger-110"></i>
+			</a>
+		</div>
+		
+	</body>
+
+</html>

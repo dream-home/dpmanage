@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>充值积分加入合伙人</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js-->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/basepath.js"></script>
+		<!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+		<!--验证js-->
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/md5.js"></script>
+		
+		<script>
+			var token = sessionStorage.getItem("token");
+			var grid_user = "#grid_user";
+			var grid_pager_user = "#grid_pager_user";
+			var mUsers=null;
+			
+			$(function() {
+				var date = new Date();
+				var now = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+((date.getDate())<=9?("0"+date.getDate()):date.getDate());
+				
+				$.autoByWindow(grid_user);
+				
+				var person = {
+					status:3,
+					token:sessionStorage.getItem("token")
+					
+				}
+				
+				
+				
+				$.jqGrid(grid_user, $base_path + 'manage/recharge/partner', person,colNames_user, fd_user, grid_pager_user, "充值积分加入合伙人", null, true,true,15);
+				$("#t_grid_user").append($("#grid_user_tbar").html());
+				
+				
+				/*$("#datestart").val(now);		
+				$("#dateend").val(now);*/
+				
+				
+			});
+			
+			var colNames_user = ['记录编号','交易编号',"类型","uid",'金额(积分)','姓名','手机号','日期'];
+			var fd_user = [
+				{name:'id', index:'id', width:60, key: true},
+				{name:'orderNo', index:'orderNo', width:100,hidden:true},
+				{name:'remark', index:'remark', width:100},
+				{name:'uid', index:'uid', width:100,hidden:true},
+				{name:'confirmScore', index:'confirmScore', width:100},
+				{name:'userName', index:'userName',width:100,formatter:getstatus},
+				{name:'phone', index:'phone',width:100},
+				{name:'createTime', index:'createTime', width:100,},
+			];
+			
+			function getstatus(v,o,row){
+				
+				if(row.userName!=null){
+					return row.userName+"("+row.uid+")";
+					
+				}else{
+					return row.uid;
+				}
+				
+				
+				
+				
+				
+				
+				
+			}
+			
+			
+			
+			function getfashion(v){
+				return "第"+v+"次签到";
+			}
+			
+			function getStatus(v){
+				if(v=="0"){
+					return "普通";
+				}else if(v=="1"){
+					return "vip";
+				}else if(v=="2"){
+					return "初级合伙人";
+				}else if(v=="11"){
+					return "一星合伙人";					
+				}else if(v=="12"){
+					return "二星合伙人";
+				}else if(v=="13"){
+					return "三星合伙人";
+				}else if(v=="14"){
+					return "四星合伙人";
+				}else if(v=="15"){
+					return "五星合伙人";
+				}else if(v=="16"){
+					return "六星合伙人";
+				}else if(v=="17"){
+					return "七星合伙人";
+				}else if(v=="21"){
+					return "一星董事";
+				}else if(v=="22"){
+					return "二星董事";
+				}else if(v=="23"){
+					return "三星董事";
+				}else if(v=="24"){
+					return "四星董事";
+				}else if(v=="25"){
+					return "五星董事";
+				}
+				
+			}
+			
+			
+			
+			
+			
+			function getIsDisable(v,o,row){
+				//alert(row.isForbidden);
+				if(row.isForbidden == '1'){
+					return "是";
+				}else if(row.isForbidden == '0'){
+					return "否";
+				}
+					
+			}
+			
+			function gridUserComplete(){
+				var ids = $(grid_user).jqGrid('getDataIDs');
+				for (var i = 0; i < ids.length; i++) {
+					var id = ids[i];
+					var rowData = $(grid_user).getRowData(id);
+					var funcBtn = '<div class="action-buttons">';
+					var bianjiBtn = '<a class="blue" href="javascript:_select('+ id +')">编辑</a>';
+					var shanchuBtn = '<a class="blue" href="javascript:_del('+ id +')">删除</a>';
+					funcBtn += selectBtn + '</div>';
+	         		$(grid_user).setRowData(id, {func: funcBtn});
+	      		}
+			}
+			
+			
+			
+			function _search(){
+				//var uid = $("#uid").val().trim()==""?null:$("#uid").val().trim();
+				var mobile = $("#mobile").val().trim();
+				var uid = $("#uid").val().trim();
+				
+			
+				
+				
+				
+				
+				
+				if($("#datestart").val()!=""){
+					var datestart =new Date($("#datestart").val().trim()).Format("yyyy-MM-dd hh:mm:ss");
+					
+				}
+				if($("#dateend").val()!=""){
+					var dateend =new Date($("#dateend").val().trim()).Format1("yyyy-MM-dd hh:mm:ss");
+				}
+			
+				
+				$.setPostData(grid_user,{phone:mobile,donateUid:uid,fromTime:datestart,stopTime:dateend});
+			    $.refresh(grid_user);
+			}
+			
+			function _download(){
+				
+				var mobile = $("#mobile").val().trim();
+				var uid = $("#uid").val().trim();
+				var grade = $("#grade").val().trim();
+			
+				
+				
+				var datestart = "";
+				
+				var dateend1 = "";
+				
+				
+				if($("#datestart").val()!=""){
+					 datestart =new Date($("#datestart").val().trim()).Format("yyyy-MM-dd hh:mm:ss");
+					
+				}
+				if($("#dateend").val()!=""){
+					 
+					 dateend1 =new Date($("#dateend").val().trim()).Format1("yyyy-MM-dd hh:mm:ss");
+				}
+			
+				
+				$.ajax({
+					type:"get",
+					url:$base_path+"manage/sign/list",
+					//data:person,
+					beforeSend: function(request) {
+                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+               		},
+               		
+					success:function(data){
+						if(data.code==200){
+							
+							//location.href=$base_path+"manage/sign/extWalletSign?pageSize="+data.result.totalSize+"&status=1&token="+sessionStorage.getItem("token");
+							location.href=$base_path+"manage/sign/extWalletSign?pageSize="+data.result.totalSize+"&status=1&token="+sessionStorage.getItem("token")+"&phone="+mobile+"&donateUid="+uid+"&grade="+grade+"&stopTime="+dateend1+"&fromTime="+datestart;		
+							
+
+						}else if(data.code==1403){
+							overTime();
+						}else{
+							//alert(data.msg);
+						}
+
+					}, 
+					error:function(data){ 
+						alert("服务器跑丢了......");
+					} 
+					
+				});	
+				
+				
+				
+				
+				
+				
+				
+			}
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+		</script>
+	</head>
+	<body>
+		<div>
+			<table id="grid_user"></table>
+			<div id="grid_pager_user"></div>
+		</div>
+		
+		<!--user筛选工具栏-->
+		<div id="grid_user_tbar" style="display:none;">
+			<div class="action-buttons" style="margin-left: 10px; padding: 5px;">
+				<!--UID: <input id="uid" onblur="_search()"/>-->
+				会员UID: <input id="uid" onblur="_search()"/>
+				会员手机: <input id="mobile" onblur="_search()"/>
+				<!--等级: <select id="grade"  onblur="_search()">
+							<option value="">全部</option>
+							<option value="0">普通</option>
+							<option value="1">vip</option>
+							<option value="2">初级合伙人</option>
+							<option value="11">一星合伙人</option>
+							<option value="12">二星合伙人</option>
+							<option value="13">三星合伙人</option>
+							<option value="14">四星合伙人</option>
+							<option value="15">五星合伙人</option>
+							<option value="16">六星合伙人</option>
+							<option value="17">七星合伙人</option>
+							<option value="21">一星董事</option>
+							<option value="22">二星董事</option>
+							<option value="23">三星董事</option>
+							<option value="24">四星董事</option>
+							<option value="25">五星董事</option>
+							
+							
+							
+			
+				     </select>-->
+				日期: <input type="date" id="datestart" onblur="_search()" />至<input type="date" id="dateend" onblur="_search()"/>
+				<a class="blue" href="javascript:_search()"><i class="icon-search bigger-130"></i>查询</a>
+				<!--<a class="blue" href="javascript:_download()"><i class="icon-download bigger-130"></i>下载订单记录</a>-->
+			</div>
+		</div>
+		
+		<!-- 六度人脉信息窗口 -->
+		<form id="edit_user" class="grid_from checkform">
+			<div class="widget-header">
+				<h4 id="form_title">六度人脉信息</h4>
+				<span class="widget-toolbar">
+					<a href="#" data-action="close" onclick="closeForm('edit_user')">
+						<i class="icon-remove"></i>
+					</a>
+				</span>
+			</div>
+			<div class="form_content">
+				<!--<div class="form_content_table">
+					<table border="1">
+						<tr>
+							<th align="center">人脉</th>
+							<th align="center">会员ID</th>
+							<th align="center">会员昵称</th>
+						</tr>
+						
+						<tr>
+							<td>一度人脉: </td>
+							<td><input type="text" id="id1" placeholder="暂无此人脉id" readonly="readonly" /></td>
+							<td><input type="text" id="nickName1" placeholder="暂无此人脉昵称" readonly="readonly" /></td>
+						</tr>
+						
+						<tr>
+							<td>二度人脉: </td>
+							<td><input type="text" id="id2" placeholder="暂无此人脉id" readonly="readonly" /></td>
+							<td><input type="text" id="nickName2" placeholder="暂无此人脉昵称" readonly="readonly" /></td>
+						</tr>
+						
+						<tr>
+							<td>三度人脉: </td>
+							<td><input type="text" id="id3" placeholder="暂无此人脉id" readonly="readonly" /></td>
+							<td><input type="text" id="nickName3" placeholder="暂无此人脉昵称" readonly="readonly" /></td>
+						</tr>
+						
+						<tr>
+							<td>四度人脉: </td>
+							<td><input type="text" id="id4" placeholder="暂无此人脉id" readonly="readonly" /></td>
+							<td><input type="text" id="nickName4" placeholder="暂无此人脉昵称" readonly="readonly" /></td>
+						</tr>
+						
+						<tr>
+							<td>五度人脉: </td>
+							<td><input type="text" id="id5" placeholder="暂无此人脉id" readonly="readonly" /></td>
+							<td><input type="text" id="nickName5" placeholder="暂无此人脉昵称" readonly="readonly" /></td>
+						</tr>
+						
+						<tr>
+							<td>六度人脉: </td>
+							<td><input type="text" id="id6" placeholder="暂无此人脉id" readonly="readonly" /></td>
+							<td><input type="text" id="nickName6" placeholder="暂无此人脉昵称" readonly="readonly" /></td>
+						</tr>
+					</table>
+				</div>-->
+			</div>
+		</form>
+		
+		<div id="div_dialog"></div>
+		<div id="hidebg"></div>
+	</body>
+	
+</html>

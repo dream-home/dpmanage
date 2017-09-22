@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>账户基本信息</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		<!-- 导入选项卡样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_tab.css" />
+		<link rel="stylesheet"  href="/enjoyRedEnvelopeManager/css/inputstyle.css"  />
+		
+		
+			<style type="text/css">
+			
+			
+			.resizer {
+				overflow: hidden;
+			}
+			
+			.resizer.have-img button.ok {
+				display: inline-block;
+			}
+			
+			.resizer.have-img .inner {
+				display: block;
+			}
+			
+			.inner {
+				width: 100%;
+				position: relative;
+				font-size: 0;
+				overflow: hidden;
+				display: none;
+			}
+			
+			img {
+				width: 100%;
+			}
+			
+			.frames {
+				position: absolute;
+				top: 0;
+				left: 0;
+				border: 1px solid black;
+				cursor: move;
+				outline: rgba(0, 0, 0, 0.6) solid 10000px;
+			}
+			
+			button.ok {
+				float: right;
+				margin-left: 5px;
+				display: none;
+			}
+			
+			canvas {
+				max-width: 100%;
+				margin: auto;
+				display: block;
+			}
+		</style>
+		
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js -->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--验证js-->
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<!--
+        	引进路径
+        -->
+        <script type="text/javascript" src="/enjoyRedEnvelopeManager/js/basepath.js" ></script>
+        <!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+
+		<script>
+		var token = sessionStorage.getItem("token");
+		var grid_user= "#grid_user";
+		var grid_pager_user = "#grid_pager_user";
+		$(function() {
+					var date = new Date();
+					var now = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+((date.getDate())<=9?("0"+date.getDate()):date.getDate());	
+					$.autoByWindow(grid_user);
+					/*var per = {
+						status:0,
+						token:sessionStorage.getItem("token")
+					}
+					
+					$.jqGrid(grid_user, $base_path + 'manage/goods/list',per, colNames_user, fd_user, grid_pager_user, "商品列表", gridUserComplete,true,true,15);*/
+					/*url传参*/
+					$.jqGrid(grid_user, $base_path + 'manage/goods/list?goodsType=0',false, colNames_user, fd_user, grid_pager_user, "商品列表", gridUserComplete,true,true,15);
+					$("#t_grid_user").append($("#grid_user_tbar").html());
+					
+					$.navGrid(grid_user, grid_pager_user);
+					$.navButtonAdd(grid_user, grid_pager_user, 'icon-plus-sign purple', '<font color="purple">添加</font>', '添加', add);
+					//uploadBase("mu_Input","icon","adImg");
+					//$.navButtonAdd(grid_user, grid_pager_user, 'icon-trash red', '<font color="red">商品下架</font>', '商品下架', beforeDel);
+					/*$("#datestart").val(now);		
+					$("#dateend").val(now);
+					*/
+					//_search();
+					$.ajax({
+			        type: 'get',
+			        url: $base_path +"manage/goods/animalsGoods/list",
+			        beforeSend: function(request) {
+                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+               		},
+			        success: function(data) {
+			        	if(data.code == 200){
+			        		
+			        		
+			        		var str1 = "<option  value=''>全部</option>";
+			        		var str = "";
+			        		for(i in data.result.rows){
+			        			
+			        			if(i==0){
+			        				str+="<option value='"+data.result.rows[i].id+"'>"+ data.result.rows[i].name+"</option>";	
+			        			}else{
+			        				str+="<option value='"+data.result.rows[i].id+"'>"+ data.result.rows[i].name+"</option>";
+			        			}
+			        			
+			        		}
+						    $("#goodsSortId").html(str);
+						    
+						    
+						    $("#goodsSorts").html(str1+str);
+						    
+						    
+			        	}else if(data.code == 1403){
+			        		overTime();
+			        	}else{
+			        		//alert(data.msg);
+			        	}
+			        },
+			        
+			        })
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					$(".checkform").Validform({
+						tiptype:function(msg, o, cssctl){
+							var objtip = $("#msgspan");
+							cssctl(objtip,o.type);
+							objtip.text(msg);
+						},
+						callback: function(){
+							edit_submit();
+							return false;
+						}
+					});
+					//匿名form表单
+					$("#uploadImg").click(function(){					
+						/*alert(JSON.stringify(new FormData($('#edit_user')[0])));*/
+						$.ajax({
+						    url: $base_path+"manage/image/upload",
+						    type: 'POST',
+						    cache: false,
+						    data: new FormData($('#edit_user')[0]),
+						    beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		               		},
+						    processData: false,
+						    contentType: false
+						}).done(function(res) {
+							if(res.code==200){
+								$("#icon").attr("src",sessionStorage.getItem("imgUrl")+res.result);
+								$("#adImg").val(res.result);
+								
+							}else if(res.code==1403){
+								overTime();
+							}else{
+								//alert(res.msg);
+							}
+							
+							//alert($("#mu_img").attr("src"));
+							//alert(res.result);
+						}).fail(function(res) {
+							
+						});
+	
+					})
+					
+					
+				
+			});
+			
+			var colNames_user = ['ID', 'icon','图片', '商品名称', '商品介绍','商品属性','商品价格', '竞拍积分','竞拍人数','发布时间','商品是否下架','是否开启委托','备注','操作'];
+			var fd_user = [
+				{name:'id', index:'id', width:60, key: true,hidden:true},
+				{name:'icon', index:'icon', hidden:true},
+				{name:'image', index:'image', width:60,formatter:getStatus,align:'center',hidden:true},
+				{name:'name', index:'name', align: 'center', width:60},
+				{name:'detail', index:'detail', align: 'center', width:60},
+				{name:'goodsSortId', index:'goodsSortId', align: 'center', hidden:true,width:60},
+				{name:'price', index:'price', align: 'center', width:60},
+				{name:'drawPrice', index:'drawPrice', align: 'center', width:60},
+				{name:'drawNum', index:'drawNum', align: 'center', width:60},
+				{name:'createTime', index:'createTime', align: 'center',width:60, sorttype:"date"},
+				{name:'status', index:'status', width:60, align: 'center',hidden: true},
+				{name:'saleSwitch', index:'saleSwitch', width:60, align: 'center',formatter:getSwitch},
+				{name:'remark', index:'remark', width:60, align: 'center'},
+				{name:'func',index:'func', width:120, align: 'center'}
+			];
+			
+			function getSwitch(v){
+				
+				if(v =='0'){
+					return "否";
+				}else if(v =='1'){
+					return "是";
+				}
+				
+				
+			}
+			
+			
+			
+			function getStatus(v,o,row){
+				
+				return "";
+				/*if(row.icon == ""){
+					return "";
+				}else{
+					return "<img style='width:30px;height=30px;' src='"+row.icon+"'>";
+				}*/
+			}
+			
+			function gridUserComplete(){
+				var ids = $(grid_user).jqGrid('getDataIDs');
+				for (var i = 0; i < ids.length; i++) {
+					var paramId = ids[i];
+					
+					var paramIds = ids[i];
+					var paramIds = ids[i+1];
+					var count  =  i;
+					count++;
+					if(ids.length == count){
+						//alert("dd");
+						paramIds = ids[i];
+					}
+					
+					var rowData = $(grid_user).getRowData(paramId);
+					
+					var funcBtn = '<div class="action-buttons">';
+					var editBtn = '<a class="blue" href="javascript:_edit(&quot;'+paramId+'&quot;)"><i class="icon-search bigger-130"></i>查看</a>';
+					//var sort = '<a class="blue" href="javascript:_sort(&quot;'+paramId+'&quot;,&quot;'+paramIds+'&quot;)"><i class="icon-sort bigger-130" aria-hidden="true"></i>升序</a>';
+					
+					funcBtn += editBtn+'</div>';
+	         		$(grid_user).setRowData(paramId, {func: funcBtn});
+	         		
+	      		}
+				//_search();
+			}
+			
+		
+			
+			
+			
+			
+			
+			
+			
+			function _search(){
+				var goodsName = $("#goodsName").val().trim();
+				
+				var goodsSorts = $("#goodsSorts").val().trim();
+				var status = $("#status").val().trim();
+				var datestart ="";
+				var dateend ="";
+				
+				if(goodsName.trim().length>32){
+					alert("商品名称最多只有输入32个字符");
+					$("#goodsName").val("");
+					return;
+				}
+				
+				
+				if($("#datestart").val()!=""){
+					var datestart =new Date($("#datestart").val().trim()).Format("yyyy-MM-dd hh:mm:ss");
+					
+				}
+				if($("#dateend").val()!=""){
+					var dateend =new Date($("#dateend").val().trim()).Format1("yyyy-MM-dd hh:mm:ss");
+				}
+			
+				$.setPostData(grid_user, {name: goodsName,goodsSortId:goodsSorts,status: status, startTime: datestart, endTime: dateend});
+			    $.refresh(grid_user);
+			}
+			
+			function _sort(id,ids){
+				//alert(id+ids);
+				/*if(id == ids){
+					
+				}*/
+			var person  = {
+				downId:id,
+				upId:ids
+			}
+				
+				
+			$.ajax({
+					type:"get",
+					url:$base_path+"manage/ad/exchangeOrder", 
+					async:true,
+					data:person,
+					beforeSend: function(request) {
+                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+               		 },
+					
+					success:function(data){
+						if(data.code==200){
+							alert("修改成功");
+							$.refresh(grid_user);	
+						}else if(data.code==1403){
+							overTime();
+						}else{
+							//alert(data.msg);
+						}
+						
+					}, 
+					error:function(data){ 
+						alert("服务器跑丢了......");
+					} 
+					
+			});
+				
+			
+				
+				
+			}
+			
+			
+			
+			function add(){
+				_edit('');
+				   
+				$("#form_title").html('添加商品');
+				$("#tr_pwd").show(); 
+				//$("#mu_pwd").attr('ignore', ''); 
+				$("#msgspan").text('');
+				$("#icon").prop("src","/enjoyRedEnvelopeManager/image/logoImg.png");
+				$("#name").val('');
+			 	$("#price").val('');
+			 	$("#detail").val('');
+			 	$("#drawPrice").val('');
+			 	$("#drawNum").val('');
+			 	$("#detail").val('');
+			 	$("#remark").val('');
+			 	$("#goodsSortId").val("");
+			 	$("#up").prop("checked","checked");
+				$.show("edit_user");
+			}
+			function beforeDel(){
+				var ids = $(grid_user).getGridParam('selarrrow');
+				if(ids == ''){
+					$.reminderDailog("div_dialog", '<i class="icon-warning-sign"></i>警告', '请选中行!');
+				}else{
+					$.openDelDailog("div_dialog", del);
+				}
+			}
+			function del(){
+				
+				
+				
+				
+				
+				
+				var ids = $(grid_user).getGridParam('selarrrow');
+				//alert(ids);
+				if($('#div_dialog').html() != ''){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/goods/down',
+				        data: 'goodsId=' + ids,
+				        beforeSend: function(request) {
+	                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+	               		},
+				        success: function(data) {
+				        	if(data.code==200){
+								$.refresh(grid_user);
+								$.closeDelDailog();
+					          	alert('删除成功！');
+					       	}else{					       		
+								//alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';
+					       	}
+				        }
+				    });
+			   }
+			}
+			
+			function _edit(id){
+				
+				if(id==""){
+					
+				}else{
+					
+					
+					//alert(id);title  mu_rank
+					//$("#mu_img1").val(""); 
+					$("#form_title").html('查看详情');
+					$("#msgspan").text(''); 
+					
+					var model = $(grid_user).getRowData(id); 
+					$("#adImg").val(model.icon); 
+					$("#id").val(model.id);
+					//$("#mu_img").attr("src",$downImg+res.result);
+					$("#icon").attr("src",model.icon);
+					//$("#image").attr("src",model.icon);
+					$("#name").val(model.name);
+					$("#detail").val(model.detail);
+					$("#price").val(model.price); 
+					$("#drawPrice").val(model.drawPrice);
+					$("#drawNum").val(model.drawNum);
+					$("#createTime").val(model.createTime);
+					$("#remark").val(model.remark);
+					
+					//$("#goodsSortId").val(model.goodsSortId);
+					$("#goodsSortId").val(model.goodsSortId);
+					//alert(model.goodsSortId);
+					if(model.status==1){
+						$("#up").prop("checked","checked");
+					}else{
+						$("#down").prop("checked","checked");
+					}
+				}
+				
+				$.show("edit_user");
+				
+				
+			}
+			
+			//重置
+			function resetForm(){
+				var muId=$("#id").val();
+				
+				if(muId == ''){
+					_edit(muId);
+					
+					$("#form_title").html('添加商品');
+					$("#tr_pwd").show(); 
+					$("#msgspan").text('');
+					$("#uploadImg").prop("src","/enjoyRedEnvelopeManager/image/logoImg.png");
+					$("#name").val('');
+				 	$("#price").val('');
+				 	$("#detail").val('');
+				 	$("#drawPrice").val('');
+				 	$("#drawNum").val('');
+				 	$("#detail").val('');
+				 	$("#remark").val('');
+				 	$("#goodsSortId").val("");
+				 	$("#up").prop("checked","checked");
+				}else{
+					_edit(muId);
+					$("#form_title").html('编辑商品');
+					$("#msgspan").text('');
+					//$("#tr_pwd").hide(); 
+					$("#mu_pwd").attr('ignore', 'ignore');
+					//$("#msgspan").text('');
+
+				 	//$("#up").prop("checked","checked");
+				}
+			}
+			
+			//提交编辑表单
+			function edit_submit(){
+			  //$("#goodsSortId").val($("#goodsSortIdNo").val());
+				
+				var form = $("#edit_user").serialize();
+				var cho = $("#weituo").prop("checked")==true?'1':'0';
+				//alert(cho);
+				
+				//form+="&saleSwitch="+;
+				form +="&saleSwitch="+cho;
+				//alert(form);
+				
+				
+				
+				$.ajax({
+						type:"post",
+						url:$base_path+"manage/sys/detail", 
+						beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		                },
+						success:function(data){ 
+							if(data.code==200){			
+								if($("#drawNum").val()<data.result.drawNumMin){
+									alert("竞拍人数不能小于系统设置的最小开奖人数");
+									return ;
+								}else{
+									var id = $("#id").val();
+									$.ajax({
+								        type: 'POST',
+								        url: $base_path + (id == '' ? 'manage/goods/add' : 'manage/goods/update'),
+								        beforeSend: function(request) {
+					                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+					               		},
+					               		data:form,
+								        success: function(data) {
+								        	if(data.code == 200){
+											    $.hide("edit_user");
+											    $.refresh(grid_user);
+											    if(id == ''){
+											    	alert("添加成功");
+											    }else{
+											    	alert("修改成功");	
+											    }
+											    $("#id").val("");
+											    
+								        	}else if(data.code==1403){
+												overTime();
+								        	}else{
+								        		alert(data.msg);
+								        	}
+								        	
+								        	
+								        	
+								        },
+								    });
+
+								}
+								
+							}else if(data.code==1403){
+								
+								overTime();
+							}else{
+								//alert(data.msg);
+							}
+						}, 
+						error:function(data){ 
+							alert("服务器跑丢了......");
+						} 
+						
+				});
+				
+				
+				
+			
+				
+				
+			}
+	
+			//是否禁用
+			function _disable(id, v){
+				
+				var tishi="";
+				
+				if(v == 1){
+					tishi="是否禁用该幻灯片";
+				}else if(v == 0){
+					tishi="是否解除该禁用幻灯片";
+				}
+				
+				if(confirm(tishi)){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'ManagerUser/editSysManUser',
+				        data: 'muId=' + id + '&muIsDisable=' + v + '&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==0)
+				           		alert(v == 1 ? '已禁用！' : '禁用已解除.');
+				           	else{
+				        		alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';			           			
+			           		}
+				        }
+				    });
+				    $.refresh(grid_user);
+				}
+				
+			    $.refresh(grid_user);
+			}
+			
+			//重置密码
+			function _reset(id){
+				if(confirm("是否重置密码")){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'ManagerUser/resetSysManUserPwd',
+				        data: 'muId=' + id + '&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==0)
+				           		alert('密码重置成功！');
+				           	else{
+				        		alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';				           		
+				           	}
+				        }
+				    });					
+				}
+			}
+		
+		</script>
+	</head>
+	<body>
+		
+		<div>
+			<table id="grid_user"></table>
+			<div id="grid_pager_user"></div>
+		</div>
+		<div id="grid_user_tbar" style="display:none;">
+			<div class="action-buttons" style="margin-left: 10px; padding: 5px;">
+				商品名称: <input id="goodsName" onblur="_search()"/>
+				商品属性: <select id="goodsSorts" onblur="_search()">
+						<option value="">全部</option>
+						<option value="0" >下架商品</option>
+						<option value="1">上架商品</option>
+					 </select>
+
+				类型: <select id="status" onblur="_search()">
+						<option value="">全部</option>
+						<option value="0" >下架商品</option>
+						<option value="1">上架商品</option>
+					 </select>
+				日期: <input id="datestart" type="date" onblur="_search()"/>至<input type="date" id="dateend" onblur="_search()"/>
+				<a class="blue" href="javascript:_search()"><i class="icon-search bigger-130"></i>查询</a>
+			</div>
+		</div>
+		
+		<!-- 编辑商品信息窗口 -->
+		<form id="edit_user" class="grid_from checkform">
+			<div class="widget-header">
+				<h4 id="form_title">商品信息</h4>
+				<span class="widget-toolbar">
+					<a href="#" data-action="close" onclick="closeForm('edit_user')">
+						<i class="icon-remove"></i>
+					</a>    
+				</span>
+			</div>
+			<div class="form_content">
+				<input type="hidden" id="id" name="id"/>
+				<div class="form_content_table">
+					<span id="msgspan" style="color:red;"></span>
+					<table>
+						<!--<form id="uploadform" >-->
+						<tr>
+							<td>图片</td>
+							<td style=" width: 70px;">
+								<input type="file" style="width: 66px;" id="fileImg" accept="images/*">
+						    </td>
+						    <td >
+						    	<!--<input type="button" id="saveImg" class="btn btn-warning" style="width:80px; margin-left: -60px;" value="保存">-->
+						    </td>
+						</tr>
+						<tr>
+							<td></td>
+							<td><div class="container" style="width: 150px;"></div></td>
+						</tr> 
+						<!--</form>-->
+						<tr>
+							<td><input type="hidden" name="icon" id="adImg"></td>
+							<td id="image"><img style="width: 120px;height: 120px;" src="/enjoyRedEnvelopeManager/image/logoImg.png" id="icon"></td>
+						</tr>
+						<tr>
+							<td></td>
+							<td></td>
+						</tr>
+						<tr>
+							<td>商品名称</td>
+							<td><input type="text" id="name" name="name" placeholder="商品名称" datatype="s1-18" nullmsg="请输入商品名称" errormsg="商品名称有误" /></td>
+						</tr>
+						<tr>
+							<td>商品介绍</td>
+							
+							<td><textarea style="width: 200px;height: 70px;"  id="detail" name="detail" placeholder="商品介绍" datatype="s1-200" nullmsg="请输入商品介绍" errormsg="商品介绍有误"></textarea></td>
+						</tr>
+						<tr id="tr_pwd">
+							<td>商品价格</td>
+							<td><input type="text"  id="price" name="price" placeholder="商品价格" datatype="n1-5" nullmsg="请输入商品价格！" errormsg="商品价格输入有误"/></td>
+						</tr>
+						<tr>
+							<td>商品属性</td>
+							<td>
+								<!--<input type="hidden" id="goodsSortId" name="goodsSortId" />-->
+								<select id="goodsSortId" name="goodsSortId" autocomplete="off">
+									
+									
+								</select>
+								
+								
+						</tr>
+						<tr>
+							<td>竞拍人数</td>
+							<td><input type="text"   id="drawNum" name="drawNum" placeholder="竞拍人数" datatype="n1-5" nullmsg="请输入竞拍人数" errormsg="竞拍人数有误" /></td>
+						</tr>
+						
+						<tr>
+							<td>竞拍积分</td>
+							<td><input type="text" readonly="readonly" id="drawPrice"  placeholder="竞拍积分" /></td>
+						</tr>
+						
+						<tr>
+							<td>商品备注</td>
+							<td><input type="text" id="remark" name="remark" placeholder="商品备注" datatype="*1-200" nullmsg="请输入商品备注" errormsg="商品备注有误" /></td>
+						</tr>
+						<tr>
+							<td>状态</td>
+							<td><input type="radio" checked="checked" style="width: 50px;" id="up" name="status" value="1"/>上架<input style="width: 50px;" type="radio" id="down" name="status" value="0"/>下架</td>
+						</tr>
+						<tr>
+							<td>开启委托</td>
+							<td><label  class="iosCheck col-md-2" style=" margin-bottom: -20px; margin-top: -10px;   margin-left: 10px;"><input id="weituo" class="inputyuan" type="checkbox" ><i></i></label></td>
+						</tr>
+						
+						
+					</table>
+					
+					
+					
+				</div>
+				<div>
+					<button class="btn btn-info button-left" type="submit">
+						<i class="icon-ok bigger-110"></i>
+						提交
+					</button>
+					<button class="btn button-right" type="button" onclick="resetForm()">
+						<i class="icon-undo bigger-110"></i>
+						重置
+					</button>
+				</div>
+			</div>
+		</form>
+		
+		<div id="div_dialog"></div>
+		<div id="hidebg"></div>
+	</body>
+	<script type="text/javascript">
+			var src1 = "";
+			var swidth = 720;
+			var tmp = $('<div class="resizer">' +
+
+				'<div class="inner">' +
+
+				'<img style="100%">' +
+
+				'<div class="frames"></div>' +
+
+				'</div>' +
+
+				//'<button>&#10007;</button>'+
+
+				'<button type="button" class="ok">&#10003;</button>' +
+
+				'</div>');
+
+			$.imageResizer = function() {
+
+				if(Uint8Array && HTMLCanvasElement && atob && Blob) {
+
+				} else {
+
+					return false;
+
+				}
+
+				var resizer = tmp.clone();
+
+				resizer.image = resizer.find('img')[0];
+
+				resizer.frames = resizer.find('.frames');
+
+				resizer.okButton = resizer.find('button.ok');
+
+				resizer.frames.offset = {
+
+					top: 0,
+
+					left: 0
+
+				};
+
+				resizer.okButton.click(function() {
+
+					resizer.clipImage();
+					$(".container").hide();
+					//alert(document.getElementsByName("inner").innerHTML);
+					//alert(src1); image
+					//alert(src1);
+					
+					//$("#image").html(src1);
+					$("#icon").prop("src",src1);
+					$("#adImg").val(src1);
+					//alert($("#icon").prop("src"));
+					
+						
+				});
+
+				resizer.clipImage = function() {
+
+					var nh = this.image.naturalHeight,
+
+						nw = this.image.naturalWidth,
+
+						size = nw > nh ? nh : nw;
+
+					//size=size>1000?1000:size;
+					size = swidth;
+					
+					var canvas = $('<canvas width="' + size + '" height="' + size + '"></canvas>')[0],
+
+						ctx = canvas.getContext('2d'),
+
+						scale = nw / this.offset.width,
+
+						x = this.frames.offset.left * scale,
+
+						y = this.frames.offset.top * scale,
+
+						w = this.frames.offset.size * scale,
+
+						h = this.frames.offset.size * scale;
+
+					ctx.drawImage(this.image, x, y, w, h, 0, 0, size, size);
+
+					var src = canvas.toDataURL("image/png", 0.5);
+					//alert(src.length);
+					//console.log(src);
+					src1 = src;
+					
+					this.canvas = canvas;
+
+					this.append(canvas);
+
+					this.addClass('uploading');
+
+					this.removeClass('have-img');
+
+					src = src.split(',')[1];
+
+					if(!src) return this.doneCallback(null);
+
+					src = window.atob(src);
+
+					var ia = new Uint8Array(src.length);
+
+					for(var i = 0; i < src.length; i++) {
+
+						ia[i] = src.charCodeAt(i);
+
+					};
+
+					this.doneCallback(new Blob([ia], {
+						type: "image/png"
+					}));
+					
+					
+
+				};
+
+				resizer.resize = function(file, done) {
+
+					this.reset();
+
+					this.doneCallback = done;
+
+					this.setFrameSize(0);
+
+					this.frames.css({
+
+						top: 0,
+
+						left: 0
+
+					});
+
+					var reader = new FileReader();
+
+					reader.onload = function() {
+
+						resizer.image.src = reader.result;
+
+						reader = null;
+
+						resizer.addClass('have-img');
+
+						resizer.setFrames();
+
+					};
+
+					reader.readAsDataURL(file);
+
+				};
+
+				resizer.reset = function() {
+
+					this.image.src = '';
+
+					this.removeClass('have-img');
+
+					this.removeClass('uploading');
+
+					this.find('canvas').detach();
+
+				};
+
+				resizer.setFrameSize = function(size) {
+
+					this.frames.offset.size = size;
+
+					return this.frames.css({
+
+						width: size + 'px',
+
+						height: size + 'px'
+
+					});
+
+				};
+
+				resizer.getDefaultSize = function() {
+
+					var width = this.find(".inner").width(),
+
+						height = this.find(".inner").height();
+
+					this.offset = {
+
+						width: width,
+
+						height: height
+
+					};
+
+					console.log(this.offset)
+
+					return width > height ? height : width;
+
+				};
+
+				resizer.moveFrames = function(offset) {
+
+					var x = offset.x,
+
+						y = offset.y,
+
+						top = this.frames.offset.top,
+
+						left = this.frames.offset.left,
+
+						size = this.frames.offset.size,
+
+						width = this.offset.width,
+
+						height = this.offset.height;
+
+					if(x + size + left > width) {
+
+						x = width - size;
+
+					} else {
+
+						x = x + left;
+
+					};
+
+					if(y + size + top > height) {
+
+						y = height - size;
+
+					} else {
+
+						y = y + top;
+
+					};
+
+					x = x < 0 ? 0 : x;
+
+					y = y < 0 ? 0 : y;
+
+					this.frames.css({
+
+						top: y + 'px',
+
+						left: x + 'px'
+
+					});
+
+					this.frames.offset.top = y;
+
+					this.frames.offset.left = x;
+
+				};
+
+				(function() {
+
+					var time;
+
+					function setFrames() {
+
+						var size = resizer.getDefaultSize();
+
+						resizer.setFrameSize(size);
+
+					};
+
+					window.onresize = function() {
+
+						clearTimeout(time)
+
+						time = setTimeout(function() {
+
+							setFrames();
+
+						}, 1000);
+
+					};
+
+					resizer.setFrames = setFrames;
+
+				})();
+
+				(function() {
+
+					var lastPoint = null;
+
+					function getOffset(event) {
+
+						event = event.originalEvent;
+
+						var x, y;
+
+						if(event.touches) {
+
+							var touch = event.touches[0];
+
+							x = touch.clientX;
+
+							y = touch.clientY;
+
+						} else {
+
+							x = event.clientX;
+
+							y = event.clientY;
+
+						}
+
+						if(!lastPoint) {
+
+							lastPoint = {
+
+								x: x,
+
+								y: y
+
+							};
+
+						};
+
+						var offset = {
+
+							x: x - lastPoint.x,
+
+							y: y - lastPoint.y
+
+						}
+
+						lastPoint = {
+
+							x: x,
+
+							y: y
+
+						};
+
+						return offset;
+
+					};
+
+					resizer.frames.on('touchstart mousedown', function(event) {
+
+						getOffset(event);
+
+					});
+
+					resizer.frames.on('touchmove mousemove', function(event) {
+
+						if(!lastPoint) return;
+
+						var offset = getOffset(event);
+
+						resizer.moveFrames(offset);
+
+					});
+
+					resizer.frames.on('touchend mouseup', function(event) {
+
+						lastPoint = null;
+
+					});
+
+				})();
+
+				return resizer;
+
+			};
+
+			var resizer = $.imageResizer(),
+
+				resizedImage;
+
+			if(!resizer) {
+
+				resizer = $("<p>Your browser doesn't support these feature:</p><ul><li>canvas</li><li>Blob</li><li>Uint8Array</li><li>FormData</li><li>atob</li></ul>")
+
+			};
+
+			$('.container').append(resizer);
+
+			$('input').change(function(event) {
+
+				var file = this.files[0];
+
+				resizer.resize(file, function(file) {
+
+					resizedImage = file;
+
+				});
+
+			});
+			
+			
+			
+			$("#saveImg").click(function(){
+				
+				$(".container").hide();
+				
+				
+			  	$("#fileImg").val('');
+				//alert(src1);
+				console.log(src1);
+			})
+			
+			$("#fileImg").click(function(){
+				$("#fileImg").val('');
+				$(".container").show();
+				
+				  
+			})
+			
+			
+		</script>
+
+</html>

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>充值订单</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js-->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/basepath.js"></script>
+		<!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+		<!--验证js-->
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/md5.js"></script>
+		
+		<script>
+			var token = sessionStorage.getItem("token");
+			var grid_user = "#grid_user";
+			var grid_pager_user = "#grid_pager_user";
+			var mUsers=null;
+			
+			$(function() {
+				var date = new Date();
+				var now = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+((date.getDate())<=9?("0"+date.getDate()):date.getDate()); 
+				$.autoByWindow(grid_user);
+				$.jqGrid(grid_user, $base_path + 'manage/logs/list', false, colNames_user, fd_user, grid_pager_user, "财务日志", null, true,true,15);
+				$("#t_grid_user").append($("#grid_user_tbar").html());
+				/*$("#datestart").val(now);		
+				$("#dateend").val(now);*/
+			});
+			
+			var colNames_user = ['ID','会员UID','手机号','财务类型','recordType', '日志内容', '金额', '收入/支出','时间','操作'];
+			var fd_user = [
+				{name:'id', index:'id', width:25,key:true,hidden:true},
+				{name:'uid', index:'uid', width:25},
+				{name:'phone', index:'phone', width:40},
+				{name:'recordTypeName', index:'recordTypeName', width:30},
+				{name:'recordType', index:'recordType', width:30,hidden:true},
+				{name:'remark', index:'remark', width:30,},
+				{name:'score', index:'score', width:40},
+				{name:'score', index:'score', width:30,formatter:getScore},
+				{name:'createTime',index:'fcreateTime',width:30},
+				{name:'waIsDelete',index:'waIsDelete',width:40}
+			];
+			
+			function getIsDisable(v,o,row){
+				//alert(row.isForbidden);
+				if(row.isForbidden == '1'){
+					return "是";
+				}else if(row.isForbidden == '0'){
+					return "否";
+				}
+					
+			}
+			
+			function getTypes(v){
+				
+				if(v=='0'){
+					return "充值";
+				}else if(v=="1"){
+					return "兑换";
+				}else if(v=="2"){
+					return "赠送";
+				}else if(v=="3"){
+					return "斗拍消费";
+				}else if(v=="4"){
+					return "斗拍中奖";
+				}else if(v=="5"){
+					return "委托出售";
+				}else if(v=='6'){
+					return "积分购买";
+				}else if(v=='7'){
+					return "退款";
+				}else if(v=='8'){
+					return "分销奖励";
+				}else if(v=='9'){
+					return "商家服务费";
+				}else if(v=='10'){
+					return "差价收益";
+				}else if(v=="11"){
+					return "直接购买";
+				}else if(v=="12"){
+					return "商家赠送EP值";
+				}else if(v=="13"){
+					return "签到领取";
+				}else if(v=='14'){
+					return "续费消费EP值";
+				}else if(v=='15'){
+					return "邀请好友赠送EP值";
+				}else if(v=='16'){
+					return "绑定手机号赠送EP值";
+				}else if(v=='17'){
+					return "系统赠送绑定手机号EP值";
+				}else if(v=="18"){
+					return "EP兑换";
+				}else if(v=="19"){
+					return "商家扫码支付";
+				}else if(v=="20"){
+					return "用户扫码支付";
+				}else if(v=="21"){
+					return "扫码支付赠送EP";
+				}else if(v=="22"){
+					return "系统抽取商家费用";
+				}else{
+					return "";
+				}
+				
+			}
+			
+			function getScore(v){
+				if(v>=0){
+					return "收入";
+				}else if(v<0){
+					return "支出";
+				}
+				
+			}
+			
+			function gridUserComplete(){
+				var ids = $(grid_user).jqGrid('getDataIDs');
+				for (var i = 0; i < ids.length; i++) {
+					var id = ids[i];
+					var rowData = $(grid_user).getRowData(id);
+					var funcBtn = '<div class="action-buttons">';
+					var bianjiBtn = '<a class="blue" href="javascript:_select('+ id +')">通过</a>';
+					var shanchuBtn = '<a class="blue" href="javascript:_del('+ id +')">不通过</a>';
+					funcBtn += selectBtn + '</div>';
+	         		$(grid_user).setRowData(id, {func: funcBtn});
+	      		}
+			}
+			
+			Date.prototype.Format = function(fmt)   
+			{ //author: meizz   
+			  var o = {   
+			    "M+" : this.getMonth()+1,                 //月份   
+			    "d+" : this.getDate(),                    //日   
+			    "h+" : this.getHours()-8,                   //小时   
+			    "m+" : this.getMinutes(),                 //分   
+			    "s+" : this.getSeconds(),                 //秒   
+			    "q+" : Math.floor((this.getMonth()+3)/3), //季度   
+			    "S"  : this.getMilliseconds()             //毫秒   
+			  };   
+			  if(/(y+)/.test(fmt))   
+			    fmt=fmt.replace(RegExp.$1, (this.getFullYear()+"").substr(4 - RegExp.$1.length));   
+			  for(var k in o)   
+			    if(new RegExp("("+ k +")").test(fmt))   
+			  	fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (("00"+ o[k]).substr((""+ o[k]).length)));   
+			  return fmt;   
+			}  
+			
+			
+			
+			
+			function _search(){
+				var uid = $("#uid").val().trim();
+				var phone = $("#phone").val().trim();
+				var recordType = $("#recordType").val().trim();
+				
+				if($("#uid").val()!=null){
+					if($("#uid").val().trim().length>32){
+						alert("uid最多只有输入32个字符");
+						$("#uid").val("");
+						return;
+					}
+				}
+				if($("#phone").val()!=null){
+					if($("#phone").val().trim().length>32){
+						alert("手机号码最多只有输入32个字符");
+						$("#phone").val("");
+						return;
+					}	
+				}
+				
+				
+				
+				
+				if($("#datestart").val()!=""){
+					var datestart =new Date($("#datestart").val().trim()).Format("yyyy-MM-dd hh:mm:ss");
+					
+				}
+				if($("#dateend").val()!=""){
+					var dateend =new Date($("#dateend").val().trim()).Format1("yyyy-MM-dd hh:mm:ss");
+				}
+			
+				
+				
+				//var datestart = $("#datestart").val().trim();
+				//var dateend =  $("#dateend").val().trim();
+				//alert(JSON.stringify(datestart+":"+dateend));
+				//$.setPostData(grid_user, {uid: uid, phone: mobile, status: status, fromTime: datestart,endTime:dateend});
+				$.setPostData(grid_user,{uid:uid,recordType:recordType,phone:phone,fromTime:datestart,stopTime:dateend});
+			    $.refresh(grid_user);
+			}
+			
+			
+			function _del(){
+				var ids = $(grid_user).getGridParam('selarrrow');
+				if($('#div_dialog').html() != ''){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'ManagerUser/delSysManUser',
+				        data: 'delIds=' + ids + '&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==0){
+								$.refresh(grid_user);
+								$.closeDelDailog();
+					          	alert('删除成功！');
+					       	}else{					       		
+								alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';
+					       	}
+				        }
+				    });
+			   }
+			}
+			
+			
+			
+			
+			
+			
+			function _select(id){
+				$.ajax({
+			        type: 'POST',
+			        async: false,
+			        url: $base_path + 'mUser_managerController/getConnectionByUser',
+			        data: 'token=' + token + '&id=' + id,
+			        success: function(data) {
+			        	if(data != null){
+			        		mUsers=eval(data.result.rows);
+			        	}else{
+			        		alert("查询人脉关系失败");
+			        		//$.refresh(grid_user);
+			        	}
+			        }
+			    });
+			    
+			    if(mUsers != null){
+			    	//alert(mUsers[0].id1);
+			    	if(mUsers[0].id1 !=null){
+			    		$("#id1").val(mUsers[0].id1);
+			        	$("#nickName1").val(mUsers[0].nickName1);
+			    	}else{
+			    		$("#id1").val("");
+			        	$("#nickName1").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id2 !=null){
+			    		$("#id2").val(mUsers[0].id2);
+			        	$("#nickName2").val(mUsers[0].nickName2);
+			    	}else{
+			    		$("#id2").val("");
+			        	$("#nickName2").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id3 !=null){
+			    		$("#id3").val(mUsers[0].id3);
+			        	$("#nickName3").val(mUsers[0].nickName3);
+			    	}else{
+			    		$("#id3").val("");
+			        	$("#nickName3").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id4 !=null){
+			    		$("#id4").val(mUsers[0].id4);
+			        	$("#nickName4").val(mUsers[0].nickName4);
+			    	}else{
+			    		$("#id4").val("");
+			        	$("#nickName4").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id5 !=null){
+			    		$("#id5").val(mUsers[0].id5);
+			        	$("#nickName5").val(mUsers[0].nickName5);
+			    	}else{
+			    		$("#id5").val("");
+			        	$("#nickName5").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id6 !=null){
+			    		$("#id6").val(mUsers[0].id6);
+			        	$("#nickName6").val(mUsers[0].nickName6);
+			    	}else{
+			    		$("#id6").val("");
+			        	$("#nickName6").val("");
+			    	}
+			    	
+			    	//显示六度人脉信息框
+			    	$.show("edit_user");
+			    }
+			}
+			
+			
+			
+		</script>
+	</head>
+	<body>
+		<div>
+			<table id="grid_user"></table>
+			<div id="grid_pager_user"></div>
+		</div>
+		
+		<!--user筛选工具栏-->
+		<div id="grid_user_tbar" style="display:none;">
+			<div class="action-buttons" style="margin-left: 10px; padding: 5px;">
+				UID: <input id="uid" onblur="_search()"/>
+				手机号: <input id="phone" onblur="_search()"/>
+				状态: <select id="recordType" onblur="_search()">
+						<option value="">全部</option>
+						<option value="0">充值</option>
+						<option value="1">兑换</option>
+						<option value="2">赠送</option>
+						<option value="3">斗拍消费</option>
+						<option value="4">斗拍中奖</option>
+						<option value="5">委托出售</option>
+						<option value="6">积分购买</option>
+						<option value="7">退款</option>
+						<option value="8">分销奖励</option>
+						<option value="9">商家服务费</option>
+						<option value="10">差价收益</option>
+						<option value="11">直接购买</option>
+						<option value="12">商家赠送EP值</option>
+						<option value="13">签到领取</option>
+						<option value="14">续费消费EP值</option>
+						<option value="15">邀请好友赠送EP值</option>
+						<option value="16">绑定手机号赠送EP值</option>
+						<option value="17">系统赠送绑定手机号EP值</option>
+						<option value="18">EP兑换</option>
+						<option value="19">商家扫码支付收款</option>
+						<option value="20">用户扫码支付</option>
+						<option value="21">扫码支付赠送EP</option>
+						<option value="22">区域维护费</option>
+						<option value="23">商家二维码-用户扫码支付</option>
+						<option value="24">商家二维码-商家收款</option>
+						<option value="25">商家二维码-赠送EP</option>
+						<option value="26">加入合伙人-支付</option>
+						<option value="27">签到补贴金额</option>
+						<option value="28">Ep折扣优惠</option>
+						<option value="29">斗斗签到</option>
+						<option value="30">EP兑换斗斗</option>
+						<option value="31">邀请好友赠送斗斗</option>
+						<option value="32">绑定手机号赠送斗斗</option>
+						<option value="33">直接购买商品赠送斗斗</option>
+						<option value="34">面对面扫码支付赠送斗斗</option>
+						<option value="35">商家固定二维码扫码支付赠送斗斗</option>
+						<option value="36">合伙人业绩结算</option>
+						
+						
+				    </select>
+				日期: <input type="date" id="datestart" onblur="_search()" />至<input type="date" id="dateend" onblur="_search()"/>
+				<a class="blue" href="javascript:_search()"><i class="icon-search bigger-130"></i>查询</a>
+			</div>
+		</div>
+
+		<div id="div_dialog"></div>
+		<div id="hidebg"></div>
+	</body>
+	
+</html>

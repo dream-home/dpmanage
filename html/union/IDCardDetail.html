@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		<!-- 导入选项卡样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_tab.css" />
+	
+	
+	
+		
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js -->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--验证js-->
+		
+		<!--grid事件机制-->
+		
+		<!--<script src="/enjoyRedEnvelopeManager/js/slider.js" ></script>-->
+		<!--
+        	引进路径
+        -->
+        <script type="text/javascript" src="/enjoyRedEnvelopeManager/js/basepath.js" ></script>
+        <!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+		
+		<script>
+			$(function(){
+				
+				var storeId = sessionStorage.getItem("storeId");
+				var person = {
+					storeId:storeId					
+				}
+				
+				
+				
+			
+				
+				$.ajax({
+					type:"get",
+					url:$base_path+"manage/storeManage/AptitudeDetail", 
+					async:true,
+					data:person,
+					beforeSend: function(request) {
+                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+               		},
+               		
+					success:function(data){
+						if(data.code==200){
+							/*<img src="/enjoyRedEnvelopeManager/image/bkeImg1.jpg"  width="200px" height="200px" onclick="imgShow($(this))"/>*/
+						
+						
+						
+						var idCards = "";
+						var storeLicenses = "";
+						$("#message1").html("资质图片正在加载中...");
+						for(var i = 0 ; i<data.result.IDCardIcons.length;i++){
+							idCards+= '<img src="'+data.result.IDCardIcons[i]+'"  width="200px" height="200px"  style="margin-right:10px" onclick="imgShow($(this))"/>';
+							
+						}
+						
+						for(var i = 0 ; i<data.result.storeLicenses.length;i++){
+							storeLicenses+= '<img src="'+data.result.storeLicenses[i]+'"  width="200px" height="200px"  style="margin-right:10px" onclick="imgShow($(this))"/>';
+							
+						}
+						
+						
+						if(idCards!=""){
+							
+							$("#IDCardIcons").html(idCards);
+							$("#message1").html("");
+						}else{
+							$("#message1").html("该店铺没有上传资质图片认证");
+						}
+						if(storeLicenses!=""){
+							$("#storeLicenses").html(storeLicenses);	
+						}
+						
+						//console.log(idCards);
+						
+						
+						
+						
+						
+							
+							
+							
+							
+							
+						}else if(data.code==1403){
+							overTime();
+						}else{
+							alert(data.msg);
+						}
+
+					}, 
+					error:function(data){ 
+						alert("服务器跑丢了......");
+					} 
+					
+				});
+				
+				$("#selectPro").click(function(){
+					sessionStorage.getItem("selectPro",businessId);
+					//alert(businessId);
+					if($("#goodsCount").html()==0){
+						alert("发布商品数量为0");
+					}else{
+						parent.location.href= "/enjoyRedEnvelopeManager/html/union/promanage.html?selectPro="+businessId;	
+					}
+					
+					
+				})
+				
+				
+				$("#back").click(function(){
+					$('#ifm', window.parent.document).html('<iframe name="frm_cusInfo" scrolling="yes" style="width:1100px;" height="630px" frameborder="0" src="businessDetails.html"></iframe>');
+					
+					
+				})
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+			})
+			
+			
+		</script>
+		<style type="text/css">
+		.close{ width:30px; height:30px; background:url(images/close_3.png) no-repeat 0 0; position:fixed; top:5px; right:30px; _position:absolute; _top:expression(documentElement.scrollTop+5+"px"); cursor:pointer;}
+		.close:hover{ background:url(images/close_3.png) no-repeat -30px 0;}
+		</style>
+   
+		    <script type="text/javascript">
+		    function imgShow(_this){
+				var src = _this.attr("src");
+				$("#bigimg").attr("src", src);
+				$("<img/>").attr("src", src).load(function(){
+					var windowW = $(window).width();
+					var windowH = $(window).height();
+					var realWidth = this.width;
+					var realHeight = this.height;
+					var imgWidth, imgHeight;
+					var scale = 0.8;
+					
+					if(realHeight>windowH*scale) {
+						imgHeight = windowH*scale;
+						imgWidth = imgHeight/realHeight*realWidth;
+						if(imgWidth>windowW*scale) {
+							imgWidth = windowW*scale;
+						}
+					} else if(realWidth>windowW*scale) {
+						imgWidth = windowW*scale;
+						imgHeight = imgWidth/realWidth*realHeight;
+					} else {
+						imgWidth = realWidth;
+						imgHeight = realHeight;
+					}
+					$("#bigimg").css("width",imgWidth);
+					
+					var w = (windowW-imgWidth)/2;
+					var h = (windowH-imgHeight)/2;
+					$("#innerdiv").css({"top":h, "left":w});
+					$("#outerdiv").fadeIn("fast");
+				});
+				$("#outerdiv").click(function(){
+					$(this).fadeOut("fast");
+				});
+			}
+		    </script>
+		
+	</head>
+	<body>
+			<table class="table table-striped  table-bordered" style="text-align: center;  ">
+				<thead>
+					<tr style="height: 50px; ">
+						<th  width="10%" style="text-align: center;font-size: 10px;" id="back"><a>返回上一级</a></th>
+						<th colspan="3" width="80%" style="text-align: center;font-size: 30px;" id="businessName"></th>
+						
+					</tr>
+				</thead>
+			</table>
+			<h3 id="message1" style="color: red;"></h3>
+			
+			<h3 >身份证</h3>
+			<div id="IDCardIcons">
+				<img src="/enjoyRedEnvelopeManager/image/image.png"  width="200px" height="200px" onclick="imgShow($(this))"/>
+				<img src="/enjoyRedEnvelopeManager/image/image.png"  width="200px" height="200px" onclick="imgShow($(this))"/>
+				<img src="/enjoyRedEnvelopeManager/image/image.png"  width="200px" height="200px" onclick="imgShow($(this))"/>
+			</div>
+			<h3 >营业执照</h3>
+			<div id="storeLicenses">
+			<img src="/enjoyRedEnvelopeManager/image/image.png"  width="200px" height="200px" onclick="imgShow($(this))"/>
+			<img src="/enjoyRedEnvelopeManager/image/image.png"  width="200px" height="200px" onclick="imgShow($(this))"/>
+			<img src="/enjoyRedEnvelopeManager/image/image.png"  width="200px" height="200px" onclick="imgShow($(this))"/>
+			</div>
+			<div id="outerdiv" style="position:fixed;top:0;left:0;background:rgba(0,0,0,0.7);z-index:999;width:100%;height:100%;display:none;">
+			    <a class="close" onclick="$('#outerdiv').fadeOut('fast');"></a>
+			    <div id="innerdiv" style="position:absolute;"><img id="bigimg" style="border:5px solid #fff;" src="" /></div>
+			</div> 
+			
+		
+			
+			
+			
+			
+			
+		
+			
+
+	</body>
+	
+	
+</html>

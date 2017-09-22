@@ -1,0 +1,61 @@
+.searchClass{
+	margin-top: 5px;	
+}
+.yearCharts{
+	background-color: #FFFAFA;
+	height: auto;
+	padding-top: 10px;
+	padding-bottom: 30px;	
+}
+.monthCharts{
+	background-color: #FFFAFA;
+	height: auto;
+	padding-top: 10px;
+	padding-bottom: 30px;	
+}
+.dayCharts{
+	background-color: #FFFAFA;
+	height: auto;
+	padding-top: 10px;
+	padding-bottom: 30px;	
+}
+.hourCharts{
+	background-color: #FFFAFA;
+	height: auto;
+	padding-top: 10px;
+	padding-bottom: 30px;
+}
+.minuteCharts{
+	background-color: #FFFAFA;
+	height: auto;
+	padding-top: 10px;
+	padding-bottom: 30px;	
+}
+.incomeCharts{
+	background-color: #f1f5f8;
+	height: auto;
+	padding-top: 10px;	
+	padding-bottom: 20px;
+}
+
+.charts_class{
+	width: 800px; 
+	height: 400px;
+	margin: auto;
+}
+.charts_class_hide{
+	width: 800px; 
+	height: 400px;
+	margin: auto;
+	display: none;
+}
+.minute_charts_class{
+	width: 1220px; 
+	height: 400px;
+	margin: auto;
+}
+.income_charts_class{
+	width: 1330px; 
+	height: auto;
+	margin: auto;
+}

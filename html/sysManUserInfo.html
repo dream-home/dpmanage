@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>个人资料</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js-->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/basepath.js"></script>
+		<!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+		<!--验证js-->
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/md5.js"></script>
+
+		<script>
+			var token = sessionStorage.getItem("token");	
+			
+			$(function() {
+				getManUser();
+				$(".checkform").Validform({
+					tiptype:function(msg, o, cssctl){
+						var objtip = $("#msgspan");
+						cssctl(objtip,o.type);
+						objtip.text(msg);
+					},
+					callback: function(){
+						edit_submit();
+						return false;
+					}
+				});				
+			});	
+			
+			function getManUser(){
+				//获取当前用户信息
+				
+				var person = {
+					nickName:sessionStorage.getItem("nickName")
+				}
+				
+				$.ajax({
+					type:"POST",
+					url:$base_path+"manage/admin/list", 
+					async:true,
+					data:person,
+					beforeSend: function(request) {
+                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+               		 },
+					
+					success:function(data){
+						if(data.code==200){
+							//alert("修改成功");
+							//$.refresh(pwd_change);
+							
+							mu_name
+							mu_id
+							$("#mu_phone").val(data.result.rows[0].phone);
+							$("#mu_name").val(data.result.rows[0].nickName);
+							$("#mu_id").val(data.result.rows[0].id);
+							
+							
+							
+							
+						}else if(data.code==1403){
+							overTime();
+						}else{
+							alert(data.msg);
+						}
+						
+					}, 
+					error:function(data){ 
+						alert("服务器跑丢了......");
+					} 
+					
+				});
+			}
+			
+			//提交编辑表单
+			function edit_submit(){				
+				var id=$("#sp_id").val();
+				var form = $("#edit_user").serialize();
+				/*$.ajax({
+			        type: 'POST',
+			        url: $base_path + 'ManagerUser/editSysManUser',
+			        data: form + '&token=' + token,
+			        success: function(data) {
+						alert(data.msg);
+			        	if(data.code==-2)//跳转到登录页面
+							top.location.href='/enjoyRedEnvelopeManager/html/login.html';
+			        }
+			    });*/
+			}
+			
+			function resetForm(){
+				getManUser();
+			}
+			
+			/*修改密码*/
+			function _pwdChange(){
+				$("#old_pwd").val("");
+				$("#new_pwd").val("");
+				$.show("pwd_change");	
+			}
+			
+			
+			/*修改操作密码*/
+			function _payPwdChange(){
+				$("#old_paypwd").val("");
+				$("#new_paypwd").val("");
+				
+				$.show("pwd_change2");	
+			}
+			
+			
+			
+			
+			
+			function savePwd(){
+				
+				//为旧密码和新密码进行加密
+				var oldPwd=$("#old_pwd").val().trim();
+				var newPwd=$("#new_pwd").val().trim();
+				var person= {
+					password:oldPwd,
+					passwordNew:newPwd
+				}
+				
+				
+				if(oldPwd==newPwd){
+						alert("新密码与旧密码相同");
+						return;
+				}
+				
+				if(sessionStorage.getItem("nickName").indexOf(newPwd)>=0){
+						alert("密码不允许是用户名的一部分");
+						return;
+				}
+				
+				$.ajax({
+					type:"get",
+					url:$base_path+"manage/admin/modifyPassword", 
+					async:true,
+					data:person,
+					beforeSend: function(request) {
+                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+               		 },
+					
+					success:function(data){
+						if(data.code==200){
+							alert("修改成功");
+							$.refresh(pwd_change);	
+							
+						}else if(data.code==1403){
+							overTime();
+						}else{
+							alert(data.msg);
+						}
+						
+					}, 
+					error:function(data){ 
+						alert("服务器跑丢了......");
+					} 
+					
+				});
+			}
+			function closePwdForm(){	
+				$.hide("pwd_change");
+			}
+			
+			
+			
+			/*修改操作密码*/
+			function savePayPwd(){
+				
+				//为旧密码和新密码进行加密
+				var oldPwd=$("#old_paypwd").val().trim();
+				var newPwd=$("#new_paypwd").val().trim();
+				var person= {
+					payPassword:oldPwd,
+					payPasswordNew:newPwd
+				}
+				
+				
+				if(oldPwd==newPwd){
+						alert("新操作密码与旧操作密码相同");
+						return;
+				}
+				
+				if(sessionStorage.getItem("nickName").indexOf(newPwd)>=0){
+						alert("操作密码不允许是用户名的一部分");
+						return;
+				}
+				
+				$.ajax({
+					type:"get",
+					url:$base_path+"manage/admin/modifypayPassword", 
+					async:true,
+					data:person,
+					beforeSend: function(request) {
+                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+               		 },
+					
+					success:function(data){
+						if(data.code==200){
+							alert("修改成功");
+							$.refresh("pwd_change2");	
+							$.hide("pwd_change2");
+						}else if(data.code==1403){
+							overTime();
+						}else{
+							alert(data.msg);
+						}
+						
+					}, 
+					error:function(data){ 
+						alert("服务器跑丢了......");
+					} 
+					
+				});
+			}
+			function closePayPwdForm(){	
+				$.hide("pwd_change2");
+			}
+		</script>
+	</head>
+
+	<body>
+		<!-- 个人信息窗口 -->
+		<form id="edit_user" class="checkform">
+			<div class="widget-header">
+				<h4 id="form_title">个人信息</h4>
+			</div>
+			<div class="form_content">
+				<div class="form_content_table">
+					<span id="msgspan" style="color:red;"></span>
+					<table>
+						<tr >
+							<td>ID: </td>
+							<td>
+								<input type="text" id="mu_id" name="muId" placeholder="ID" readonly="readonly"/>
+							</td>
+						</tr>						
+						<tr>
+							<td>昵称: </td>
+							<td>
+								<input type="text" id="mu_name" name="muName" placeholder="昵称" readonly="readonly" datatype="s" nullmsg="请输入昵称！"/>
+							</td>
+						</tr>
+						<tr>
+							<td>联系电话: </td>
+							<td>
+								<input type="text" id="mu_phone" name="muPhone" placeholder="电话" readonly="readonly" datatype="m" nullmsg="请输入联系电话！" />
+							</td>
+						</tr>
+					
+						<tr>
+							<td colspan="2"><a href="javascript:_pwdChange()">修改密码</a> </td>
+							<td colspan="2"><a href="javascript:_payPwdChange()">修改操作密码</a> </td>
+						</tr>
+					</table>
+				</div>
+				<div>
+					
+				</div>
+			</div>
+		</form>
+		
+		<!-- 修改密码窗口 -->
+		<form id="edit_user1" >
+			<div id="pwd_change" class="grid_from">
+				<div class="widget-header">
+					<h4 id="form_title"></h4>
+					<span class="widget-toolbar">
+						<a href="#" data-action="close" onclick="closeForm('edit_user1')">
+							<i class="icon-remove"></i>
+						</a>    
+					</span>
+				</div>
+				<div class="form_content">
+					<table>
+						<tr >
+							<td>旧密码: </td>
+							<td>
+								<input type="password" id="old_pwd" placeholder="旧密码" />
+							</td>
+						</tr >						
+						<tr style="width: 200px;height: 60px;">
+							<td>新密码: </td>
+							<td>
+								<input type="password" id="new_pwd" placeholder="新密码" />
+							</td>
+						</tr>	
+					</table>
+					<div>
+						<button class="btn btn-info button-left" type="button" onclick="savePwd()">
+							<i class="icon-ok bigger-110"></i> 确定
+						</button>
+						<button class="btn button-right" type="button" onclick="closePwdForm()">
+							<i class="icon-undo bigger-110"></i> 取消
+						</button>
+					</div>
+				</div>
+			</div>
+		</form>
+		<!-- 修改操作密码窗口 -->
+		<form id="edit_user2" >
+			<div id="pwd_change2" class="grid_from">
+				<div class="widget-header">
+					<h4 id="form_title"></h4>
+					<span class="widget-toolbar">
+						<a href="#" data-action="close" onclick="closeForm('edit_user2')">
+							<i class="icon-remove"></i>
+						</a>    
+					</span>
+				</div>
+				<div class="form_content">
+					<table>
+						<tr >
+							<td>旧操作密码: </td>
+							<td>
+								<input type="password" id="old_paypwd" placeholder="旧操作密码" />
+							</td>
+						</tr >						
+						<tr style="width: 200px;height: 60px;">
+							<td>新操作密码: </td>
+							<td>
+								<input type="password" id="new_paypwd" placeholder="新操作密码" />
+							</td>
+						</tr>	
+					</table>
+					<div>
+						<button class="btn btn-info button-left" type="button" onclick="savePayPwd()">
+							<i class="icon-ok bigger-110"></i> 确定
+						</button>
+						<button class="btn button-right" type="button" onclick="closePayPwdForm()">
+							<i class="icon-undo bigger-110"></i> 取消
+						</button>
+					</div>
+				</div>
+			</div>
+		</form>
+		
+		<div id="hidebg"></div>
+		<div id="div_dialog"></div>
+	</body>
+
+	<script>
+	</script>
+
+</html>

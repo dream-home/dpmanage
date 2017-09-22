@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>发货订单</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		<!-- 导入选项卡样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_tab.css" />
+
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js -->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--验证js-->
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<!--
+        	引进路径
+        -->
+        <script type="text/javascript" src="/enjoyRedEnvelopeManager/js/basepath.js" ></script>
+        <!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+
+		<script>
+		var token = sessionStorage.getItem("token");
+		var grid_user= "#grid_user";
+		var grid_pager_user = "#grid_pager_user";
+		$(function() {
+			
+					$.autoByWindow(grid_user);
+					/*url传参*/
+					var topdata = {
+						status:2,
+						token:sessionStorage.getItem("token")
+					}
+					
+					
+					
+					
+					$.jqGrid(grid_user, $base_path + 'manage/OrderManage/deleverProducts',topdata, colNames_user, fd_user, grid_pager_user, "商家发货订单", gridUserComplete,true,true,12);
+					$("#t_grid_user").append($("#grid_user_tbar").html());
+					
+					$.navGrid(grid_user, grid_pager_user);
+					/*$.navButtonAdd(grid_user, grid_pager_user, 'icon-plus-sign purple', '<font color="purple">添加</font>', '添加', add);
+					$.navButtonAdd(grid_user, grid_pager_user, 'icon-trash red', '<font color="red">删除</font>', '删除', beforeDel);
+					*/
+					
+					$(".checkform").Validform({
+						tiptype:function(msg, o, cssctl){
+							var objtip = $("#msgspan");
+							cssctl(objtip,o.type);
+							objtip.text(msg);
+						},
+						callback: function(){
+							edit_submit();
+							return false;
+						}
+					});
+					
+					$.ajax({
+						    url: $base_path+"manage/OrderManage/deleverProducts",
+						    type: 'GET',
+						    cache: false,
+						    data: {},
+						    beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		               		},
+						    processData: false,
+						    contentType: false
+						}).done(function(res) {
+							console.log("success "+res.status);
+							console.log(res);
+						}).fail(function(res) {
+							console.log("error "+res.status);
+						});
+					
+					
+					
+					//匿名form表单
+					$("#uploadImg").click(function(){					
+						/*alert(JSON.stringify(new FormData($('#edit_user')[0])));*/
+						$.ajax({
+						    url: $base_path+"manage/image/upload",
+						    type: 'POST',
+						    cache: false,
+						    data: new FormData($('#edit_user')[0]),
+						    beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		               		},
+						    processData: false,
+						    contentType: false
+						}).done(function(res) {
+							
+							if(res.code ==200){
+								$("#mu_img").attr("src",$downImg+res.result);
+								$("#icon").val($downImg+res.result);
+								
+							}else if(res.code==1403){
+								overTime();
+							}else{
+								//alert(res.msg);
+							}
+							
+							//alert($("#mu_img").attr("src"));
+							//alert(res.result);
+						}).fail(function(res) {
+							
+						});
+	
+					})
+					
+					
+					
+				
+				
+				
+				
+				/*$.ajax({
+						type:"post",
+						url:$base_path+"manage/ad/list", 
+						beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		                },
+						success:function(data){ 
+							if(data.code==200){
+								
+								
+								
+								var person= {
+									pageNo:1,
+									pageSize:data.result.totalSize,
+									token:sessionStorage.getItem("token")
+								}
+								
+								loadData(person);
+								
+								
+							}else{
+								alert(data.msg);
+							}
+						}, 
+						error:function(data){ 
+						} 
+						
+				});*/
+				
+				
+				
+				
+				
+			
+				
+			});
+			
+			var colNames_user = ['ID','订单编号','userId','storeId','发货商铺名称','商品名称','支付类型','购买方式','orderType','payWay','商品单价','数量','商品总价','businessSendEp','收货人姓名', '收货人电话', '地址', '快递单号','快递名字','创建时间','状态','status','操作','goodsName','expressNo','expressName'];
+			var fd_user = [
+				{name:'id', index:'id', width:60, key: true,hidden:true},
+				{name:'orderNo', index:'orderNo', width:100},
+				{name:'userId', index:'userId', width:30,hidden:true},
+				{name:'storeId', index:'storeId', width:100,hidden:true},
+				{name:'storeName', index:'storeName', width:100},
+				{name:'goodsName', index:'goodsName', width:100,hidden:true},
+				{name:'bankTypeName', index:'bankTypeName', width:10,hidden:true},
+				{name:'order', index:'order', width:60,formatter:getOrderType},
+				{name:'orderType', index:'orderType', width:60,hidden:true},
+				{name:'payWay', index:'payWay', width:10,hidden:true},
+				{name:'price', index:'price', width:60,formatter:getPrice},
+				{name:'num', index:'num', width:50},
+				{name:'sum',index:'sum',width:60,formatter:getSum},
+				{name:'businessSendEp', businessSendEp:'businessSendEp', width:20,hidden:true},
+				{name:'userName', index:'userName', width:100},
+				{name:'phone', index:'phone', width:100},
+				{name:'addr', index:'addr', width:100},
+				{name:'expressNo', index:'expressNo', width:100},
+				{name:'expressName', index:'expressName', width:100},
+				{name:'createTime', index:'createTime', width:100},
+				{name:'status',index:'status', width:100, align: 'center',formatter:getStatus},
+				{name:'status',index:'status', width:100, align: 'center',hidden:true},
+				{name:'func',index:'func', width:120, align: 'center'},
+				{name:'goodsName',index:'goodsName', width:120, align: 'center' ,hidden:true},
+				{name:'expressNo',index:'expressNo', width:120, align: 'center' ,hidden:true},
+				{name:'expressName',index:'expressName', width:120, align: 'center' ,hidden:true},
+				
+			];
+			
+			
+			function getOrderType(v,o,row){
+				
+				if(row.orderType=='0'){
+					return "竞拍中奖";
+				}else if(row.orderType=='1'){
+					return "直接购买";
+				}else if(row.orderType=='2'){
+					return "ep兑换";
+				}else if(row.orderType=='3'){
+					return "购物车购买";
+				}else{
+					return "";
+				}
+				
+				
+				
+				
+				
+			}
+			
+			
+			function getPrice(v,o,row){
+				if(row.orderType !='3'){
+					return row.price; 
+				}else{
+					return "";
+				}
+			}
+			
+			
+			
+			function getSum(v,o,row){
+				if(row.orderType !='3'){
+					return row.price * row.num; 
+				}else{
+					return row.price;
+				}
+				
+			}
+			
+			
+			
+			function getStatus(v){
+				if(v=="0"){
+					return	"待处理";
+				}else if(v=="1"){
+					return	"已出售";	
+				}else if(v=="2"){
+					return	"已购买，待发货";
+				}else if(v=="3") {
+					return	"已发货";
+				}
+			}
+			
+			function getUserName(v,o,row){
+				return row.userName+'('+row.phone+')';	
+			}
+			
+			function gridUserComplete(){
+				var ids = $(grid_user).jqGrid('getDataIDs');
+				for (var i = 0; i < ids.length; i++) {
+					var paramId = ids[i];
+					
+					var paramIds = ids[i];
+					var paramIds = ids[i+1];
+					var count  =  i;
+					count++;
+					if(ids.length == count){
+						//alert("dd");
+						paramIds = ids[i];
+					}
+					var funcBtn = '<div class="action-buttons">';
+					var rowData = $(grid_user).getRowData(paramId);
+					if(rowData.status==2){
+						var details = '<a class="blue" href="javascript:_fahuo(&quot;'+paramId+'&quot;)"><i class="icon-pencil bigger-130"></i>提醒发货</a>';
+					}else if(rowData.status==3){
+						var details = '<a class="blue" href="javascript:_detailDate(&quot;'+paramId+'&quot;)"><i class="icon-search bigger-130"></i>详情</a>'; 
+						
+						/*details +='<a class="blue" href="javascript:_details(&quot;'+paramId+'&quot;)"><i class="icon-search bigger-130"></i>发货记录</a>';*/
+					}else{
+						var details = "";
+					}
+					
+					
+					//var remind = '<a class="blue" href="javascript:_details(&quot;'+paramId+'&quot;)"><i class="icon-pencil bigger-130"></i>提醒发货</a>';
+					
+					
+					funcBtn += details+'</div>';
+	         		$(grid_user).setRowData(paramId, {func: funcBtn});
+	      		}
+			}
+			
+			
+			function _fahuo(storeId){
+				var rowData = $(grid_user).getRowData(storeId);
+				var storeId = rowData.storeId;
+					
+				var person = {
+					storeId:storeId
+				}
+					
+				$.ajax({
+					type:"get",
+					url:$base_path+"manage/win/warnDeliver", 
+					async:true,
+					data:person,
+					beforeSend: function(request) {
+                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+               		},
+					success:function(data){
+						if(data.code==200){
+							
+							alert("提醒发货成功");
+							
+							
+							
+						}else if(data.code==1403){
+							overTime();
+						}
+					}, 
+					error:function(data){ 
+					} 
+					
+				});
+				
+				
+				
+			}
+			
+			function _search(){
+				var name = $("#storeName").val().trim();
+				//var account = $("#account").val();
+				var phone = $("#phone").val().trim();
+				
+				var status = $("#status").val().trim();
+				//$("#datestart") dateend
+				var datestart ="";
+				var dateend ="";
+				if($("#datestart").val()!=""){
+					var datestart =new Date($("#datestart").val().trim()).Format("yyyy-MM-dd hh:mm:ss");
+					
+				}
+				if($("#dateend").val()!=""){
+					var dateend =new Date($("#dateend").val().trim()).Format1("yyyy-MM-dd hh:mm:ss");
+				}
+				
+				
+				
+				
+				//alert(JSON.stringify({storeName: name, phone: phone, status: status}))
+				//var role=$("#role").val();
+				$.setPostData(grid_user, {storeName: name, phone: phone, status: status,fromTime: datestart, stopTime: dateend});
+			    $.refresh(grid_user);
+			}
+			
+			function _sort(id,ids){
+				//alert(id+ids);
+				/*if(id == ids){
+					
+				}*/
+			var person  = {
+				downId:id,
+				upId:ids
+			}
+				
+				
+			$.ajax({
+					type:"get",
+					url:$base_path+"manage/ad/exchangeOrder", 
+					async:true,
+					data:person,
+					beforeSend: function(request) {
+                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+               		 },
+					
+					success:function(data){
+						alert("修改成功");
+						$.refresh(grid_user);
+					}, 
+					error:function(data){ 
+					} 
+					
+			});
+				
+				/*alert(JSON.stringify($(grid_user)));*/
+				//console.log(JSON.stringify($(grid_user).get));
+				/*$("#form_title").html('编辑幻灯片');
+				$("#msgspan").text(''); 
+				var model = $(grid_user).getRowData(id); 
+				$("#mu_id").val(model.id); 
+				
+				
+				$("#mu_img").attr("src",model.adImg);
+				$("#adImg").val(model.adImg);
+				$("#mu_title").val(model.title); 
+				$("#mu_rank").val(model.rank); 				 
+				$.show("edit_user");
+				*/
+				
+				
+			}
+			
+			
+			
+			function add(){
+				_edit('');
+				 
+				var obj = document.getElementById('mu_img1') ;    
+				obj.outerHTML=obj.outerHTML;   
+				$("#form_title").html('添加商品属性');
+				$("#tr_pwd").show(); 
+				$("#mu_pwd").attr('ignore', ''); 
+				$("#msgspan").text('');
+				$("#mu_img").prop("src","/enjoyRedEnvelopeManager/image/logoImg.png");
+				$("#mu_roleId").val('');
+				$.show("edit_user");
+			}
+			function beforeDel(){
+				var ids = $(grid_user).getGridParam('selarrrow');
+				if(ids == ''){
+					$.reminderDailog("div_dialog", '<i class="icon-warning-sign"></i>警告', '请选中行!');
+				}else{
+					$.openDelDailog("div_dialog", del);
+				}
+			}
+			function del(){
+				
+				var ids = $(grid_user).getGridParam('selarrrow');
+				//alert(ids);
+				if($('#div_dialog').html() != ''){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/ad/delete',
+				        data: 'adId=' + ids + '&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==200){
+								$.refresh(grid_user);
+								$.closeDelDailog();
+					          	alert('删除成功！');
+					       	}else{					       		
+								alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';
+					       	}
+				        }
+				    });
+			   }
+			}
+			
+			function _edit(id){
+				
+				/*{name:'id', index:'id', width:60, sorttype:"string", key: true, hidden: true},
+				{name:'icon', index:'icon', width:120},
+				{name:'name', index:'name', width:200},
+				{name:'count', index:'count', width:100},
+				{name:'createTime', index:'createTime',width:100, sorttype:"date"},
+				{name:'func',index:'func', width:100, align: 'center'}*/
+				
+				
+				
+				//alert(id);title  mu_rank
+				$("#form_title").html('编辑商品属性');
+				$("#msgspan").text(''); 
+				var model = $(grid_user).getRowData(id); 
+				$("#mu_id").val(model.id); 
+				
+				//$("#mu_img").attr("src",$downImg+res.result);
+				$("#mu_img").attr("src",model.icon);
+				$("#icon").val(model.icon);
+				$("#name").val(model.name); 
+				$("#count").val(model.count); 				 
+				$.show("edit_user");
+				
+				
+			}
+			
+			//审核
+			
+			function _reviewBtn(id){
+				//获取当前选中行
+				
+				/*
+				usUserId = id;
+				shengId=rowData.usShengId;
+				shiId=rowData.usShiId;*/
+				
+				//sessionStorage.setItem("uid",id);
+				var rowData = $(grid_user).getRowData(id);
+				//essionStorage.setItem("userId",rowData.id);
+				
+				$("#ifm").html('<iframe name="frm_cusInfo" scrolling="yes" style="width:1100px;" height="630px" frameborder="0" src="businessReview.html"></iframe>');
+				//$.setPostData(grid_, {usUid:uid});
+				$.show("edit_user");
+			}
+			
+			
+			//订单详情
+			function _detailDate(id){
+				
+				
+				$("#shoppGoodsList").html("");
+				$("#userIdDetail").html("");
+				$("#rechargeDetail").html("");
+				$("#storeIdDetail").html("");
+				
+				var epcount= 0;
+				
+				var rowData = $(grid_user).getRowData(id);
+					
+					if(rowData.orderType=="3"){
+						$.ajax({
+							type:"get",
+							url:$base_path+"manage/OrderManage/shoppGoodsList",
+							data:{orderNo:rowData.orderNo},
+							beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		               	},
+							success:function(data){
+								if(data.code==200){
+									var str = "<tr height='50px'><td width='15%'>商铺名</td><td width='25%'>商品Id</td><td width='20%'>商品名</td><td width='7%'>价格</td><td width='7%'>数量</td><td width='10%'>商家赠送EP</td><td width='35%'>生成时间</td></tr>";
+									for(var i= 0;i<data.result.length;i++){
+										str+= "<tr height='50px'><td>"+data.result[i].storeName+"</td><td>"+data.result[i].goodsId+"</td><td>"+data.result[i].goodsName+"</td><td>"+data.result[i].price+"</td><td>"+data.result[i].num+"</td><td>"+data.result[i].businessSendEp+"</td><td style='font-size:4px'>"+data.result[i].createTime+"</td></tr>";
+										epcount+=data.result[i].businessSendEp;
+									}
+									
+									$("#shoppGoodsList").html(str);
+									
+									
+								}else if(data.code==1403){
+									overTime();
+								}else{
+									//alert(data.msg);
+								}
+		
+							}, 
+							error:function(data){ 
+								alert("服务器跑丢了......");
+							} 
+							
+						});
+							
+						
+					}
+					
+					
+					
+					
+					
+					/*获取当前订单的购买者的信息*/
+					$.ajax({
+						type:"get",
+						url:$base_path+"manage/member/detail",
+						data:{userId:rowData.userId},
+						beforeSend: function(request) {
+	                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+	               	},
+						success:function(data){
+							if(data.code==200){
+							var str = "<tr height='50px'><td width='20%'>购买用户uid</td><td width='20%'>购买用户名字</td><td width='30%'>购买用户手机号码</td><td width='30%'>支付类型</td>";	
+							str+="<tr height='50px'><td width='20%'>"+data.result.uid+"</td><td width='20%'>"+data.result.userName+"</td><td width='30%'>"+data.result.phone+"</td><td width='30%'>"+rowData.bankTypeName+"</td>";
+							    $("#userIdDetail").html(str);	
+							}else if(data.code==1403){
+								overTime();
+							}else{
+								//alert(data.msg);
+							}
+	
+						}, 
+						error:function(data){ 
+							alert("服务器跑丢了......");
+						} 
+						
+					});
+					
+					
+					
+					
+					
+					
+					var person = {
+						
+						orderNo:rowData.orderNo
+					}
+					
+					
+					
+					/*获取流水数据*/
+					$.ajax({
+						type:"get",
+						url:$base_path+"manage/logs/getPaymentDetail",
+						data:person,
+						beforeSend: function(request) {
+	                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+	               	},
+						success:function(data){
+							if(data.code==200){
+								var str = "<tr height='50px'><td width='15%'>订单号</td><td width='23%'>用户id</td><td width='7%'>积分</td><td width='17%'>充值类型</td><td width='17%'>备注</td><td width='7%'>状态</td><td width='35%'>生成时间</td></tr>";
+								for(var i= 0;i<data.result.length;i++){
+									str+= "<tr height='50px'><td>"+data.result[i].orderNo+"</td><td>"+data.result[i].userId+"</td><td>"+data.result[i].score+"</td><td>"+data.result[i].typeName+"</td><td>"+data.result[i].remark+"</td><td>"+data.result[i].status+"</td><td style='font-size:4px'>"+data.result[i].createTime+"</td></tr>";
+								}
+								
+								$("#rechargeDetail").html(str);
+								
+								
+							}else if(data.code==1403){
+								overTime();
+							}else{
+								//alert(data.msg);
+							}
+	
+						}, 
+						error:function(data){ 
+							alert("服务器跑丢了......");
+						} 
+						
+					});
+					
+					/*获取商铺userId*/
+					var store = {
+						storeId:rowData.storeId
+					}
+					
+					$.ajax({
+						type:"get",
+						url:$base_path+"manage/storeManage/detailUserId",
+						data:store,
+						beforeSend: function(request) {
+	                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+	               	},
+						success:function(data){
+							if(data.code==200){
+									
+									/*获取商家信息*/
+									$.ajax({
+										type:"get",
+										url:$base_path+"manage/member/detail",
+										data:{userId:data.result.userId},
+										beforeSend: function(request) {
+					                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+					               	},
+										success:function(data){
+											var rowep = 0;
+											if(data.code==200){
+											var str = "<tr height='50px'><td width='20%'>商铺用户uid</td><td width='20%'>商铺用户名字</td><td width='30%'>商铺用户手机号码</td><td width='30%'>商家赠送EP</td>";	
+											if(rowData.orderType =='3'){
+												rowep = epcount;
+											}else{
+												rowep = rowData.businessSendEp;
+											}
+											str+="<tr height='50px'><td width='20%'>"+data.result.uid+"</td><td width='20%'>"+data.result.userName+"</td><td width='30%'>"+data.result.phone+"</td><td width='30%'>"+rowep+"</td>";
+											  
+											    	
+											    $("#storeIdDetail").html(str);
+											}else if(data.code==1403){
+												overTime();
+											}else{
+												//alert(data.msg);
+											}
+					
+										}, 
+										error:function(data){ 
+											alert("服务器跑丢了......");
+										} 
+										
+									});
+									
+									
+									
+							}else if(data.code==1403){
+								overTime();
+							}else{
+								//alert(data.msg);
+							}
+	
+						}, 
+						error:function(data){ 
+							alert("服务器跑丢了......");
+						} 
+						
+					});
+					/*var users = {
+						userId:storeUserId
+					}
+					
+					
+					$.ajax({
+						type:"get",
+						url:$base_path+"manage/member/detail",
+						data:users,
+						beforeSend: function(request) {
+	                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+	               	},
+						success:function(data){
+							if(data.code==200){
+							var str = "<tr height='50px'><td width='30%'>商铺用户uid</td><td width='40%'>商铺用户名字</td><td width='30%'>商铺用户手机号码</td>";	
+							str+="<tr height='50px'><td width='30%'>"+data.result.uid+"</td><td width='40%'>"+data.result.userName+"</td><td width='30%'>"+data.result.phone+"</td>";
+							    $("#storeIdDetail").html(str);	
+							}else if(data.code==1403){
+								overTime();
+							}else{
+								//alert(data.msg);
+							}
+	
+						}, 
+						error:function(data){ 
+							alert("服务器跑丢了......");
+						} 
+						
+					});*/
+					
+					
+					
+					
+					$("#form_title").html('查看发货订单详情');
+					$("#msgspan").text(''); 
+					
+					var model = $(grid_user).getRowData(id); 
+					$.show("edit_user");
+					
+				
+			}
+			
+			
+			
+			
+			
+			
+			//发货记录
+			function _details(id){
+				//获取当前选中行
+				/*
+				{name:'id', index:'id', width:60, key: true,hidden:true},
+				{name:'orderNo', index:'orderNo', width:100},
+				{name:'storeName', index:'storeName', width:100},
+				{name:'goodsName', index:'goodsName', width:100,hidden:true},
+				{name:'userName', index:'userName', width:100},
+				{name:'phone', index:'phone', width:100},
+				{name:'addr', index:'addr', width:100},
+				{name:'updateTime', index:'updateTime', width:70},
+				{name:'status',index:'status', width:100, align: 'center',formatter:getStatus},
+				{name:'status',index:'status', width:100, align: 'center',hidden:true},
+				{name:'func',index:'func', width:120, align: 'center'},
+				{name:'goodsName',index:'goodsName', width:120, align: 'center' ,hidden:true},
+				{name:'expressNo',index:'expressNo', width:120, align: 'center' ,hidden:true},
+				{name:'expressName',index:'expressName', width:120, align: 'center' ,hidden:true},*/
+				
+				
+				
+				/*
+				usUserId = id;
+				shengId=rowData.usShengId;
+				shiId=rowData.usShiId;*/
+				
+				//sessionStorage.setItem("uid",id);
+				var rowData = $(grid_user).getRowData(id);
+				
+						$("#orderNo").html(rowData.orderNo);
+						$("#storeName").html(rowData.storeName);
+						$("#goodsName").html(rowData.goodsName);
+						$("#userName").html(rowData.userName);
+						$("#phone").html(rowData.phone);
+						$("#addr").html(rowData.addr);
+						$("#expressName").html(rowData.expressName);
+						$("#expressNo").html(rowData.expressNo);
+						$("#updateTime").html(rowData.updateTime);
+				//essionStorage.setItem("userId",rowData.id);
+				
+				//$("#ifm").html('<iframe name="frm_cusInfo" scrolling="yes" style="width:1100px;" height="730px" frameborder="0" src="proDetails.html"></iframe>');
+				//$.setPostData(grid_, {usUid:uid});
+				$.show("edit_user");
+			}
+			
+			
+			
+			
+			//重置
+			function resetForm(){
+				var muId=$("#mu_id").val();
+				
+				if(muId == ''){
+					_edit(muId);
+					var obj = document.getElementById('mu_img1') ;    
+					obj.outerHTML=obj.outerHTML;  
+					$("#form_title").html('添加商品属性');
+					$("#tr_pwd").show(); 
+					$("#mu_pwd").attr('ignore', ''); 
+					$("#msgspan").text('');
+					$("#mu_img").prop("src","/enjoyRedEnvelopeManager/image/logoImg.png");
+					$("#mu_roleId").val('');
+					
+				}else{
+					_edit(muId);
+					$("#form_title").html('编辑商品属性');
+					$("#msgspan").text('');
+					//$("#tr_pwd").hide(); 
+					$("#mu_pwd").attr('ignore', 'ignore'); 
+				}
+			}
+			
+			//提交编辑表单
+			function edit_submit(){
+				
+				
+				var form = $("#edit_user").serialize();
+				
+				
+				
+				var id = $("#mu_id").val();
+				$.ajax({
+			        type: 'POST',
+			        url: $base_path + (id == '' ? 'manage/goods/goodsSort/create' : 'manage/goods/goodsSort/update'),
+			        beforeSend: function(request) {
+                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+               		},
+			        data: form,
+			        success: function(data) {
+			        	if(data.code == 200){
+						    $.hide("edit_user");
+						    $.refresh(grid_user);
+						    if(id == ''){
+						    	alert("添加成功");
+						    }else{
+						    	alert("修改成功");	
+						    }
+						    
+			        	}else{
+			        		alert(data.msg);
+							if(data.code==-2)//跳转到登录页面
+								top.location.href='/enjoyRedEnvelopeManager/html/login.html';
+			        	}
+			        },
+			    });
+			}
+	
+			//是否禁用
+			function _disable(id, v){
+				
+				var tishi="";
+				
+				if(v == 1){
+					tishi="是否禁用该幻灯片";
+				}else if(v == 0){
+					tishi="是否解除该禁用幻灯片";
+				}
+				
+				if(confirm(tishi)){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'ManagerUser/editSysManUser',
+				        data: 'muId=' + id + '&muIsDisable=' + v + '&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==0)
+				           		alert(v == 1 ? '已禁用！' : '禁用已解除.');
+				           	else{
+				        		alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';			           			
+			           		}
+				        }
+				    });
+				    $.refresh(grid_user);
+				}
+				
+			    $.refresh(grid_user);
+			}
+			
+			//重置密码
+			function _reset(id){
+				if(confirm("是否重置密码")){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'ManagerUser/resetSysManUserPwd',
+				        data: 'muId=' + id + '&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==0)
+				           		alert('密码重置成功！');
+				           	else{
+				        		alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';				           		
+				           	}
+				        }
+				    });					
+				}
+			}
+		
+		</script>
+	</head>
+	<body>
+		
+		<div>
+			<table id="grid_user"></table>
+			<div id="grid_pager_user"></div>
+		</div>
+		
+		<div id="grid_user_tbar" style="display:none;">
+			<div class="action-buttons" style="margin-left: 10px; padding: 5px;">
+				发货商铺名称: <input id="storeName" onblur="_search()"/>
+				收货人会员电话: <input id="phone" onblur="_search()"/>
+				状态: <select id="status" onblur="_search()">
+						<option value="">全部</option>
+						<option value="0">待处理</option>
+						<option value="1">已出售</option>
+						<option value="2">已出售，2：已购买，待发货</option>
+						<option value="3">已发货</option>
+					 </select>
+				日期: <input id="datestart" type="date" onblur="_search()"/>至<input type="date" id="dateend" onblur="_search()"/>
+				<a class="blue" href="javascript:_search()"><i class="icon-search bigger-130"></i>查询</a>
+			</div>
+		</div>
+		
+		
+		
+		<!--<div id="edit_user" class="grid_from" >
+			<div class="widget-header" >
+				<h4>发货记录</h4>
+				<span class="widget-toolbar">
+					<a href="#" data-action="close" onclick="closeForm('edit_user')">
+						<i class="icon-remove"></i>
+					</a>
+				</span>
+			</div>
+			<div id="ifm"></div>
+			<div>
+				
+				
+				<table class="table table-striped  table-bordered" style="text-align: center;  ">
+					<thead>
+						<tr style="height: 50px; " >
+							<th colspan="2" width="600px" style="text-align: center;">发货订单记录详情</th>
+						</tr>
+					</thead>
+					<tbody>
+						
+						<tr>
+							<td width="200px">订单编号:</td>
+							<td width="400px" id="orderNo"></td>
+						</tr>
+						<tr>
+							<td width="80px">发货商铺:</td>
+							<td width="220px" id="storeName"></td>
+						</tr>
+						<tr>
+							<td width="80px">商品名称:</td>
+							<td width="220px" id="goodsName"></td>
+						</tr>
+						<tr>
+							<td width="80px">收货人姓名:</td>
+							<td width="220px" id="userName"></td>
+						</tr>
+						<tr>
+							<td width="80px">收货人电话:</td>
+							<td width="220px" id="phone"></td>
+						</tr>
+						<tr>
+							<td width="80px">收货地址:</td>
+							<td width="220px" id="addr"></td>
+						</tr>
+						<tr>
+							<td width="80px">物流公司:</td>
+							<td width="220px" id="expressName"></td>
+						</tr>
+						<tr>
+							<td width="80px">快递单号:</td>
+							<td width="220px" id="expressNo"></td>
+						</tr>
+						<tr>
+							<td width="80px">发货时间:</td>
+							<td width="220px" id="updateTime"></td>
+						</tr>
+						
+						
+					</tbody>
+				</table>
+				
+			</div>
+		</div>
+		-->
+		
+		<form id="edit_user" class="grid_from checkform" style="width:1000px;">
+			<div class="widget-header">
+				<h4 id="form_title">商品信息</h4>
+				<span class="widget-toolbar">
+					<a href="#" data-action="close" onclick="closeForm('edit_user')">
+						<i class="icon-remove"></i>
+					</a>    
+				</span>
+			</div>
+			<div class="form_content">
+				<input type="hidden" id="id" name="id"/>
+				<div class="form_content_table">
+					<span id="msgspan" style="color:red;"></span>
+					
+					<table id="shoppGoodsList" class="table table-striped  table-bordered" style="text-align: center;  width: 990px; margin-left: -4%; font-size: 5px;">	
+						
+					</table>
+					
+					<table id="userIdDetail" class="table table-striped  table-bordered" style="text-align: center;  width: 990px; margin-left: -4%; font-size: 5px;">	
+						
+					</table>
+					<table id="storeIdDetail" class="table table-striped  table-bordered" style="text-align: center;  width: 990px; margin-left: -4%; font-size: 5px;">	
+						
+					</table>
+					
+					<table id="rechargeDetail" class="table table-striped  table-bordered" style="text-align: center;  width: 990px; margin-left: -4%; font-size: 5px;">	
+						
+					</table>
+					
+					
+					
+				</div>
+				<div>
+					<!--<button class="btn btn-info button-left" type="submit">
+						<i class="icon-ok bigger-110"></i>
+						提交
+					</button>
+					<button class="btn button-right" type="button" onclick="resetForm()">
+						<i class="icon-undo bigger-110"></i>
+						重置
+					</button>-->
+				</div>
+			</div>
+		</form>
+		
+		
+		<!-- 编辑幻灯片信息窗口 -->
+		<!--<form id="edit_user" class="grid_from checkform">
+			<div class="widget-header">
+				<h4 id="form_title">商品属性管理</h4>
+				<span class="widget-toolbar">
+					<a href="#" data-action="close" onclick="closeForm('edit_user')">
+						<i class="icon-remove"></i>
+					</a>    
+				</span>
+			</div>
+			<div class="form_content">
+				<input type="hidden" id="mu_id" name="id"/>
+				<div class="form_content_table">
+					<span id="msgspan" style="color:red;"></span>
+					<table>
+						
+						<tr>
+							<td>图片</td>
+							<td><input type="file" name="file" style="height: 30px;width: 100px;" id="mu_img1"  placeholder="图片"  nullmsg="请选择图片" errormsg="请选择图片" ></input></td>
+							<td><input type="button" id="uploadImg" style="height: 30px;width: 70px; margin-left: -80px;" class="btn-warning" value="上传"></input></td>
+						</tr>
+						<tr>
+							<td></td>
+							<td></td>
+						</tr> 
+						
+						<tr>
+							<td><input type="hidden" name="icon" id="icon"></td>
+							<td><img style="width: 170px;height: 100px;" src="/enjoyRedEnvelopeManager/image/logoImg.png" id="mu_img"></td>
+						</tr> 
+						<tr>
+							<td>属性名称</td>
+							<td><input type="text" id="name" name="name" placeholder="属性名称" datatype="s1-18" nullmsg="请输入属性名称" errormsg="请输入属性名称" /></td>
+						</tr>
+					</table>
+					
+					
+					
+				</div>
+				<div>
+					<button class="btn btn-info button-left" type="submit">
+						<i class="icon-ok bigger-110"></i>
+						提交
+					</button>
+					<button class="btn button-right" type="button" onclick="resetForm()">
+						<i class="icon-undo bigger-110"></i>
+						重置
+					</button>
+				</div>
+			</div>
+		</form>-->
+		
+		<div id="div_dialog"></div>
+		<div id="hidebg"></div>
+	</body>
+</html>
+

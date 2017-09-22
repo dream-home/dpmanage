@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>会员列表</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js-->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/basepath.js"></script>
+		<!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+		<!--验证js-->
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/md5.js"></script>
+		
+		<script>
+			var token =sessionStorage.getItem("token");
+			var grid_user = "#grid_user";
+			var grid_pager_user = "#grid_pager_user";
+			var mUsers=null;
+			
+			$(function() {
+				var date = new Date();
+				var now = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+((date.getDate())<=9?("0"+date.getDate()):date.getDate()); 
+			
+				$.autoByWindow(grid_user);
+				
+				$.jqGrid(grid_user, $base_path + 'manage/member/list', false, colNames_user, fd_user, grid_pager_user, "会员列表", gridUserComplete, true,true,15);
+				$("#t_grid_user").append($("#grid_user_tbar").html());
+				
+				/*$("#datestart").val(now);		
+				$("#dateend").val(now);
+				*/
+				
+				
+				
+			});
+			
+			var colNames_user = ['ID','uid','status','昵称','手机号', '微信', '积分','剩余EP','会员等级','一部业绩','二部业绩','三部业绩', '累积赠送EP','银行账户','卡号','银行','邀请人','是否客服','注册时间',"备注",'操作'];
+			var fd_user = [
+				{name:'id',  width:60,hidden:true},
+				{name:'uid', index:'uid', key: true, width:40,},
+				{name:'status', index:'uid',hidden:true, width:10,},
+				{name:'nickName', index:'nickname', width:60},
+				{name:'phone', index:'phone', width:100},
+				{name:'weixin', index:'weixin', width:10,hidden:true},
+				{name:'score', index:'score',width:100},
+				{name:'exchangeEP', index:'exchangeEP',width:100},
+				{name:'gradeName', index:'gradeName',width:100},
+				{name:'performanceOne', index:'performanceOne',width:100},
+				{name:'performanceTwo', index:'performanceTwo',width:100},
+				{name:'performanceThree', index:'performanceThree',width:100},
+				{name:'bindEP', index:'bindEP',width:100},
+				{name:'userName', index:'userName',width:100,hidden:true},
+				{name:'cardNo', index:'cardNo',width:100,hidden:true},
+				{name:'bankName', index:'bankName', width:100,hidden:true},
+				{name:'firstReferrer', index:'firstReferrer', width:10,hidden:true},
+				{name:'isKF', index:'isKF', width:100,formatter:isKF,hidden:true},
+				{name:'createTime', index:'createTime', width:70},
+				{name:'remark', index:'remark', width:90},
+				{name:'func',index:'func', width:100, align: 'center'}
+			];
+			
+			function isKF(v,o,row){
+				if(row.isKF=="1"){
+					return "是";
+				}else{
+					return "否";
+				}
+			}
+			
+			/*function one(v){
+				return parseInt(v)*800;
+			}
+			function two(v){
+				return parseInt(v)*800;
+			}
+			function three(v){
+				return parseInt(v)*800;
+			}*/
+			
+			
+			function getIsDisable(v,o,row){
+				//alert(row.isForbidden);
+				if(row.isForbidden == '1'){
+					return "是";
+				}else if(row.isForbidden == '0'){
+					return "否";
+				}
+					
+			}
+			
+			function gridUserComplete(){
+				var ids = $(grid_user).jqGrid('getDataIDs');
+				for (var i = 0; i < ids.length; i++) {
+					var id = ids[i];
+					var rowData = $(grid_user).getRowData(id);
+					var funcBtn = '<div class="action-buttons">';
+					var bianjiBtn = '<a class="blue" href="javascript:_selectById(&quot;'+ id +'&quot;)">详情</a>';
+					var one = "";
+					var two = "";
+					var three ="";
+					if(rowData.remark!="该用户已注销"){
+						if(rowData.status == '0'){
+							one = '<a class="blue" href="javascript:_selectOne(&quot;'+ rowData.id +'&quot;)">启用</a>';	
+						}else{
+							two = '<a class="blue" href="javascript:_selectTwo(&quot;'+ rowData.id +'&quot;)">禁用</a>';	
+						}
+						three = '<a class="blue" href="javascript:_selectThree(&quot;'+ rowData.id +'&quot;)">注销</a>';
+					}
+					
+					
+					
+					//var shanchuBtn = '<a class="blue" href="javascript:_del('+ id +')">删除</a>';
+					funcBtn += bianjiBtn+one+two+three+'</div>';
+	         		$(grid_user).setRowData(id, {func: funcBtn});
+	      		}
+			}
+			
+			
+			
+			
+			
+			
+			function _search(){
+				var uid = $("#uid").val().trim();
+				var id = $("#id").val().trim();
+				var phone = $("#phone").val().trim();
+				var isKFInput = $("#isKFInput").val();
+				//alert(isKFInput);
+				if(uid.trim().length>32){
+					alert("uid最多只有输入32个字符");
+					$("#uid").val("");
+					return;
+				}
+				if(phone.trim().length>32){
+					alert("手机号码最多只有输入32个字符");
+					$("#phone").val("");
+					return;
+				}
+				
+				
+				if($("#datestart").val()!=""){
+					var datestart =new Date($("#datestart").val().trim()).Format("yyyy-MM-dd hh:mm:ss");
+					
+				}
+				if($("#dateend").val()!=""){
+					var dateend =new Date($("#dateend").val().trim()).Format1("yyyy-MM-dd hh:mm:ss");
+				}
+			
+				
+				//var datestart = $("#datestart").val().trim();
+				//var dateend =  $("#dateend").val().trim();
+				//alert(JSON.stringify(datestart+":"+dateend));
+				//$.setPostData(grid_user, {uid: uid, phone: mobile, status: status, fromTime: datestart,endTime:dateend});
+				//alert( JSON.stringify({uid:uid,phone:phone,fromTime:datestart,stopTime:dateend,pageNo:1}));
+				$.setPostData(grid_user,{id:id,uid:uid,phone:phone,fromTime:datestart,stopTime:dateend,page:"1",isKF:isKFInput});
+			    $.refresh(grid_user);
+			}
+			
+			
+			function _del(){
+				var ids = $(grid_user).getGridParam('selarrrow');
+				if($('#div_dialog').html() != ''){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'ManagerUser/delSysManUser',
+				        data: 'delIds=' + ids + '&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==0){
+								$.refresh(grid_user);
+								$.closeDelDailog();
+					          	alert('删除成功！');
+					       	}else{					       		
+								alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';
+					       	}
+				        }
+				    });
+			   }
+			}
+			
+			
+			function _selectById(id){
+				//获取当前选中行
+				
+				/*
+				usUserId = id;
+				shengId=rowData.usShengId;
+				shiId=rowData.usShiId;*/
+				
+				sessionStorage.setItem("uid",id);
+				var rowData = $(grid_user).getRowData(id);
+				sessionStorage.setItem("userId",rowData.id);
+				sessionStorage.setItem("firstReferrer",rowData.firstReferrer);
+				$("#ifm").html('<iframe name="frm_cusInfo" scrolling="yes" style="width:1100px;" height="630px" frameborder="0" src="userxiangqing.html"></iframe>');
+				//$.setPostData(grid_, {usUid:uid});
+				$.show("edit_user");
+			}
+			
+			
+			function _selectOne(ids){
+				
+				var person = {
+					status:1,
+					id:ids
+				}
+				
+				
+				$.ajax({
+						type:"get",
+						url:$base_path+"manage/member/update", 
+						data:person,
+						beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		                },
+						success:function(data){ 
+							if(data.code==200){
+								
+								alert("修改成功");
+							}else if(data.code==1403){
+								overTime();
+							}else{
+								//alert(data.msg);
+							}
+							$.refresh(grid_user);
+						}, 
+						error:function(data){ 
+							alert("服务器跑丢了......");
+						} 
+						
+				});	
+				
+				
+				
+				
+			}
+			
+			
+			
+			function _selectTwo(ids){
+				
+				var person = {
+					status:0,
+					id:ids
+				}
+				
+				
+				$.ajax({
+						type:"get",
+						url:$base_path+"manage/member/update", 
+						data:person,
+						beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		                },
+						success:function(data){ 
+							if(data.code==200){
+								
+								alert("修改成功");
+							}else if(data.code==1403){
+								overTime();
+							}else{
+								//alert(data.msg);
+							}
+							$.refresh(grid_user);
+						}, 
+						error:function(data){ 
+							alert("服务器跑丢了......");
+						} 
+						
+				});	
+				
+				
+				
+			}
+			
+			
+			/*注销用户*/
+			function _selectThree(ids){
+				
+				if(confirm("是否确认注销")){
+					$.ajax({
+						type:"get",
+						url:$base_path+"manage/member/delete1", 
+						data:{"id":ids},
+						beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		                },
+						success:function(data){ 
+							if(data.code==200){
+								
+								alert(data.msg);
+							}else if(data.code==1403){
+								overTime();
+							}else{
+								alert(data.msg);
+							}
+							$.refresh(grid_user);
+						}, 
+						error:function(data){ 
+							alert("服务器跑丢了......");
+						} 
+						
+				});	
+					
+					
+					
+					
+				}
+				
+			}
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			function _select(id){
+				
+				$.ajax({
+			        type: 'POST',
+			        async: false,
+			        url: $base_path + 'mUser_managerController/getConnectionByUser',
+			        data: 'token=' + token + '&id=' + id,
+			        success: function(data) {
+			        	if(data != null){
+			        		mUsers=eval(data.result.rows);
+			        	}else{
+			        		alert("查询人脉关系失败");
+			        		//$.refresh(grid_user);
+			        	}
+			        }
+			    });
+			    
+			    if(mUsers != null){
+			    	//alert(mUsers[0].id1);
+			    	if(mUsers[0].id1 !=null){
+			    		$("#id1").val(mUsers[0].id1);
+			        	$("#nickName1").val(mUsers[0].nickName1);
+			    	}else{
+			    		$("#id1").val("");
+			        	$("#nickName1").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id2 !=null){
+			    		$("#id2").val(mUsers[0].id2);
+			        	$("#nickName2").val(mUsers[0].nickName2);
+			    	}else{
+			    		$("#id2").val("");
+			        	$("#nickName2").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id3 !=null){
+			    		$("#id3").val(mUsers[0].id3);
+			        	$("#nickName3").val(mUsers[0].nickName3);
+			    	}else{
+			    		$("#id3").val("");
+			        	$("#nickName3").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id4 !=null){
+			    		$("#id4").val(mUsers[0].id4);
+			        	$("#nickName4").val(mUsers[0].nickName4);
+			    	}else{
+			    		$("#id4").val("");
+			        	$("#nickName4").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id5 !=null){
+			    		$("#id5").val(mUsers[0].id5);
+			        	$("#nickName5").val(mUsers[0].nickName5);
+			    	}else{
+			    		$("#id5").val("");
+			        	$("#nickName5").val("");
+			    	}
+			    	
+			    	if(mUsers[0].id6 !=null){
+			    		$("#id6").val(mUsers[0].id6);
+			        	$("#nickName6").val(mUsers[0].nickName6);
+			    	}else{
+			    		$("#id6").val("");
+			        	$("#nickName6").val("");
+			    	}
+			    	
+			    	//显示六度人脉信息框
+			    	$.show("edit_user");
+			    }
+			}
+		</script>
+	</head>
+	<body>
+		<div>
+			<table id="grid_user"></table>
+			<div id="grid_pager_user"></div>
+		</div>
+		
+		<!--user筛选工具栏-->
+		<div id="grid_user_tbar" style="display:none;">
+			<div class="action-buttons" style="margin-left: 10px; padding: 5px;">
+				id: <input id="id" onblur="_search()"/>
+				UID: <input id="uid" onblur="_search()"/>
+				手机号: <input id="phone" onblur="_search()"/>
+				日期: <input id="datestart" type="date" onblur="_search()"/>至<input type="date" id="dateend" onblur="_search()"/>
+				分类：<select id="isKFInput" style="width:120px" onblur="_search()">
+					<option value="" selected="selected" >全部</option>
+					<option value="0" >只显示用户</option>
+					<option value="1">只显示客服</option>
+					
+				</select>
+				<a class="blue" href="javascript:_search()"><i class="icon-search bigger-130"></i>查询</a>
+				
+			</div>
+			
+		</div>
+		
+		<!--点击根据id查询会员的基本信息-->
+		<div id="edit_user" class="grid_from" >
+			<div class="widget-header" >
+				<h4>显示会员信息</h4>
+				<span class="widget-toolbar">
+					<a href="#" data-action="close" onclick="closeForm('edit_user')">
+						<i class="icon-remove"></i>
+					</a>
+				</span>
+			</div>
+			<div id="ifm"></div>
+		</div>
+		
+		<div id="div_dialog"></div>
+		<div id="hidebg"></div>
+	</body>
+	
+</html>

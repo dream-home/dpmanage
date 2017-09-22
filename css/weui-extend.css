@@ -1,0 +1,359 @@
+/*页面跳转动画效果样式*/
+.page,body{background-color:#efeff4}
+.container,body{overflow:hidden}
+.container,.page{position:absolute;top:0;right:0;bottom:0;left:0}
+.page{overflow-y:auto;-webkit-overflow-scrolling:touch;opacity:0;}
+@-webkit-keyframes a{0%{-webkit-transform:translate3d(100%,0,0);transform:translate3d(100%,0,0);opacity:0}to{-webkit-transform:translateZ(0);transform:translateZ(0);opacity:1}}@keyframes a{0%{-webkit-transform:translate3d(100%,0,0);transform:translate3d(100%,0,0);opacity:0}to{-webkit-transform:translateZ(0);transform:translateZ(0);opacity:1}}@-webkit-keyframes b{0%{-webkit-transform:translateZ(0);transform:translateZ(0);opacity:1}to{-webkit-transform:translate3d(100%,0,0);transform:translate3d(100%,0,0);opacity:0}}@keyframes b{0%{-webkit-transform:translateZ(0);transform:translateZ(0);opacity:1}to{-webkit-transform:translate3d(100%,0,0);transform:translate3d(100%,0,0);opacity:0}}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+.page.slideIn{-webkit-animation:a .2s forwards;animation:a .2s forwards}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+.page.slideOut{-webkit-animation:b .2s forwards;animation:b .2s forwards}
+
+/*列表*/
+.weui_cell .img {
+    width:80px;height:60px;margin-right:10px;display:block
+}
+.weui_cell .img_circle {
+    width:60px;height:60px; border-radius:8px; margin-right:10px;display:block;
+}
+.weui_cell .title {
+    font-weight: 400;
+    font-size: 16px;
+    color: #000;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-height: 1.3;
+}
+.weui_cell .desc {
+    font-size: 13px;
+    color: #999;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-height: 1.3;
+}
+.weui_cell .desc {
+    font-size: 13px;
+    color: #999;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-height: 1.3;
+    margin-top:5px;
+}
+/*详情样式*/
+.weui_detail_header {
+    padding:20px 15px; 
+    height:auto;
+    background-color:#009edf;
+}
+.weui_detail_header .title {
+    color:#ffffff;
+    font-size:24px;
+}
+.weui_detail_header .desc {
+    font-size: 13px;
+    color: #fff;
+    overflow: hidden;
+    margin-top:5px;
+}
+.weui_detail_content {
+    padding:15px;
+    font-size: 14px;
+    overflow: hidden;
+    background-color:#fff;
+}
+.weui_detail_content img { max-width:100%;}
+
+/*顶部样式*/
+.weui_logo {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 40px;
+    background-color: #efeff4;    
+    width: 100%;
+    height: 40px;
+    text-align:center;
+    padding: 2px 0;
+    overflow:hidden;
+}
+.weui_fixed {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    padding-right: 10px;
+    padding-left: 10px;
+    border-bottom: 0;
+    -webkit-box-shadow: 0 0 1px #fff;/*1px rgba(0,0,0,.85);*/
+    box-shadow: 0 0 1px #fff;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+.weui_header{
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 44px;
+    background-color: #3492e9;
+    border-bottom: 0;
+    -webkit-box-shadow: 0 0 1px #fff;/*1px rgba(0,0,0,.85);*/
+    box-shadow: 0 0 1px #fff;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    padding-right: 0px;
+    padding-left: 0px;
+    color: #FFFFFF;
+    top: 0;
+    z-index:2;
+    /*-webkit-box-shadow: 0 1px 6px #ccc;
+    box-shadow: 0 1px 6px #ccc;*/
+}
+.weui_header .title {
+    position: absolute;
+    display: block;
+    width: 100%;
+    padding: 0;
+    margin: 0 -10px;
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 44px;
+    text-align: center;
+    white-space: nowrap;
+
+    right: 40px;
+    left: 40px;
+    width: auto;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.weui_header .left,.weui_header .right {
+    position: relative;
+    z-index: 20;
+    padding: 8px;
+    margin: 5px;
+    display: inline-block;
+    font-family: Muiicons;
+    font-size: 17px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1;
+}
+.weui_header .right  {float:right;color:#ffffff;}
+.weui_header .right .icon {color:#ffffff; padding-right:2px;}
+
+.weui_header .left  {float:left;color:#ffffff;}
+.weui_header .left .icon {color:#ffffff; padding-right:2px;}
+.weui_content{
+    margin-top:44px;
+    margin-bottom:55px;    
+}
+.weui_content_main{
+    margin-top:44px;
+    margin-bottom:55px;    
+}
+
+/*通用样式*/
+.weui_top {top:44px;}
+.weui_top2 {top:88px;}
+.weui_mtop {margin-top:44px;}
+.weui_mmtop {margin-top:54px;}
+.weui_mtop2 {margin-top:59px;}
+.weui_mtop3 {margin-top:103px;}
+
+.weui_input_round {
+    display: block;
+    width: 100%;
+    height: 34px;
+    box-sizing : content-box; 
+    -moz-box-sizing : content-box;
+    -webkit-writing-mode: horizontal-tb;
+    text-indent:5px;
+    font-size: 14px;
+    line-height: 1.42857143;
+    color: #555;
+    background-color: #fff;
+    background-image: none;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+    -webkit-transition: border-color ease-in-out .15s,-webkit-box-shadow ease-in-out .15s;
+    -o-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+    transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+}
+.weui_nodata {
+    text-align: center;
+    font-size: 16px;
+    color: #000000;
+    font-weight: 400;
+    margin: 15px 0;
+}
+
+.weui_error_top,.weui_error_bottom {
+    position:absolute;
+    z-index:9999;
+    height:40px;
+    line-height:40px;
+    left:0px;
+    right:0px;
+}
+.weui_error_top {
+    top:200px;
+}
+.weui_error_bottom {
+    bottom:50px;
+}
+.weui_error_top .content,.weui_error_bottom .content  {
+    text-align:center;
+    color:#ffffff;
+    background-color:#656565;
+    border-radius: 20px;
+    width:200px;
+    margin:auto;
+}
+
+.weui_wrap {
+    width: auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-wrap: normal;
+    word-wrap: break-word;
+    word-break: break-all;
+}
+.pd_15 {padding:15px;}
+.pd_h_15 {padding:0px 15px;}
+.pd_v_15 {padding:15px 0px;}
+.mg_bt_15 {margin-bottom:15px;}
+.weui_rotate {
+    -webkit-animation: circle 1s infinite linear; /*匀速 循环*/
+}
+@-webkit-keyframes circle {
+    0% { -webkit-transform: rotate(0deg);}
+    100% { -webkit-transform: rotate(360deg);}
+}
+@-moz-keyframes mymove /* Firefox */{
+    0% { -moz-transform: rotate(0deg);}
+    100% { -moz-transform: rotate(360deg);}
+}
+@-o-keyframes mymove /* Opera */{
+    0% { -o-transform: rotate(0deg);}
+    100% { -o-transform: rotate(360deg);}
+}
+@keyframes mymove{
+    0% { transform: rotate(0deg);}
+    100% { transform: rotate(360deg);}
+}
+
+/*扩展*/
+.weui_cell_icon {
+    border-radius:50%;
+    color:#ffffff;
+    margin-right:5px;
+    text-align:center;
+    line-height:1.9;
+}
+.weui_cell_icon_24 {
+    height:24px;
+    width:24px;
+    font-size:14px;
+}
+.weui_cell_icon_35 {
+    height:30px;
+    width:30px;
+    font-size:18px;
+}
+.weui_grid_icon {
+    height:42px;
+    width:42px;
+    border-radius:5px;
+    color:#ffffff;
+    font-size:28px;
+    text-align:center;
+    line-height:45px;
+}
+.bg_1 {background-color:#43b546;}
+.bg_2 {background-color:#ea603b;}
+.bg_3 {background-color:#bc84cb;}
+.bg_4 {background-color:#36adfd;}
+.bg_5 {background-color:#76919c;}
+.bg_6 {background-color:#f64442;}
+.bg_7 {background-color:#ff923c;}
+.bg_8 {background-color:#5cc9f4;}
+.bg_8 {background-color:#7588ef;}
+
+.weui_btn_plain_disabled{
+   color: gray;
+   border: 1px solid  gray;
+}
+
+.weui_btn_disabled{
+   background-color: gray;
+}
+
+.weui_navbar_item { padding:8px 0; }
+.weui_bar_item_on { color:#009edf; border-bottom:3px solid #009edf; }
+.weui_tabbar_item { color:#888; font-size:24px;}
+.navigation .weui_bar_item_on { color:#009edf; border-bottom:0px; }
+.navigation .weui_tabbar_item.weui_bar_item_on .weui_tabbar_label { color: #009edf; }
+
+.weui-infinite-scroll {display:none; }
+.weui_navbar + .weui_tab_bd { padding-top:44px; }
+.weui_panel_title,.weui_media_box.weui_media_text .weui_media_title {color: #333333;}
+.weui_panel_title{font-weight: bold;}
+ul {list-style: none;}
+a,.weui_panel_hd { cursor:pointer;}
+.weui_search_inner .weui_search_input { padding:10px 0px; }
+.weui_search_text .weui_icon_search { margin-top:10px; }
+.weui_search_cancel { line-height:38px; }
+.weui_search_text { top:8px;}
+.weui_search_inner .weui_icon_search {top:5px;}
+.weui_search_inner .weui_icon_clear {top:5px;}
+
+.weui_btn_plain_primary {
+   color: #009edf;
+   border: 1px solid #009edf;
+}
+
+.weui_media_box.weui_media_appmsg .weui_media_info {
+    margin-top: 15px;
+    padding-bottom: 5px;
+    font-size: 13px;
+    color: #CECECE;
+    line-height: 1em;
+    list-style: none;
+    overflow: hidden;
+}
+.weui_media_box.weui_media_appmsg .weui_media_info_meta {
+    float: left;
+    padding-right: 1em;
+}
+
+.arrow:after {
+    content: " ";
+    display: inline-block;
+    -webkit-transform: rotate(45deg);
+    transform: rotate(45deg);
+    height: 6px;
+    width: 6px;
+    border-width: 2px 2px 0 0;
+    border-color: #c8c8cd;
+    border-style: solid;
+    position: relative;
+    top: -2px;
+    top: -1px;
+}
+.weui_cells {
+    font-size:14px;
+}

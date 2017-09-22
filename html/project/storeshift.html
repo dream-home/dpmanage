@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>商品分类转移</title>
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+	
+
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js -->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--验证js-->
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<!--
+        	引进路径
+        -->
+        <script type="text/javascript" src="/enjoyRedEnvelopeManager/js/basepath.js" ></script>
+        <!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+		
+		<style>
+			.u1156 {
+			    position: absolute;
+			    left: 0px;
+			    top: 0px;
+			    width: 1000px;
+			    height: 50px;
+			}
+			.ax_default {
+			    font-family: 'Arial Normal', 'Arial';
+			    font-weight: 400;
+			    font-style: normal;
+			    font-size: 13px;
+			    color: #333333;
+			    text-align: center;
+			    line-height: normal;
+			}
+			.u1156_div {
+			    position: absolute;
+			    left: 0px;
+			    top: 0px;
+			    width: 1005px;
+			    height: 50px;
+			    background: inherit;
+			    background-color: rgba(215, 215, 215, 1);
+			    border: none;
+			    border-radius: 0px;
+			    -moz-box-shadow: none;
+			    -webkit-box-shadow: none;
+			    box-shadow: none;
+			}
+			.u1157 {
+			    position: absolute;
+			    left: 2px;
+			    top: 17px;
+			    width: 1000px;
+			    word-wrap: break-word;
+			}
+			.u1189 {
+			    width: 235px;
+			    height: 100px;
+			}
+			.u1189_div {
+			    width: 235px;
+			    height: 100px;
+			    background: inherit;
+			    background-color: rgba(255, 255, 255, 1);
+			    border: none;
+			    border-radius: 0px;
+			}
+			.u1191_img {
+			    width: 80px;
+			    height: 80px;
+			}
+		</style>
+		<script>
+			var token = sessionStorage.getItem("token");
+			$(function(){
+				//加载项
+				loadAllType();
+			});
+			//加载所有分类
+			function loadAllType(){
+				$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/goods/allGoodsSort',
+				        data:  'token=' + token, 
+				        success: function(data) {
+				        	if(data.code==0||data.code==200){
+				        		var html="";
+				        		$.each(data.result,function(index,obj){
+				        			html+="<option value="+obj.id+">"+obj.name+"</option>";
+				        		})
+				        		$("#originalType_select").html(html);
+				        		$("#newType_select").html(html);
+				        		//加载数据
+				        		_search();
+				           	}else{
+				        		alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';				           		
+				           	}
+				        }
+				});	
+			}
+			
+			//查询商品
+			function _search(){
+				//设置hidden  选中的分类
+				selectType();
+				//Ajax请求数据
+				$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/goods/getGoodsBySort',
+				        data: $("#selete_from").serialize()+ '&token=' + token, 
+				        //dataType:"text",
+				        success: function(data) {
+				        	if(data.code==0||data.code==200){
+				        		$("#allselectcheckbox").empty();
+				        		var pageNum=1,pageCount=1;
+				        		pageNum=data.result.pageNo;
+				        		pageCount=(Math.ceil(data.result.totalSize/data.result.pageSize));
+				        		//数据
+				        		$.each(data.result.rows,function(index,obj){
+				        			$("#allselectcheckbox").append(""+
+				        			"<label>"+
+										"<div class='ax_default u1189' style='margin-left: 10px;margin-top: 10px;display:inline-block;'>"+
+							              "<div class='u1189_div' tabindex='0' style=''>"+
+							              		"<img  class='u1191_img' src='"+obj.icon+"' tabindex='0' style='float: left;margin:10px auto 10px 10px;'/>"+
+							              		"<div style='float:left;margin-left: 10px;margin-top: 10px;width: 130px;height: 25px;'>"+obj.name+"</div>"+
+							              		"<div style='float:left;margin-left: 10px;margin-top: 10px;width: 130px;height: 25px;color:"+((obj.status==1)?"green":(obj.status==3)?"red":"#cccccc")+"'>"+((obj.status==1)?"上架中":(obj.status==3)?"已删除":"已下架")+"</div>"+
+							              		"<div style='float:left;margin-left: 10px;display:inline-block;width: 100px;height:25px;'>￥"+obj.price+"</div>"+
+							              		"<input type='checkbox' value='"+obj.id+"' style='float: left;margin-top: 10px;' onclick='selectIn()'/>"+
+							              "</div>"+
+							            "</div>"+
+						           " </label>"+
+				        			"");
+				        		})
+				        		//设置分页值
+				        		setPageVal(pageNum,pageCount);
+				        		//加载完数据后是否全部选中
+								selectAll();
+				           	}else{
+				        		alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';				           		
+				           	} 
+				        }
+				});	
+			}
+			
+			//设置分页
+			function setPageVal(pageNum,pageCount){
+				$("#pageNum_span").html(pageNum);
+				$("#pageNum").val(pageNum);
+				$("#pageCount_span").html(pageCount);
+				$("#pageCount").val(pageCount);
+			}
+			
+			//全选/反选
+			function selectAll(){
+				var check=$("#businessName").prop("checked");
+				$("#selectAll").val((check?"0":"1"));
+				$("#allselectcheckbox input[type=checkbox]").each(function(index,obj){
+					$(obj).prop("checked",check);
+				})
+				selectIn();
+			}
+			
+			//选中
+			function selectIn(){
+				var select="";
+				$("#allselectcheckbox input[type=checkbox]").each(function(index,obj){
+					if($(obj).prop("checked")){
+						select+=$(obj).val()+"_";
+					}else{
+						$("#businessName").prop("checked",false);
+					}
+				});
+				$("#selectInput").val(select);
+			}
+			
+			//选择分类  
+			function selectType(){
+				$("#newType").val($("#newType_select").val());
+				$("#originalType").val($("#originalType_select").val());
+			}
+			
+			//分页
+			function setPage(type){
+				var pageNum=parseInt($("#pageNum").val());
+				var pageCount=parseInt($("#pageCount").val());
+				if(type=="1"){//首页
+					$("#pageNum").val("1");
+				}else if(type=="-"){//上一页
+					if((pageNum-1)<=0){
+						alert("没有上一页了");
+						return false;
+					}
+					$("#pageNum").val(pageNum-1);
+				}else if(type=="+"){//下一页
+					if((pageNum+1)>pageCount){
+						alert("没有下一页了");
+						return false;
+					}
+					$("#pageNum").val(pageNum+1);
+				}else if(type=="0"){//尾页
+					if(pageNum==pageCount){
+						alert("当前已经是尾页");
+						return false;
+					}
+					$("#pageNum").val(pageCount);
+				}
+				_search();				
+			}
+			
+			//转移商品
+			function transferType(){
+				var originalType=$("#originalType").val();
+				var newType=$("#newType").val();
+				var selectAll=$("#selectAll").val();
+				var selectInput=$("#selectInput").val();
+				if(originalType==newType){
+					alert("[目标分类]请选择其他分类!");
+					return false;
+				}
+				if(selectAll==1){
+					if(""==selectInput||null==selectInput||"undefined"==selectInput||undefined==selectInput){
+						alert("请选择商品!");
+						return false;
+					}
+				}else{
+					if(!confirm("确定转移当前分类下所有商品?")){
+						return false;
+					}else{
+						if(""==selectInput||null==selectInput||"undefined"==selectInput||undefined==selectInput){
+							alert("当前分类下无商品!");
+							return false;
+						}
+					}
+				}
+				$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/goods/transferType',
+				        data:  $("#selete_from").serialize()+'&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==0||data.code==200){
+				        		//重新加载数据
+				        		_search();
+				           	}else{
+				        		alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';				           		
+				           	}
+				        }
+				});	
+			}
+		</script>
+	</head>
+	<body>
+		<div class="ax_default u1156" data-label="title">
+        <div class="u1156_div"></div>
+        <div class="u1157" style="visibility: visible; top: 16px; transform-origin: 498px 9px 0px;">
+          <p><span>商品分类转移</span></p>
+        </div>
+      </div>
+		<div id="grid_user_tbar" style="margin-top: 60px;">
+			<!--头-->
+			<div class="action-buttons" style="padding: 5px;width: 1005px;" align="center;">
+				<table style="width: 100%;">
+					<tr>
+						<td>
+								原分类: <select id="originalType_select" onchange="_search()">
+											 </select>
+						</td>
+						<td>
+								<label style="margin-left: 20px;">
+									<input id="businessName" type="checkbox" onclick="selectAll()"/>转移分类所有商品
+								</label>
+						</td>
+						<td>
+								目标分类: <select id="newType_select" onchange="selectType()">
+												 </select>
+						</td>
+						<td>
+								<input id="" style="border-radius:4px;background-color: #6fb3e0; color: white; height:35px;border: 0px;  width: 100px;" type="button" value="转移" onclick="transferType()"/>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<!--列表-->
+			<div style="width:1005px;height: 482px;background: #CCCCCC;" id="allselectcheckbox">
+				
+				
+	            
+	            
+			</div>
+			
+			<!--分页-->
+			<div style="width:1005px;height: 52px;background: #CCCCCC;margin-top: 5px;">
+				<div class="" style="margin-left: 30px;margin-top: 10px;display:inline-block;width:200px;height: 30px ;">
+	              <div class="" tabindex="0" style="margin-top: 5px;" align="right">
+	              			共<span id="pageCount_span">1</span>页,当前第<span id="pageNum_span">1</span>页
+	              </div>
+	            </div>
+	           <input id="" style="border-radius:4px;background-color: #6fb3e0; color: white; height:35px;border: 0px;  width: 150px;margin-left: 60px;" type="button" value="首页" onclick="setPage('1')"/>
+	           <input id="" style="border-radius:4px;background-color: #6fb3e0; color: white; height:35px;border: 0px;  width: 150px;" type="button" value="上一页" onclick="setPage('-')"/>
+	           <input id="" style="border-radius:4px;background-color: #6fb3e0; color: white; height:35px;border: 0px;  width: 150px;" type="button" value="下一页" onclick="setPage('+')"/>
+	           <input id="" style="border-radius:4px;background-color: #6fb3e0; color: white; height:35px;border: 0px;  width: 150px;" type="button" value="末页" onclick="setPage('0')"/>
+			</div>
+			<form id="selete_from">
+				<input type="hidden" value="1" name="pageNum" id="pageNum"/>
+				<input type="hidden" value="16" name="pageSize" id="pageSize"/>
+				<input type="hidden" value="1" name="pageCount" id="pageCount"/>
+				<input type="hidden" value="" name="originalType" id="originalType"/>
+				<input type="hidden" value="" name="newType" id="newType"/>
+				<input type="hidden" value="1" name="selectAll" id="selectAll"/>
+				<input type="hidden" value="" name="selectInput" id="selectInput"/>
+			</form>
+			
+		</div>
+	</body>
+</html>

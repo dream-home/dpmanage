@@ -1,0 +1,1720 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>代理列表</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js-->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/basepath.js"></script>
+		<!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+		<!--验证js-->
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/md5.js"></script>
+		
+		<script>
+			var token = sessionStorage.getItem("token");
+			var grid_user = "#grid_user";
+			var grid_pager_user = "#grid_pager_user";
+			var mUsers=null;
+			
+			$(function() {
+				var date = new Date();
+				var now = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+((date.getDate())<=9?("0"+date.getDate()):date.getDate());
+				
+				$.autoByWindow(grid_user);
+				var pro = {
+					status:1,
+					token:sessionStorage.getItem("token")
+				}
+				
+				$.jqGrid(grid_user, $base_path + 'manage/agentInfo/list',null,colNames_user, fd_user, grid_pager_user, "代理列表",gridUserComplete, true,true,15);
+				$("#t_grid_user").append($("#grid_user_tbar").html());
+				
+				$.navGrid(grid_user, grid_pager_user);
+				$.navButtonAdd(grid_user, grid_pager_user, 'icon-plus-sign purple', '<font color="purple">添加</font>', '添加', add);
+					//uploadBase("mu_Input","icon","adImg");
+				/*$.navButtonAdd(grid_user, grid_pager_user, 'icon-trash red', '<font color="red">删除</font>', '删除', beforeDel);*/
+				
+				
+				/*三级联表*/
+				$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/city/list',
+				        data: 'level=1&token='+sessionStorage.getItem("token"), 
+				        success: function(data) {
+				        	//alert(data.result.rows);
+				        	var str = "";
+				        	
+				        	str+="<option  value = ''>全部</option>";
+				        	for(var i = 0 ; i<data.result.rows.length;i++){
+				        		str+="<option  title='"+data.result.rows[i].name+"'   value = '"+data.result.rows[i].code+"'>"+data.result.rows[i].name+"</option>";
+				        	}
+				        	$("#province1").html(str);
+				        	$("#province").html(str);
+				        	_search1();
+				        }
+				});
+				
+				
+				
+				
+				
+				//获取银行列表					
+				$.ajax({
+						type:"post",
+						url:$base_path+"manage/bank/list", 
+						beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		                },
+						success:function(data){ 
+							if(data.code==200){
+								var option = "";
+								for(a in data.result){
+									option+='<option title="'+data.result[a].name+'" value="'+data.result[a].id+'" >'+data.result[a].name+'</option>';
+								}
+								$("#bankTypeCode").html(option);
+								
+							}else if(data.code==1403){
+								overTime();
+							}else{
+								//alert(data.msg);
+							}
+						}, 
+						error:function(data){ 
+							alert("服务器跑丢了......");
+						} 
+						
+				});	
+				
+				
+				
+				//uploadBase1("fileImg","icon","adImg","doupai-test-store");
+				
+				/*$("#datestart").val(now);		
+				$("#dateend").val(now);*/
+				$("#funOne").click(function(){
+					$.show("edit_user1");
+					//$.show("edit_user");
+					$("#edit_user").css("opacity",0.8);
+					$("#edit_user  input").attr("disabled","disabled");
+					$("#sub  button").attr("disabled","disabled");
+					//$.hide("edit_user");
+					//$('.inputxt').attr("disabled","disabled");
+					$("#editClose1").removeAttr('onclick');
+					
+					var ids = $("#loginName").val();
+						$("#epId").val(ids);
+						$("#epPayPassword").val("");
+						$("#epCount").val("");
+						$("#epRemark").val("");		
+					
+				})
+				
+				
+				/*取消代理*/
+				$("#funTwo").click(function(){
+					var id = $("#id").val();
+					
+					$.show("edit_user2");
+					$.show("edit_user");
+					$("#edit_user").css("opacity",0.8);
+					$("#edit_user  input").attr("disabled","disabled");
+					$("#sub  button").attr("disabled","disabled");
+					//$("#editClose1").removeAttr('onclick');
+					/*$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/agentInfo/delete',
+				        data: 'id=' + id,
+				        beforeSend: function(request) {
+	                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+	               		},
+				        success: function(data) {
+				        	if(data.code==200){
+								alert('取消代理成功！');
+								$.refresh(grid_user);
+								closeForm1();
+					          	
+					       	}else{					       		
+
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';
+					       	}
+				        }
+				    });*/
+					
+					
+					
+				})
+				$("#funThree").click(function(){
+					var id = $("#id").val();
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/agentInfo/updatePassWord',
+				        data: 'id=' + id,
+				        beforeSend: function(request) {
+	                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+	               		},
+				        success: function(data) {
+				        	if(data.code==200){
+								alert('重置密码成功！');
+								$.refresh(grid_user);
+								closeForm1();
+					          	
+					       	}else{					       		
+								alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';
+					       	}
+				        }
+				    });
+					
+					
+					
+					
+				})
+			
+				
+				
+			});
+			
+			
+			
+			var colNames_user = ['id','代理账户','代理公司名称',"负责人姓名",'手机号','客服电话','邮箱','代理等级','ep值','消费ep','代理区域id','省','市','区','公司详情地址','代理合作日期',"licenseId",'状态',"agentProvince","agentCity","agentCountry",'操作'];
+			var fd_user = [
+				{name:'id', index:'id', width:60, key: true,hidden:true},
+				{name:'loginName', index:'loginName', width:100},
+				{name:'company', index:'company', width:120},
+				{name:'userName', index:'userName', width:100},
+				{name:'phone', index:'phone',width:100},
+				{name:'servicePhone', index:'servicePhone',width:100},
+				{name:'email', index:'email', width:100,},
+				{name:'agentLevel', index:'agentLevel',width:100,formatter:getagentLevel},
+				{name:'exchangeEP', index:'exchangeEP', width:100,},
+				{name:'consumeEP', index:'consumeEP', width:100,},
+				{name:'agentAreaId', index:'agentAreaId',width:100,hidden:true},
+				{name:'agentProvinceName', index:'agentProvinceName',width:100,},
+				{name:'agentCityName', index:'agentCityName',width:100,},
+				{name:'agentCountryName', index:'agentCountryName',width:100,},
+				{name:'address', index:'address', width:100,},
+				{name:'createTime', index:'createTime', width:100,},
+				{name:'licenseId', index:'licenseId', width:40,hidden:true},
+				{name:'status', index:'status', width:70,formatter:getstatus},
+				{name:'agentProvince', index:'agentProvince',width:50,hidden:true},
+				{name:'agentCity', index:'agentCity',width:50,hidden:true},
+				{name:'agentCountry', index:'agentCountry',width:50,hidden:true},
+				{name:'func',index:'func', width:100, align: 'center'}
+			];
+			
+			
+			function getagentLevel(v,o,row){
+				
+				
+				if(v=='1'){
+					return "省级代理";
+				}else if(v=='2'){
+					return "市级代理";
+				}else if(v=='3'){
+					return "区级代理";
+				}else{
+					
+					return "";
+				}
+				
+			
+				
+			}
+			
+			
+			
+			function getstatus(v,o,row){
+				
+				if(v=="1"){
+					return "审核通过";
+				}else if(v=="0"){
+					return "审核中";
+				}else if(v=="2"){
+					return "审核不通过";
+				}else if(v=="3"){
+					return "关闭";
+				}else{
+					return "" ;
+				}
+				
+				
+				
+				
+				
+				
+			}
+			
+			
+			
+			function getfashion(v){
+				return "第"+v+"次签到";
+			}
+			
+			function getStatus(v){
+				if(v=="0"){
+					return "普通";
+				}else if(v=="1"){
+					return "vip";
+				}else if(v=="2"){
+					return "初级合伙人";
+				}else if(v=="11"){
+					return "一星合伙人";					
+				}else if(v=="12"){
+					return "二星合伙人";
+				}else if(v=="13"){
+					return "三星合伙人";
+				}else if(v=="14"){
+					return "四星合伙人";
+				}else if(v=="15"){
+					return "五星合伙人";
+				}else if(v=="16"){
+					return "六星合伙人";
+				}else if(v=="17"){
+					return "七星合伙人";
+				}else if(v=="21"){
+					return "一星董事";
+				}else if(v=="22"){
+					return "二星董事";
+				}else if(v=="23"){
+					return "三星董事";
+				}else if(v=="24"){
+					return "四星董事";
+				}else if(v=="25"){
+					return "五星董事";
+				}
+				
+			}
+			
+			
+			
+			
+			
+			function getIsDisable(v,o,row){
+				//alert(row.isForbidden);
+				if(row.isForbidden == '1'){
+					return "是";
+				}else if(row.isForbidden == '0'){
+					return "否";
+				}
+					
+			}
+			
+			function gridUserComplete(){
+				var ids = $(grid_user).jqGrid('getDataIDs');
+				for (var i = 0; i < ids.length; i++) {
+					var id = ids[i];
+					//var rowData = $(grid_user).getRowData(id);
+					var funcBtn = '<div class="action-buttons">';
+					var bianjiBtn = '<a class="blue" href="javascript:_edit(&quot;'+ id +'&quot;)">编辑</a>';
+					var shanchuBtn = '<a class="blue" href="javascript:_achievement(&quot;'+ id +'&quot;)">业绩</a>';
+					
+					funcBtn += bianjiBtn+shanchuBtn + '</div>';
+	         		$(grid_user).setRowData(id, {func: funcBtn});
+	         		
+	         		
+	         		
+	         		
+	      		}
+			}
+			
+			
+			//业绩跳转
+			
+			function _achievement(id){
+				
+				window.location.href= "/enjoyRedEnvelopeManager/html/agent/agentAchievement.html?agentId="+id;
+				
+			}
+			
+			
+			
+			function _search(){
+				//var uid = $("#uid").val().trim()==""?null:$("#uid").val().trim();
+				
+				var mobile = $("#phone1").val().trim();
+				var grade = $("#grade").val().trim();
+				var province = $("#province").val();
+				var city = $("#city").val();
+				var country = $("#country").val();
+				
+				
+				
+				
+				
+				if($("#datestart").val()!=""){
+					var datestart =new Date($("#datestart").val().trim()).Format("yyyy-MM-dd hh:mm:ss");
+					
+				}
+				if($("#dateend").val()!=""){
+					var dateend =new Date($("#dateend").val().trim()).Format1("yyyy-MM-dd hh:mm:ss");
+				}
+			
+				
+				$.setPostData(grid_user,{phone:mobile,agentLevel:grade,fromTime:datestart,stopTime:dateend,agentProvince:province,agentCity:city,agentCountry:country});
+			    $.refresh(grid_user);
+			}
+			
+			
+			
+			
+			
+			
+		
+			
+			
+			
+			function add(){
+				_edit('');
+				
+				
+				
+				
+				$("#form_title").html('添加地区代理');
+				$("#tr_pwd").show(); 
+				//$("#mu_pwd").attr('ignore', ''); 
+				$("#msgspan").text('');
+				$("#icon").prop("src","/enjoyRedEnvelopeManager/image/logoImg.png");
+				$("#name").val('');
+			 	$("#price").val('');
+			 	$("#detail").val('');
+			 	$("#drawPrice").val('');
+			 	$("#drawNum").val('');
+			 	$("#stock").val('');
+			 	$("#detail").val('');
+			 	$("#remark").val('');
+			 	$("#goodsSortId").val("");
+			 	$("#up").prop("checked","checked");
+				$.show("edit_user");
+			}
+			function beforeDel(){
+				var ids = $(grid_user).getGridParam('selarrrow');
+				if(ids == ''){
+					$.reminderDailog("div_dialog", '<i class="icon-warning-sign"></i>警告', '请选中行!');
+				}else{
+					$.openDelDailog("div_dialog", del);
+				}
+			}
+			function del(){
+				
+				
+				
+				
+				
+				
+				var ids = $(grid_user).getGridParam('selarrrow');
+				//alert(ids);
+				if($('#div_dialog').html() != ''){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/agentInfo/delete',
+				        data: 'id=' + ids,
+				        beforeSend: function(request) {
+	                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+	               		},
+				        success: function(data) {
+				        	if(data.code==200){
+								$.refresh(grid_user);
+								$.closeDelDailog();
+					          	alert('删除成功！');
+					       	}else{					       		
+								//alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';
+					       	}
+				        }
+				    });
+			   }
+			}
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			function _edit(id){
+					$("#icon").prop("src","/enjoyRedEnvelopeManager/image/logoImg.png");
+		        	$("#icon2").prop("src","/enjoyRedEnvelopeManager/image/logoImg.png");
+		        	$("#icon3").prop("src","/enjoyRedEnvelopeManager/image/logoImg.png");
+		        	$("#icon4").prop("src","/enjoyRedEnvelopeManager/image/logoImg.png");
+		        	$("#icon5").prop("src","/enjoyRedEnvelopeManager/image/logoImg.png");
+		        	$("#icon6").prop("src","/enjoyRedEnvelopeManager/image/logoImg.png");
+					$("#loginName").attr("disabled",true);
+				
+				if(id==""){
+					$("#province1").attr("disabled",false);
+					$("#city1").attr("disabled",false);
+					$("#country1").attr("disabled",false);
+					$("#agentLevel").attr("disabled",false);
+					
+					$("#edit_user input").val("");
+					$("#edit_user select").val("");
+					$("#sub input").val("确认添加");
+					//$("#updateFun input").val("确认添加");
+					$("#funOne").val("EP充值");
+					$("#funTwo").val("取消代理");
+					$("#funThree").val("重置密码");
+					$("#tijiao").html("确认添加");
+					$("#id").val("");
+					$("#icon").prop("src","/enjoyRedEnvelopeManager/image/logoImg.png");
+		        	$("#icon2").prop("src","/enjoyRedEnvelopeManager/image/logoImg.png");
+		        	$("#icon3").prop("src","/enjoyRedEnvelopeManager/image/logoImg.png");
+		        	$("#icon4").prop("src","/enjoyRedEnvelopeManager/image/logoImg.png");
+		        	$("#icon5").prop("src","/enjoyRedEnvelopeManager/image/logoImg.png");
+		        	$("#icon6").prop("src","/enjoyRedEnvelopeManager/image/logoImg.png");
+					$("#updateFun").hide();
+				}else{
+					
+					$("#province1").attr("disabled",true);
+					$("#city1").attr("disabled",true);
+					$("#country1").attr("disabled",true);
+					$("#agentLevel").attr("disabled",true);
+					$("#loginName").attr("disabled",true);
+					$("#form_title").html('修改地区代理');
+					
+					$("#updateFun").show();
+					$("#sub input").val("确认修改");
+					$("#tijiao").html("确认修改");
+					var model = $(grid_user).getRowData(id); 
+					$("#id").val(model.id);
+					$("#agentId").val(model.id);
+					$("#company").val(model.company);
+					$("#phone").val(model.phone);
+					
+					
+					$("#licenseId").val(model.licenseId);
+					if(model.servicePhone.indexOf("-")>=0){
+						$("#servicePhone").val(model.servicePhone.split("-")[0]);
+						$("#servicePhone2").val(model.servicePhone.split("-")[1]);
+					}else{
+						$("#servicePhone").val("");
+						$("#servicePhone2").val(model.servicePhone);
+					}
+					
+					
+					/*三级联表获取当前省市区*/
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/city/list',
+				        data: 'parentCode='+model.agentProvince+'&token='+sessionStorage.getItem("token"), 
+				        success: function(data) {
+				        	//alert(data.result.rows);
+				        	var str = "";
+				        	
+				        	str+="<option  value = ''>全部</option>";
+				        	for(var i = 0 ; i<data.result.rows.length;i++){
+				        		str+="<option  title='"+data.result.rows[i].name+"'  value = '"+data.result.rows[i].code+"'>"+data.result.rows[i].name+"</option>";
+				        	}
+				        	$("#city1").html(str);
+				        	$("#city1").val(model.agentCity);
+				        	
+				        	
+				        
+				        }
+					});
+					
+					
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/city/list',
+				        data: 'parentCode='+model.agentCity+'&token='+sessionStorage.getItem("token"), 
+				        success: function(data) {
+				        	//alert(data.result.rows);
+				        	var str = "";
+				        	
+				        	str+="<option  value = ''>全部</option>";
+				        	if(data.result.rows!=null){
+				        		for(var i = 0 ; i<data.result.rows.length;i++){
+					        		str+="<option  title='"+data.result.rows[i].name+"'  value = '"+data.result.rows[i].code+"'>"+data.result.rows[i].name+"</option>";
+					        	}	
+				        	}
+				        	
+				        	$("#country1").html(str);
+				        	$("#country1").val(model.agentCountry);
+				        }
+					});
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					$.ajax({
+				        type: 'get',
+				        url: $base_path + 'manage/agentInfo/detail',
+				        data: 'id=' +id,
+				        beforeSend: function(request) {
+	                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+	               		},
+				        success: function(data) {
+				        	$("#province1").val(data.result.agentProvince);
+				    		/*$("#province1").val(data.result.agentProvince);
+							$("#city1").val(data.result.agentCity);
+							$("#country1").val(data.result.agentCountry);*/
+							
+							
+							$("#bankCard").val(data.result.bankCard);
+							$("#email").val(data.result.email);
+							$("#userName").val(data.result.userName);
+							$("#bankTypeCode").val(data.result.bankTypeCode);
+							$("#address").val(data.result.address);
+							$("#IDCard").val(data.result.idcard);
+							$("#bankBranch").val(data.result.bankBranch);
+							$("#licenseIconId").val(data.result.licenseIconId)
+							$("#agentLevel").val(data.result.agentLevel);
+							$("#loginName").val(data.result.loginName);
+							$("#agentphone").val(data.result.phone);
+							
+							if(data.result.status ==3){
+								$("#funTwo").val("已取消代理查看原因 ");
+								$("#agentRemark").val(data.result.remark);
+							}else{
+								$("#funTwo").val("取消代理 ");
+							}
+							for(var i= 0 ;i<data.result.idCard.length;i++){
+								
+								if(data.result.idCard[i].type ==1){
+									
+									if(data.result.idCard[i].rank ==1){
+										$("#icon").attr("src",data.result.idCard[0].path);
+										$("#iconId").val(data.result.idCard[0].id);
+										
+									}
+									if(data.result.idCard[i].rank ==2){
+										$("#icon2").attr("src",data.result.idCard[1].path);
+										$("#icon2Id").val(data.result.idCard[1].id);
+										
+									}
+									if(data.result.idCard[i].rank ==3){
+										$("#icon3Id").val(data.result.idCard[2].id);
+										$("#icon3").attr("src",data.result.idCard[2].path);
+									}
+									
+									//alert($("#icon").attr("src")+">>>>"+$("#icon2").attr("src")+">>>>"+$("#icon").attr("src")+">>>>")
+									/*alert(data.result.idCard[0].path+data.result.idCard[1].path+data.result.idCard[2].path);*/
+								}
+							}	
+							if(data.result.license.length==0){
+								
+								
+							}else{
+								
+								for(var i= 0;i<data.result.license.length;i++){	
+									//alert(data.result.license[i]);
+									if(data.result.license[i] !=null){
+										
+										
+											$("#icon"+(4+i)).attr("src",data.result.license[i].path);
+											$("#icon"+(4+i)+"Id").val(data.result.license[i].id);
+											
+									}
+									if(data.result.license[i]==null){
+											
+											$("#icon"+(4+i)+"Id").val("null");
+											$("#icon"+(4+i)).attr("src","/enjoyRedEnvelopeManager/image/logoImg.png");
+											//$("#icon"+(4+i)).attr("src",data.result.license[i].path);
+											
+									}
+									
+										
+											
+									/*if(data.result.license[i].rank ==1){
+										$("#icon4").attr("src",data.result.license[0].path);
+										$("#icon4Id").val(data.result.license[0].id);
+									}
+									if(data.result.license[i].rank ==2){
+										$("#icon5").attr("src",data.result.license[1].path);
+										$("#icon5Id").val(data.result.license[1].id);
+									}
+									if(data.result.license[i].rank ==3){	
+										$("#icon6").attr("src",data.result.license[2].path);
+										$("#icon6Id").val(data.result.license[2].id);
+										
+									}*/
+									
+								}	
+							}
+							
+							
+							
+							
+							
+					    	
+				      		
+				        }
+					});
+					
+					
+					
+					
+					
+					
+					
+					
+					//alert(id);
+				}
+				
+			
+				$.show("edit_user");
+				
+			}
+			
+			
+			
+			
+			
+			
+			function closeForm1(){
+				for(var i = 0 ;i<$(".ions").length;i++){
+					$(".ions")[i].title = "";	
+									
+				}
+				$.hide("edit_user");
+				
+			}
+			
+			function closeForm2(){
+				for(var i = 0 ;i<$(".ions").length;i++){
+					$(".ions")[i].title = "";	
+									
+				}
+				$.hide("edit_user1");
+				$.show("edit_user");
+				$("#edit_user").css("opacity",1.0);
+				$("#edit_user  input").attr("disabled",false);
+				$("#sub  button").attr("disabled",false);
+				$("#editClose1").attr("onclick","closeForm1()");
+				
+				
+			}
+			
+			function closeForm3(){
+				for(var i = 0 ;i<$(".ions").length;i++){
+					$(".ions")[i].title = "";	
+									
+				}
+				$.hide("edit_user2");
+				$.show("edit_user");
+				$("#edit_user").css("opacity",1.0);
+				$("#edit_user  input").attr("disabled",false);
+				$("#sub  button").attr("disabled",false);
+				$("#editClose2").attr("onclick","closeForm1()");
+				
+				
+			}
+			
+			
+			
+			
+			
+			
+			function  _search1(){
+				//alert($("#province1").val());
+				$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/city/list',
+				        data: 'parentCode='+$("#province1").val()+'&token='+sessionStorage.getItem("token"), 
+				        success: function(data) {
+				        	//alert(data.result.rows);
+				        	var str = "";
+				        	
+				        	str+="<option  value = ''>全部</option>";
+				        	for(var i = 0 ; i<data.result.rows.length;i++){
+				        		str+="<option  title='"+data.result.rows[i].name+"'  value = '"+data.result.rows[i].code+"'>"+data.result.rows[i].name+"</option>";
+				        	}
+				        	$("#city1").html(str);
+				        	_search2();
+				        }
+				});
+
+			}
+			
+			
+			function  _search2(){
+				
+				$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/city/list',
+				        data: 'parentCode='+$("#city1").val()+'&token='+sessionStorage.getItem("token"), 
+				        success: function(data) {
+				        	//alert(data.result.rows);
+				        	var str = "";
+				        	
+				        	str+="<option  value = ''>全部</option>";
+				        	if(data.result.rows!=null){
+				        		for(var i = 0 ; i<data.result.rows.length;i++){
+					        		str+="<option  title='"+data.result.rows[i].name+"'  value = '"+data.result.rows[i].code+"'>"+data.result.rows[i].name+"</option>";
+					        	}	
+				        	}
+				        	
+				        	$("#country1").html(str);
+				        }
+				});
+
+			}
+			
+			
+			
+			
+			
+			/*三级联表分类查询显示*/
+			function  _search3(){
+				//alert($("#province1").val());
+				$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/city/list',
+				        data: 'parentCode='+$("#province").val()+'&token='+sessionStorage.getItem("token"), 
+				        success: function(data) {
+				        	//alert(data.result.rows);
+				        	var str = "";
+				        	
+				        	str+="<option  value = ''>全部</option>";
+				        	for(var i = 0 ; i<data.result.rows.length;i++){
+				        		str+="<option  title='"+data.result.rows[i].name+"'  value = '"+data.result.rows[i].code+"'>"+data.result.rows[i].name+"</option>";
+				        	}
+				        	$("#city").html(str);
+				        	_search4();
+				        }
+				});
+
+			}
+			
+			/*三级联表分类查询显示*/
+			function  _search4(){
+				
+				$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/city/list',
+				        data: 'parentCode='+$("#city").val()+'&token='+sessionStorage.getItem("token"), 
+				        success: function(data) {
+				        	//alert(data.result.rows);
+				        	var str = "";
+				        	
+				        	str+="<option  value = ''>全部</option>";
+				        	if(data.result.rows!=null){
+				        		for(var i = 0 ; i<data.result.rows.length;i++){
+					        		str+="<option  title='"+data.result.rows[i].name+"'  value = '"+data.result.rows[i].code+"'>"+data.result.rows[i].name+"</option>";
+					        	}	
+				        	}
+				        	
+				        	$("#country").html(str);
+				        }
+				});
+
+			}
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			function _download(){
+				
+				var mobile = $("#phone").val().trim();
+				var grade = $("#grade").val().trim();
+				var province = $("#province").val();
+				var city = $("#city").val();
+				var country = $("#country").val();
+				
+				
+				
+				
+				
+				if($("#datestart").val()!=""){
+					var datestart =new Date($("#datestart").val().trim()).Format("yyyy-MM-dd hh:mm:ss");
+					
+				}
+				if($("#dateend").val()!=""){
+					var dateend =new Date($("#dateend").val().trim()).Format1("yyyy-MM-dd hh:mm:ss");
+				}
+			
+				
+				
+				
+				$.ajax({
+					type:"get",
+					url:$base_path+"manage/agentInfo/list",
+					data:{phone:mobile,agentLevel:grade,fromTime:datestart,stopTime:dateend,agentProvince:province,agentCity:city,agentCountry:country},
+					beforeSend: function(request) {
+                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+               		},
+               		
+					success:function(data){
+						if(data.code==200){
+							location.href=$base_path+"manage/agentInfo/extAgentInfo?pageSize="+data.result.totalSize+"&token="+sessionStorage.getItem("token");
+							//location.href=$base_path+"manage/sign/extWalletSign?pageSize="+data.result.totalSize+"&status=1&token="+sessionStorage.getItem("token");
+							//location.href=$base_path+"manage/sign/extWalletSign?pageSize="+data.result.totalSize+"&status=1&token="+sessionStorage.getItem("token")+"&phone="+mobile+"&donateUid="+uid+"&grade="+grade+"&stopTime="+dateend1+"&fromTime="+datestart;		
+							
+
+						}else if(data.code==1403){
+							overTime();
+						}else{
+							//alert(data.msg);
+						}
+
+					}, 
+					error:function(data){ 
+						alert("服务器跑丢了......");
+					} 
+					
+				});	
+				
+				
+				
+				
+				
+				
+				
+			}
+			
+			
+			//确认ep充值
+			function edit_submit1(){
+				
+			
+				
+				var ids = $("#loginName").val();
+				
+				$("#epId").val(ids);
+				var person = {
+					id:ids,
+					password:$("#epPayPassword").val(),
+					epCount:$("#epCount").val(),
+					remark:$("#epRemark").val()
+				}
+				
+			
+				$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'manage/agentList/rechargeEp',
+				        data:JSON.stringify(person),
+				        dataType:"json",
+				        beforeSend: function(request) {
+	                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+	                        request.setRequestHeader("Content-Type", "application/json");
+	               	},
+				        success: function(data) {
+				        	if(data.code==200){
+								alert(data.msg);
+								$.refresh(grid_user);
+								closeForm2();
+								
+								
+					          	
+					       	}else{					       		
+								alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';
+					       	}
+				        }
+				});
+				
+				
+				
+				
+				
+			}
+			
+			
+			//确认取消代理
+			function edit_submit2(){
+					var id = $("#id").val();
+					$.ajax({
+				        type: 'get',
+				        url: $base_path + 'manage/agentInfo/delete',
+				        data: 'id=' + id+"&remark="+$("#agentRemark").val(),
+				        beforeSend: function(request) {
+	                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+	               		},
+				        success: function(data) {
+				        	
+				        	if(data.code==200){
+								alert('取消代理成功！');
+								$.refresh(grid_user);
+								closeForm1();
+								closeForm2();
+								$.hide("edit_user2");
+					          	
+					       	}else{					       		
+
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';
+					       	}
+				        }
+				    });
+				
+				
+				
+				
+				
+			}
+			
+			
+			/*重置*/
+			function resetForm(){
+				$("#agentRemark").val("");
+				$("#epRemark").val("");
+				
+				$("#epCount").val("");
+				$("#epPayPassword").val("");
+				
+				
+			}
+			
+			
+			
+			
+			
+			
+			//提交新增（修改）表单
+			function edit_submit(){
+				
+				var str =  new Array();
+				
+				
+				
+				var pro1  = 0;
+				var pro2  = 0;
+				var pro3  = 0;
+				
+				   
+				  
+				if($("#agentLevel").val()==""){
+					
+					
+					alert("请选择代理等级");
+					return ;
+				}
+				
+				
+				
+				
+				
+				
+				$("#agentProvinceName").val($("#province1").find("option:selected").attr("title"));
+				$("#agentCityName").val($("#city1").find("option:selected").attr("title"));
+				$("#agentCountryName").val($("#country1").find("option:selected").attr("title"));
+				$("#bankType").val($("#bankTypeCode").find("option:selected").attr("title"));
+				var bankCard=$("#bankCard").val();
+				var checkNum = /^[\d]{16}$/;
+				if(!checkNum.test(bankCard)){
+					alert("请输入正确银行卡号");
+					return ;
+				}
+				
+				
+				
+				
+				/*上传资质图片*/
+				if($("#icon").attr("src") !="/enjoyRedEnvelopeManager/image/logoImg.png"){
+					str.push($("#icon").attr("src"));
+					pro1 = 1;
+				}
+				if($("#icon2").attr("src") !="/enjoyRedEnvelopeManager/image/logoImg.png"){
+					str.push($("#icon2").attr("src"));
+					pro2 = 1;
+				}
+				if($("#icon3").attr("src") !="/enjoyRedEnvelopeManager/image/logoImg.png"){
+					str.push($("#icon3").attr("src"));
+					pro3 = 1;
+				}
+				str.push($("#icon4").attr("src")=="/enjoyRedEnvelopeManager/image/logoImg.png"?"http://store.doupaimall.com/logoImg.png":$("#icon4").attr("src"));
+				str.push($("#icon5").attr("src")=="/enjoyRedEnvelopeManager/image/logoImg.png"?"http://store.doupaimall.com/logoImg.png":$("#icon5").attr("src"));
+				str.push($("#icon6").attr("src")=="/enjoyRedEnvelopeManager/image/logoImg.png"?"http://store.doupaimall.com/logoImg.png":$("#icon6").attr("src"));
+							
+				var servicePhone = "";
+				if(""==$("#servicePhone").val()&&$("#servicePhone2").val().length>10){
+					servicePhone = $("#servicePhone2").val();
+				}else{
+					servicePhone = $("#servicePhone").val()+"-"+$("#servicePhone2").val();
+				}
+				
+				
+				
+				
+				
+				
+				if($("#id").val()==""){
+					
+					
+					
+					
+					if(pro1 ==1 && pro2 ==1 && pro3==1){
+						if($("#id").val()==""){
+							if($("#city1").val().length ==0 &&  $("#country1").val().length ==0){
+								$("#agentAreaId").val($("#province1").val());  
+							}
+							if($("#country1").val().length ==0 && $("#city1").val().length >0 ){
+								$("#agentAreaId").val($("#city1").val());  
+							}
+							
+							if($("#country1").val().length >0 && $("#city1").val().length >0 ){
+								$("#agentAreaId").val($("#country1").val());
+							}
+							$("#loginName").val("DP"+$("#agentAreaId").val());
+						}
+								
+						
+						$.ajax({
+					        type: 'get',
+					        url: $base_path +"manage/agentInfo/create",
+					        data:$("#edit_user").serialize()+'&'+$.param({'servicePhone': servicePhone,'loginName':$("#loginName").val(),"imageVos":str.toString()}) ,
+					        beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		               		},
+					        success: function(data) {
+								
+								if(data.code == 200){
+					        		alert(data.msg);	
+					        		$.hide("edit_user");
+					        		
+				
+								    
+					        	}else if(data.code == 1403){
+					        		overTime();
+					        	}else{
+					        		alert(data.msg);
+					        	}
+					        	$.refresh(grid_user);
+					        },
+					        
+					    })
+					}else{
+						alert("请上传3张身份证图片");
+					}
+				}else{
+					
+						
+						var person = [
+							{
+								id:$("#iconId").val(),
+								path:$("#icon").attr("src"),
+								type:1,
+								rank:1
+							},
+							{
+								id:$("#icon2Id").val(),
+								path:$("#icon2").attr("src"),
+								type:1,
+								rank:2
+							},
+							{
+								id:$("#icon3Id").val(),
+								path:$("#icon3").attr("src"),
+								type:1,
+								rank:3
+							},
+							{
+								id:$("#icon4Id").val(),
+								path:$("#icon4").attr("src") ,
+								type:2,
+								rank:1
+							},
+							{
+								id:$("#icon5Id").val(),
+								path:$("#icon5").attr("src") ,
+								type:2,
+								rank:2
+							},
+							{
+								id:$("#icon6Id").val(),
+								path:$("#icon6").attr("src") ,
+								type:2,
+								rank:3
+							}
+						
+						];
+						
+						
+						//console.log(JSON.stringify(person));
+						
+						$.ajax({
+					        type: 'post',
+					        url: $base_path +"manage/agentInfo/updateAgent",
+					        data:$("#edit_user").serialize()+'&'+$.param({'servicePhone': servicePhone,"imageVos":JSON.stringify(person)}) ,
+					        beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		               		},
+					        success: function(data) {
+								
+								if(data.code == 200){
+					        		alert(data.msg);	
+					        		$.hide("edit_user");
+					        		
+				
+								    
+					        	}else if(data.code == 1403){
+					        		overTime();
+					        	}else{
+					        		alert(data.msg);
+					        	}
+					        	$.refresh(grid_user);
+					        },
+					        
+					    })	
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					/*$.ajax({
+				        type: 'post',
+				        url: $base_path +"manage/agentInfo/update",
+				        data:$("#edit_user").serialize()+'&'+$.param({'servicePhone': servicePhone,"imageVos":str.toString()}) ,
+				        beforeSend: function(request) {
+	                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+	               		},
+				        success: function(data) {
+							
+							if(data.code == 200){
+				        		alert(data.msg);	
+				        		$.hide("edit_user");
+				        		
+			
+							    
+				        	}else if(data.code == 1403){
+				        		overTime();
+				        	}else{
+				        		//alert(data.msg);
+				        	}
+				        	$.refresh(grid_user);
+				        },
+				        
+				    })	*/
+		
+					
+					
+					
+					
+				}
+				
+				
+				
+				
+				
+				//alert(/^[0-9]*$/.test($("#cardNo").val())); 
+				
+				
+				
+				
+			}
+		
+		
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+		</script>
+	</head>
+	<body>
+		<div>
+			<table id="grid_user"></table>
+			<div id="grid_pager_user"></div>
+		</div>
+		
+		<!--user筛选工具栏-->
+		<div id="grid_user_tbar" style="display:none;">
+			<div class="action-buttons" style="margin-left: 10px; padding: 5px;">
+				<!--UID: <input id="uid" onblur="_search()"/>-->
+				手机号/姓名/公司名称: <input id="phone1" onblur="_search()"/>
+				
+				代理等级: <select id="grade"  onblur="_search()" style="width: 100px;">
+							<option value="">全部</option>
+							<option value="1">省代理</option>
+							<option value="2">市代理</option>
+							<option value="3">区/县代理</option>
+				     </select>
+				代理区域: 省<select id="province"  onchange="_search3()"  onblur="_search()" style="width: 100px;">
+					</select>
+				 市<select id="city" onchange="_search4()"  onblur="_search()" style="width: 100px;">
+					</select>
+				区<select id="country"  onblur="_search()" style="width: 100px;">		
+				    </select>
+				     
+				签到日期: <input type="date" id="datestart" onblur="_search()" />至<input type="date" id="dateend" onblur="_search()"/>
+				<a class="blue" href="javascript:_search()"><i class="icon-search bigger-130"></i>查询</a>
+				<a class="blue" href="javascript:_download()"><i class="icon-download bigger-130"></i>下载代理记录</a>
+			</div>
+		</div>
+		
+		<!-- 六度人脉信息窗口 -->
+		<!-- 编辑商品信息窗口 -->
+		<form id="edit_user" class="grid_from checkform" style="width: 1100px;  " >
+			<div class="widget-header">
+				<h4 id="form_title">代理详情信息</h4>
+				<span class="widget-toolbar">
+					<a href="#" data-action="close" id="editClose1" onclick="closeForm1()">
+						<i class="icon-remove"></i>
+					</a>    
+				</span>
+			</div>
+			<div class="form_content">
+				<input type="hidden" id="id" name="id"/>
+				<div class="form_content_table">
+					<span id="msgspan" style="color:red;"></span>
+					
+					
+					<table style="line-height: 45px; text-align: right;">
+						<tr >
+							<td width="150px">  代理账户：</td>
+							<td width="150px"><input type="text" disabled="disabled" class="form form-control" id="loginName"  style="margin-right: 50px;" name="loginName" class="inputxt"  /></td>
+							<td width="150px">  公司名称：</td>
+							<td width="150px"><input type="text" class="form form-control" id="company" style="margin-right: 50px;" name="company" class="inputxt"  /></td>
+							<td width="150px">负责人手机号：</td>
+							<td width="150px"><input type="text" class="form form-control" id="agentphone" style=""  name="phone" class="inputxt"  /></td>
+						</tr>
+						
+						<tr>
+							<td>  代理等级：</td>
+							<td>
+								<select  class="form form-control"  id="agentLevel" name="agentLevel"  class="inputxt" style="width: 200px;">
+									<option value="">全部</option>
+									<option value="1">省级代理</option>
+									<option value="2">市级代理</option>
+									<option value="3">区级代理</option>
+								</select>
+							</td>
+							<td>  营业执照编号：</td>
+							<td><input type="text" class="form form-control" id="licenseId" style="margin-right: 80px;" name="licenseId" class="inputxt"  /></td>
+							<td>客服电话：</td>
+							<td style="text-align: left;"><input type="text" style="width: 50px; height: 34px; border-radius: 5px 5px 5px 5px;"   id="servicePhone" />-<input type="text"  style="width: 143px;  height: 34px; border-radius: 5px 5px 5px 5px;"  id="servicePhone2" /></td>
+							
+						</tr>
+						<tr>
+							<td>  代理地区：</td>
+							<td style="text-align: left;">
+								
+								<select id="province1" onchange="_search1()" name="agentProvince"   class="inputxt" style="width: 65px;height: 34px; border-radius: 5px 5px 5px 5px; ">
+									
+								</select>
+								<select  id="city1" onchange="_search2()" name="agentCity" class="inputxt" style="width: 65px;height: 34px; border-radius: 5px 5px 5px 5px;">
+									
+								</select>
+								<select  id="country1"  class="inputxt" name="agentCountry" style="width: 65px;height: 34px; border-radius: 5px 5px 5px 5px;">
+									
+								</select>
+								
+							</td>
+							<td>  银行账号：</td>
+							<td><input type="text" class="form form-control" id="bankCard" style="margin-right: 80px;" name="bankCard" class="inputxt"  /></td>
+							<td>邮箱：</td>
+							<td><input type="text" class="form form-control" id="email" name="email" class="inputxt"  /></td>
+						</tr>
+						<tr>
+							<td width="150px">  真实姓名：</td>
+							<td width="150px"><input type="text"  class="form form-control" id="userName"  style="margin-right: 50px;" name="userName" class="inputxt"   /></td>
+							<td width="150px">  银行：</td>
+							<td width="150px">
+								<select  class="form form-control"  id="bankTypeCode" name="bankTypeCode"  class="inputxt" style="width: 200px;">
+									
+								</select>	
+							</td>
+							<td width="150px">公司详细地址：</td>
+							<td width="150px"><input type="text" class="form form-control" id="address" style=""  name="address" class="inputxt"  /></td>
+						</tr>
+						<tr>
+							<td width="150px">身份证号码：</td>
+							<td width="150px"><input type="text"  class="form form-control" id="IDCard"  style="margin-right: 50px;" name="IDCard" class="inputxt"  /></td>
+							<td width="150px">开户支行：</td>
+							<td width="150px">
+								<input type="text"  class="form form-control" id="bankBranch"  style="margin-right: 50px;" name="bankBranch" class="inputxt"  />
+							</td>
+							<td><input type="hidden" name="remark" id="remark"></td>
+							<td><input type="hidden" name="agentAreaId" id="agentAreaId"> <input type="hidden" name="agentProvinceName" id="agentProvinceName"> <input type="hidden" name="agentCityName" id="agentCityName"><input type="hidden" name="agentCountryName" id="agentCountryName"> <input type="hidden" name="bankType" id="bankType">  </td>
+						</tr>
+						<tr style="line-height: 20px;">
+							<td colspan="6" style="color: #848484; text-align: right;">*提示：银行账户为代理公司的对公账户，请填写对公账户</td>
+						</tr>
+					</table>
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					<span>资质图片上传</span>
+					<hr style="line-height: 1px; margin-top:2px;margin-bottom:6px;" />
+					
+					<table>
+						
+						<tr style="color:#848484;">
+							<td><input type="hidden" id="adImg"></td>
+							<td id="image"><img class="ions" style="width: 120px;height: 120px; margin-right: 50px;" title="" src="/enjoyRedEnvelopeManager/image/logoImg.png" id="icon">(上传身份证正面照)<input type="hidden" id="iconId" name="iconId"><input type="hidden" name="licenseIconId" id="licenseIconId"></td>
+							<td id="image2"><img class="ions" style="width: 120px;height: 120px;margin-right: 50px; " title="" src="/enjoyRedEnvelopeManager/image/logoImg.png" id="icon2">(上传身份证反面照)<input type="hidden" id="icon2Id" name="icon2Id"></td>
+							<td id="image3"><img class="ions" style="width: 120px;height: 120px;margin-right: 50px;" title="" src="/enjoyRedEnvelopeManager/image/logoImg.png" id="icon3">(上传手持身份证照)<input type="hidden" id="icon3Id" name="icon3Id"></td>
+							<td id="image4"><img class="ions" title="" style="width: 120px;height: 120px;margin-right: 50px;" src="/enjoyRedEnvelopeManager/image/logoImg.png" id="icon4">(上传工商营业执照)<input type="hidden" id="icon4Id" name="icon4Id"> </td>
+							<td id="image5"><img class="ions"  title="" style="width: 120px;height: 120px;margin-right: 50px;" src="/enjoyRedEnvelopeManager/image/logoImg.png" id="icon5">(上传税务登记证)<input type="hidden" id="icon5Id" name="icon5Id"></td>
+							<td id="image6"><img class="ions"  title="" style="width: 120px;height: 120px;margin-right: 50px;" src="/enjoyRedEnvelopeManager/image/logoImg.png" id="icon6">(上传组织机构代码证)<input type="hidden" id="icon6Id" name="icon6Id"></td>
+						</tr>
+						
+						
+						
+						<tr>
+							<td></td>
+							<td><input type="file" style="width: 70px;" id="fileImg"  accept="images/*"></td>
+							<td><input type="file" style="width: 70px;" id="fileImg2"  accept="images/*"></td>
+							<td><input type="file" style="width: 70px;" id="fileImg3"  accept="images/*"></td>
+							<td><input type="file" style="width: 70px;" id="fileImg4" accept="images/*"></td>
+							<td><input type="file" style="width: 70px;" id="fileImg5" accept="images/*"></td>
+							<td><input type="file" style="width: 70px;" id="fileImg6" accept="images/*"></td>
+						</tr>
+						<tr>
+							<td colspan="7" style="color: #848484; text-align: right;">*三证合一的企业上传工商营业执照，三证指的是工商营业执照、组织机构代码证和税务登记证</td>
+						</tr>
+						
+						
+	
+					</table>
+					
+					<table id="updateFun" >
+						<tr>
+							<td><input type="button" id="funOne"  class="form form-control" value="EP充值" style="background-color: #6fb3e0; color: white; height:45px;border: 0px;  width: 140px; margin-right: 50px;" ></td>
+							<td><input type="button" id="funTwo"   class="form form-control" value="取消代理" style="background-color: #6fb3e0; color: white; height:45px;border: 0px;  width: 140px;margin-right: 50px;" ></td>
+							<td><input type="button" id="funThree"  class="form form-control" value="重置密码" style="background-color: #6fb3e0; color: white; height:45px;border: 0px;  width: 140px;" ></td>
+						</tr>
+						
+						
+					</table>
+					
+					
+				</div>
+				<div id="sub">
+					<input type="button"  style="background-color: #6fb3e0; color: white; height:45px;border: 0px;  width: 100px;" value="提交"  onclick="edit_submit()" />
+					<button class="btn button-right" type="button" onclick="resetForm()">
+						<i class="icon-undo bigger-110"></i>
+						重置
+					</button>
+				</div>
+			</div>
+		</form>
+		
+		<div id="div_dialog"></div>
+		<div id="hidebg"></div>
+		
+		
+		
+		
+		<form id="edit_user1" class="grid_from checkform" style="width: 450px; top:150px;left:500px ">
+			<div class="widget-header">
+				<h4 id="form_title">ep充值</h4>
+				<span class="widget-toolbar">
+					<a href="#" data-action="close" onclick="closeForm2()">
+						<i class="icon-remove"></i>
+					</a>    
+				</span>
+			</div>
+			<div class="form_content">
+				
+				<div>
+					<span id="msgspan" style="color:red;"></span>
+					<table >
+						<tr>
+							<td style="text-align: right;" >代理账号</td>
+							<td ><input type="text" id="epId" disabled="disabled" style="text-align: left;" name="epId" placeholder="代理账号" datatype="n1-12" nullmsg="代理账号" errormsg="UID输入有误" /></td>
+						</tr>
+						<tr>
+							<td style="text-align: right;">充值ep数量</td>
+							<td><input type="text" id="epCount" name="epCount" placeholder="积分"  style="text-align: left;" /></td>
+						</tr>
+						<tr id="tr_pwd">
+							<td style="text-align: right;">管理员支付密码</td>
+							<td><input type="password" id="epPayPassword" name="epPayPassword" placeholder="管理员密码" style="text-align: left;" datatype="s3-64" nullmsg="请输入密码！" errormsg="密码格式有误"/></td>
+						</tr>
+						<tr id="tr_pwd">
+							<td style="text-align: right;">备注说明</td>
+							<td><textarea style="width: 250px;" id="epRemark"></textarea></td>
+						</tr>
+					
+					</table>
+					
+					
+					
+				</div>
+				<div>
+					<input type="button" value="提交" class="btn btn-info button-left" onclick="edit_submit1()" >
+						
+					</input>
+					<input type="button" class="btn button-right" value="重置" type="button" onclick="resetForm()">
+						
+					</input>
+				</div>
+			</div>
+		</form>
+		
+		
+		
+		<form id="edit_user2" class="grid_from checkform" style="width: 450px; top:150px;left:500px ">
+			<div class="widget-header">
+				<h4 id="form_title">取消代理原因</h4>
+				<span class="widget-toolbar">
+					<a href="#" data-action="close" onclick="closeForm3()">
+						<i class="icon-remove"></i>
+					</a>    
+				</span>
+			</div>
+			<div class="form_content">
+				
+				<div>
+					<span id="msgspan2" style="color:red;"></span>
+					<textarea style="width: 400px;height: 200px;" id="agentRemark">
+						
+					</textarea>
+					
+					
+					
+				</div>
+				<div>
+					<input type="button" class="btn btn-info button-left" onclick="edit_submit2()" value="提交" >
+					</input>
+					<input type="button" class="btn button-right" type="button" onclick="resetForm()" value="重置">
+						
+					</button>
+				</div>
+			</div>
+		</form>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+	</body>
+	
+	<script>
+		
+		/*对接七牛*/
+		var bucket1 = "";
+		$(function(){
+			
+			if($qiniu_root ==1){
+						bucket1 = "doupai-offical-store";
+						
+			}else{
+				bucket1 = "doupai-test-store";
+			}
+	  
+			
+			
+			
+			
+			  
+			  
+			function run(input_file, get_data) {  
+	            /*input_file：文件按钮对象*/  
+	            /*get_data: 转换成功后执行的方法*/  
+	            if (typeof (FileReader) === 'undefined') {  
+	                alert("抱歉，你的浏览器不支持 FileReader，不能将图片转换为Base64，请使用现代浏览器操作！");  
+	            } else {  
+	                try {  
+	                    /*图片转Base64 核心代码*/  
+	                    var file = input_file.files[0];  
+	                    //这里我们判断下类型如果不是图片就返回 去掉就可以上传任意文件  
+	                    if (!/image\/\w+/.test(file.type)) {  
+	                        alert("请确保文件为图像类型");  
+	                        return false;  
+	                    }  
+	                    var reader = new FileReader();  
+	                    reader.onload = function () {  
+	                        get_data(this.result);  
+	                    }  
+	                    reader.readAsDataURL(file);  
+	                } catch (e) {  
+	                    alert('图片转Base64出错啦！' + e.toString())  
+	                }  
+	            }  
+	        }   
+			  
+			  
+			  
+			  
+			function qiniu(imageBase64,inputId){
+				
+					var person = {
+							bucket:bucket1
+					}
+					
+					
+					
+					
+					
+					var base64 = imageBase64.split("base64,")[1];
+					$.ajax({
+								type:"post",
+								url:$base_path+"manage/common/uptoken", 
+								data:person,
+								success:function(data){
+									if(data.code==200){
+										var pic = base64 ;
+									    var url = "http://upload-z2.qiniu.com/putb64/-1"; //非华东空间需要根据注意事项 1 修改上传域名
+									    var xhr = new XMLHttpRequest();
+									 	
+										xhr.onreadystatechange=function(){
+										    if (xhr.readyState==4){
+										    	
+										      //document.getElementById("myDiv").innerHTML=data.result.domain+JSON.parse(xhr.responseText).hash;  
+										   	  //result.value = data.result.domain+JSON.parse(xhr.responseText).hash;
+										   	  //img_area.src = data.result.domain+JSON.parse(xhr.responseText).hash;
+										   	  $(inputId).val(data.result.domain+JSON.parse(xhr.responseText).hash);  
+										   	   $(inputId).attr('src', data.result.domain+JSON.parse(xhr.responseText).hash);  
+										    }
+										}
+									  	xhr.open("POST", url, true);
+									  	xhr.setRequestHeader("Content-Type", "application/octet-stream");
+									  	xhr.setRequestHeader("Authorization", "UpToken "+data.result.token);
+									  	xhr.send(pic);
+									  	
+									  	
+									  	
+									}else{
+										alert(data.msg);
+									}
+									
+									
+								}, 
+								error:function(data){ 
+								} 					
+					});
+                
+                
+                
+				
+				
+			}
+			
+			
+			
+			
+			
+			  
+			  
+			  
+			  
+			  
+			  
+			
+			$("#fileImg").change(function () {  
+		            run(this, function (data) {  
+		            	qiniu(data,"#icon");
+		               
+		            });  
+		    });
+		    
+		    $("#fileImg2").change(function () {  
+		            run(this, function (data) {  
+		                qiniu(data,"#icon2");  
+		            });  
+		    });
+		    
+		    $("#fileImg3").change(function () {  
+		            run(this, function (data) {  
+		                qiniu(data,"#icon3");  
+		            });  
+		    });
+		    $("#fileImg4").change(function () {  
+		            run(this, function (data) {  
+		                qiniu(data,"#icon4");  
+		            });  
+		    });
+		    $("#fileImg5").change(function () {  
+		            run(this, function (data) {  
+		                qiniu(data,"#icon5");  
+		            });  
+		    });
+		    $("#fileImg6").change(function () {  
+		            run(this, function (data) {  
+		                qiniu(data,"#icon6");  
+		            });  
+		    });
+			
+		
+			
+			
+			
+			
+			
+			
+			
+			
+		})
+		
+		
+	</script>
+	
+	
+	
+</html>

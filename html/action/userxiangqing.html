@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>会员管理</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		<!-- 导入选项卡样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_tab.css" />
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/validform.css" />
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/validform1.css" />
+		
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js -->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!-- 日期控件 -->
+		<!--<script src="/enjoyRedEnvelopeManager/js/date-time/bootstrap-datepicker.min.js"></script>-->
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<!--
+        	引进路径
+        -->
+        <script type="text/javascript" src="/enjoyRedEnvelopeManager/js/basepath.js" ></script>
+        <!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+		
+		<script>
+			var token = sessionStorage.getItem("token");
+			
+			//获取用户传过来的id
+			//alert(parent.usUserId);
+			var id=parent.usUserId;
+			var shengId=parent.shengId;
+			var shiId=parent.shiId;
+	
+			var grid_rechargeCny="#grid_rechargeCny";
+			var grid_pager_rechargeCny="#grid_pager_rechargeCny";
+			
+			var grid_withdrawalCny="#grid_withdrawalCny";
+			var grid_pager_withdrawalCny="#grid_pager_withdrawalCny";
+			
+			var grid_withdrawalAddress="#grid_withdrawalAddress";
+			var grid_pager_withdrawalAddress="#grid_pager_withdrawalAddress";
+			var userId = sessionStorage.getItem("userId");
+			var uid = sessionStorage.getItem("uid");
+
+			$(function(){
+				
+				
+				$(".registerform").Validform({
+					tiptype:2,
+					callback:function(form){
+							var check=confirm("您确定要提交表单吗？");
+							var form = $("#formdata").serialize();
+							
+							if(check){
+								
+								
+								var person = {
+									cardNo:$("#cardNo").val(),
+									bankId:$("#bankName1").val(),
+									nickName:$("#nickName").val(),
+									userName:$("#userName").val(),
+									weixin:$("#weixin").val(),
+									phone:$("#phone").val(),
+									id:$("#userId").val(),
+									addr:$("#addr").val(),
+									status: $("#status1").prop("checked")==true?1:0,
+									isKF:$("#status3").prop("checked")==true?1:0
+								}
+								
+								//alert(JSON.stringify(person));
+								$.ajax({
+										type:"get",
+										url:$base_path+"manage/member/update", 
+										data:person,
+										beforeSend: function(request) {
+						                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+						                },
+										success:function(data){ 
+											if(data.code==200){
+												
+												alert("修改成功");
+											}else if(data.code==1403){
+												overTime();
+											}else{
+												//alert(data.msg);
+											}
+										}, 
+										error:function(data){ 
+											alert("服务器跑丢了......");
+										} 
+										
+								});	
+								
+								
+								
+								//验证完成后拼接提交
+								/*formsub.subdata.muAccount = $("#username").val();
+	                	 		formsub.subdata.muPwd = hex_md5($("#password").val());*/
+								//formsub.sub();
+							}
+							return false;
+					}
+				}); 
+				
+				
+				
+					
+				//获取银行列表					
+				$.ajax({
+						type:"post",
+						url:$base_path+"manage/bank/list", 
+						beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		                },
+						success:function(data){ 
+							if(data.code==200){
+								var option = "";
+								for(a in data.result){
+									option+='<option value="'+data.result[a].id+'" >'+data.result[a].name+'</option>';
+								}
+								$("#bankName1").html(option);
+								
+							}else if(data.code==1403){
+								overTime();
+							}else{
+								//alert(data.msg);
+							}
+						}, 
+						error:function(data){ 
+							alert("服务器跑丢了......");
+						} 
+						
+				});	
+					
+					
+				
+				
+				
+				
+				//var formData = new FormData($('#form1')[0]);
+					//formData.append('uid', '1');//可以在已有表单数据的基础上，继续添加新的键值对
+					//alert(JSON.stringify(formData));
+					/*$.ajax({
+					    url: $base_path+"manage/member/list",
+					    type: 'get',
+					    cache: false,
+					    data: preson2,
+					    processData: false,
+					    contentType: false
+					}).done(function(res) {
+						$("#id").val(res.result.rows[0].id);
+						$("#nickName").val(res.result.rows[0].nickName);
+						$("#weixin").val(res.result.rows[0].weixin);
+						$("#phone").val(res.result.rows[0].phone);
+						$("#score").val(res.result.rows[0].score);
+						$("#firstReferrer").val(res.result.rows[0].firstReferrer);
+						$("#userName").val(res.result.rows[0].userName);
+						$("#cardNo").val(res.result.rows[0].cardNo);
+						$("#bankName").val(res.result.rows[0].bankName);
+						$("#createTime").val(res.result.rows[0].createTime);
+						$("#headImg").prop("src",res.result.rows[0].headImgUrl);
+						res.result.rows[0].status==1?$("#status1").prop("checked",true):$("#status2").prop("checked",true);	
+						var count =  res.result.rows[0].bankId;
+						$("#bankName1").val(count);
+						
+					}).fail(function(res) {
+							
+				});*/
+				$("#uid").val(sessionStorage.getItem("userId"));  
+				var preson2 = $("#form1").serialize();
+				
+				var ss = sessionStorage.getItem("userId");
+				
+				
+				
+				
+				var preson3 = {
+					"userId":ss
+				}
+				//alert(sessionStorage.getItem("userId"));
+				
+				
+				var person4 = {
+					"userId":sessionStorage.getItem("firstReferrer")	
+				}
+				
+				
+				
+				
+				$.ajax({
+						type:"get",
+						url:$base_path+"manage/member/detail", 
+						data:person4,
+						beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		                },
+						success:function(res){ 
+							if(res.code==200){
+					
+								$("#firstReferrer").val(res.result.uid);
+							}else if(res.code==1403){
+									overTime();
+							}else{
+								//alert(res.msg);
+							}
+						}, 
+						error:function(res){ 
+							alert("服务器跑丢了......");
+						}
+						
+				});
+				
+				
+				
+				
+				
+				
+				
+				$.ajax({
+						type:"get",
+						url:$base_path+"manage/member/detail", 
+						data:preson3,
+						beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		                },
+						success:function(res){ 
+							if(res.code==200){
+								if(res.result.headImgUrl.split("http").length>=1){
+									$("#headImg").prop("src",res.result.headImgUrl);
+								}else{
+									$("#headImg").prop("src",sessionStorage.getItem("imgUrl")+res.result.headImgUrl);
+								}
+								
+								sessionStorage.setItem("phone",res.result.phone);
+								$("#id").val(res.result.uid);
+								$("#userId").val(res.result.id);
+								$("#nickName").val(res.result.nickName);
+								$("#weixin").val(res.result.weixin);
+								$("#phone").val(res.result.phone);
+								$("#score").val(res.result.score);
+								//$("#firstReferrer").val(res.result.firstReferrer);
+								$("#userName").val(res.result.userName);
+								$("#cardNo").val(res.result.cardNo);
+								$("#bankName").val(res.result.bankName);
+								$("#createTime").val(res.result.createTime);
+								$("#addr").val(res.result.addr);
+								
+								res.result.status==1?$("#status1").prop("checked",true):$("#status2").prop("checked",true);
+								res.result.isKF==1?$("#status3").prop("checked",true):$("#status4").prop("checked",true);
+								
+								//alert(res.result.isKF);
+								var count =  res.result.bankId;
+								$("#bankName1").val(count);
+								
+							}else if(res.code==1403){
+									overTime();
+							}else{
+								//alert(res.msg);
+							}
+						}, 
+						error:function(res){ 
+							alert("服务器跑丢了......");
+						}
+						
+				});	
+				
+				
+				
+				
+				
+		
+	    		
+			
+				
+				
+				
+				/*进行选项卡设置*/
+				$('.tabPanel ul li').click(function(){
+					$(this).addClass('hit').siblings().removeClass('hit');
+					$('.panes>div:eq('+$(this).index()+')').show().siblings().hide();	
+				});
+				
+				//根据会员id获取用户的基本信息
+				/*$.ajax({
+			        type: 'POST',
+			        url:$base_path + 'cusUserInfo/getCusUserInfo',
+			        data: 'usUid=' + id + '&token=' + token, 
+			        success: function(data) {
+						$("#us_Uid").val(data.result.usUid);
+			        	$("#us_Name").val(data.result.usName);
+			        	$("#us_Email").val(data.result.usEmail);
+			        	$("#us_Phone").val(data.result.usPhone);
+			        	$("#us_CardName").val(data.result.usCardName);
+			        	$("#us_CardNub").val(data.result.usCardNub);
+			        	//$("#us_ShengId").val(data.result.usShengId);
+			        	//$("#us_ShiId").val(data.result.usShiId);
+			        	$("#us_Introduction").val(data.result.usIntroduction);
+			        }
+			  });*/
+			  
+			  //获取企业实名认证信息
+				/*$.ajax({
+			        type: 'POST',
+			        url:$base_path + 'cusUserInfo/pageCusEnterpriseInfo',
+			        data: 'ceUid=' + id + '&token=' + token, 
+			        success: function(data) {
+			        	if(data.code==0){
+			        		if(data.result.rows.length>0){
+			        			$("#ce_Name").val(data.result.rows[0].ceName);
+								$("#ce_LegalPerson").val(data.result.rows[0].ceLegalPerson);
+								$("#ce_RegisterAddre").val(data.result.rows[0].ceRegisterAddre);
+								$("#ce_RegisterDate").val(data.result.rows[0].ceRegisterDate);
+								$("#ce_ManName").val(data.result.rows[0].ceManName);
+								$("#ce_ManCardType").val(data.result.rows[0].ceManCardType);
+								$("#ce_ManPhone").val(data.result.rows[0].ceManPhone);
+								$("#ce_ManCardNub").val(data.result.rows[0].ceManCardNub);
+			        		}
+			        	}else{
+			        		alert("查询失败");
+			        	}
+						
+			        }
+			  	});*/
+			  
+			  		//token:sessionStorage.getItem("token"),
+			  	
+			  	
+				//根据会员id获取会员的充值记录
+				$("#recharge").click(function(){
+					$.autoByWindow(grid_rechargeCny);
+					$.jqGrid(grid_rechargeCny, $base_path + 'manage/scoreManage/addScoreRecords?uid='+uid+"&token"+token,false,colNames_rechargeCny, fd_rechargeCny, grid_pager_rechargeCny,"UID:"+sessionStorage.getItem("uid")+"&nbsp;&nbsp;&nbsp;&nbsp;手机号:"+sessionStorage.getItem("phone"),null,true,true,10);
+				});
+				
+				//根据会员id获取会员的提现记录
+				$("#withdrawalCny").click(function(){
+					
+					$.autoByWindow(grid_withdrawalCny);
+					$.jqGrid(grid_withdrawalCny, $base_path + 'manage/scoreManage/exchangeRecords?uid='+uid+"&token="+token,false,colNames_withdrawalCny, fd_withdrawalCny, grid_pager_withdrawalCny,"UID:"+sessionStorage.getItem("uid")+"&nbsp;&nbsp;&nbsp;&nbsp;手机号:"+sessionStorage.getItem("phone"),gridUserComplete,true, true,10);
+					$.refresh(grid_withdrawalCny);
+				});
+				
+				//根据会员id获取积分记录
+				$("#withdrawalAddress").click(function(){
+					$.autoByWindow(grid_withdrawalAddress);
+					$.jqGrid(grid_withdrawalAddress, $base_path + 'manage/member/pointUserRecord?userId='+userId+"&token="+token,false,colNames_withdrawalAddress, fd_withdrawalAddress, grid_pager_withdrawalAddress,"UID:"+sessionStorage.getItem("uid")+"&nbsp;&nbsp;&nbsp;&nbsp;手机号:"+sessionStorage.getItem("phone"),null,true, true,10);
+				});
+				
+				//根据会员id获取竞拍记录
+				$("#entrust").click(function(){
+					$.autoByWindow(grid_entrust);
+					
+					$.jqGrid(grid_entrust,$base_path + 'manage/member/auctionRecord?userId='+userId+"&token="+token,false,colNames_entrust, fd_entrust, grid_pager_entrust,"UID:"+sessionStorage.getItem("uid")+"&nbsp;&nbsp;&nbsp;&nbsp;手机号:"+sessionStorage.getItem("phone"),null,true,true,10);
+				});
+				
+				//根据会员id推荐
+				 $("#trading").click(function(){
+					$("#t_grid_trading").empty();
+					$.autoByWindow(grid_trading);
+					
+					var pseron = {
+						underLine:0,
+						token:sessionStorage.getItem("token")
+					}
+					$.jqGrid(grid_trading, $base_path + 'manage/member/underline?userId='+userId,pseron,colNames_trading, fd_trading, grid_pager_trading,"UID:"+sessionStorage.getItem("uid")+"&nbsp;&nbsp;&nbsp;&nbsp;手机号:"+sessionStorage.getItem("phone"),setace,true,true,10);
+					//附加到工具栏	
+					$("#t_grid_trading").append($("#grid_cususer_tbar").html());
+							
+					//附加到工具栏
+					//$.refresh(grid_trading);
+					//$("#search").click();
+					
+				});
+				
+				
+				
+				
+			});
+			
+		    //获取省市名
+		   
+		
+			var colNames_rechargeCny=['ID','订单编号','充值人(会员UID)','充值人  ','充值数量','充值方式','充值时间','状态'];
+			var fd_rechargeCny = [	//根据colNames的顺序以及个数
+				{name:'id', index:'id', align:'center',width:20, key:true,hidden:true},
+				{name:'orderNo', index:'orderNo', align:'center',width:20, key:true},
+				{name:'uid', index:'id', width:40,hidden:true},
+				{name:'userName', index:'userName',align:'center', width:20},
+				{name:'score', index:'score',align:'center', width:20},
+				{name:'source', index:'source',align:'center', width:30,formatter:getRcSource},
+				{name:'createTime', index:'createTime',align:'center',width:40},
+				{name:'status', index:'status',width:20,align:'center',formatter:getRcState}
+			];
+			
+			
+			var colNames_withdrawalCny = ["ID","会员UID","手机号","账户名称","银行账号","银行","提现金额","手续费","实际金额","订单号","提交时间","状态","status","操作"];
+			var fd_withdrawalCny = [	//根据colNames的顺序以及个数
+				{name:'id', index:'id', align:'center',width:25, sorttype:"int",key:true,hidden:true},
+				{name:'uid', index:'uid', align:'center',width:25, sorttype:"int",},
+				{name:'phone', index:'phone',align:'center', width:30, },
+				{name:'userName', index:'userName',align:'center', width:40},
+				{name:'cardNo', index:'cardNo',align:'center', width:80},
+				{name:'bankName', index:'bankName',align:'center', width:50},
+				{name:'score', index:'score',width:25},
+				{name:'poundage', index:'poundage', align:'center',width:35},
+				{name:'confirmScore',index:'confirmScore',align:'center',width:25},
+				{name:'orderNo',index:'orderNo',align:'center',width:50,key:true},
+				{name:'createTime',index:'ccAuditTime',align:'center',width:40},
+				{name:'status', index:'status',align:'center',width:20,formatter:getStatusName},
+				{name:'status', index:'status',align:'center',width:20,hidden:true},
+				{name:'func',index:'func', width:40, align: 'center'}	
+			];
+			
+			//formatter:getState转换数据显示
+			
+			var colNames_entrust = ['ID','订单号','竞拍期号','商品名称','会员账户','竞拍积分','竞拍获取积分','竞拍时间','状态','操作'];
+			var fd_entrust = [	//根据colNames的顺序以及个数
+				{name:'id', index:'id', width:25, sorttype:"int",key:true,hidden:true},
+				{name:'orderNo', index:'orderNo', width:25,},
+				{name:'issueNo', index:'issueNo', width:40,formatter:issueNo},
+				{name:'goodsName', index:'goodsName', width:30},
+				{name:'userId', index:'userId', width:40,hidden:true},
+				{name:'drawPrice', index:'drawPrice', width:30},
+				{name:'score',index:'score',width:30},
+				{name:'createTime',index:'createTime',width:30,},
+				{name:'status',index:'status',width:30,formatter:getStatusName2},
+				{name:'func',index:'func',width:40}
+			];
+			
+			var colNames_trading = ["会员UID","昵称","手机号","分类","一部销售","二部销售","三部销售","积分","邀请人","注册时间","操作"];
+			var fd_trading = [	//根据colNames的顺序以及个数
+				{name:'uid', index:'uid', align:'center',width:50, sorttype:"int",key:true,hidden:true},
+				{name:'nickName', index:'nickName', width:40},
+				{name:'phone', index:'phone',align:'center', width:50},
+				{name:'groupType', index:'groupType',width:60},
+				{name:'performanceOne', index:'performanceOne',width:60},
+				{name:'performanceTwo', index:'performanceTwo',width:60},
+				{name:'performanceThree', index:'performanceThree',width:60},
+				{name:'score', index:'score',align:'center', width:25},
+				{name:'firstReferrer',index:'firstReferrer',align:'center',width:40,hidden:true},
+				{name:'fcreateTime',index:'fcreateTime',width:50},
+				{name:'func',index:'func',align:'center',width:40}
+			];	
+			
+			
+			var colNames_withdrawalAddress=['ID','会员ID','手机号','类型','recordType','积分数量','收入/支出','备注','时间','操作'];
+			var fd_withdrawalAddress=[
+				{name:'id', index:'id', width:25, sorttype:"int",key:true,hidden:true},
+				{name:'userId', index:'userId', width:25, sorttype:"int", hidden:true},
+				{name:'phone', index:'phone', width:40,hidden:true},
+				{name:'recordTypeName', index:'recordTypeName', width:60},
+				{name:'recordType', index:'recordType', width:60,hidden:true},
+				{name:'score', index:'score', width:40},
+				{name:'score', index:'score', width:30,formatter:getScore},
+				{name:'remark',index:'remark',width:100},
+				{name:'createTime',index:'fcreateTime',width:30},
+				{name:'waIsDelete',index:'waIsDelete',width:40}
+			];
+			
+			
+			function gridUserComplete(){
+				var ids = $(grid_withdrawalCny).jqGrid('getDataIDs');
+				for (var i = 0; i < ids.length; i++) {
+					var id = ids[i];
+					var rowData = $(grid_withdrawalCny).getRowData(id);
+					var funcBtn = '<div class="action-buttons">';
+					var passBtn = "";
+					var stopBtn = "";
+					
+					if(rowData.status=='0'){
+						 passBtn = '<a class="blue" href="javascript:_edit(&quot;'+ id +'&quot;)"></i>通过</a>';
+						 stopBtn = '<a class="blue" href="javascript:_edit2(&quot;'+ id +'&quot;)"></i>不通过</a>';	
+					}
+					if(rowData.status=='1'){
+						 passBtn = '<a class="blue" href="javascript:_success(&quot;'+ id +'&quot;)"></i>确认提现</a>';
+						 stopBtn = ' ';	
+					}
+					
+					
+					funcBtn += passBtn+stopBtn + '</div>';
+	         		$(grid_withdrawalCny).setRowData(id, {func: funcBtn});
+	      		}
+			}
+			
+			function setace(){
+                var ids = $(grid_trading).jqGrid('getDataIDs');
+               
+                _search();
+                /*var length = ids.length;
+				for (var i = 0; i < ids.length; i++) {
+					if(i == length-1){
+						alert("d");
+						_search();
+						return;
+					}
+					
+	      		}*/
+                
+                
+                
+			//	$("#search").click();
+					//alert($("#usIsDisable").val());
+			}
+			
+			
+			function _edit(id){
+				var person = {
+					status:1,
+					id:id
+				}
+				
+					$.ajax({
+							type:"get",
+							url:$base_path+"manage/exchange/check", 
+							data: person,
+							beforeSend: function(request) {
+			                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+			                },
+							success:function(res){ 
+								if(res.code==200){
+									alert("修改成功");
+									
+								}else if(res.code==1403){
+									overTime();
+								}else{
+									//alert(res.msg);
+								}
+								$.refresh(grid_withdrawalCny);
+								$.autoByWindow(grid_withdrawalCny);
+								$.jqGrid(grid_withdrawalCny, $base_path + 'manage/exchange/list?userId='+userId+"&token="+token,false,colNames_withdrawalCny, fd_withdrawalCny, grid_pager_withdrawalCny,"UID:"+sessionStorage.getItem("uid")+"&nbsp;&nbsp;&nbsp;&nbsp;手机号:"+sessionStorage.getItem("phone"),gridUserComplete,true, true,10);
+							}, 
+							error:function(res){ 
+								alert("服务器跑丢了......");
+							} 
+							
+					});					
+			}
+			
+			function _edit2(id){
+				var person = {
+					status:2,
+					id:id
+				}
+				
+				$.ajax({
+						type:"get",
+						url:$base_path+"manage/exchange/check", 
+						data: person,
+						beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		                },
+						success:function(res){ 
+							if(res.code==200){
+								alert("修改成功");
+								
+							}else if(res.code==1403){
+								overTime();
+							}else{
+								//alert(res.msg);
+							}
+							$.refresh(grid_withdrawalCny);
+							$.autoByWindow(grid_withdrawalCny);
+							$.jqGrid(grid_withdrawalCny, $base_path + 'manage/exchange/list?userId='+userId+"&token="+token,false,colNames_withdrawalCny, fd_withdrawalCny, grid_pager_withdrawalCny,"UID:"+sessionStorage.getItem("uid")+"&nbsp;&nbsp;&nbsp;&nbsp;手机号:"+sessionStorage.getItem("phone"),gridUserComplete,true, true,10);
+						}, 
+						error:function(res){ 
+							alert("服务器跑丢了......");
+						} 
+						
+				});	
+				
+				
+				
+				
+			}
+			
+			
+			
+			function _success(id){
+				
+				var tishi="确认是否提现通过？";
+				if(confirm(tishi)){
+					
+					var person = {
+						exchangeId:id
+					}
+					
+					
+					$.ajax({
+						type:"post",
+						url:$base_path+"manage/exchange/extMoney", 
+						data: person,
+						beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		                },
+						success:function(res){ 
+							if(res.code==200){
+								alert("提现成功");
+								$.refresh(grid_withdrawalCny);
+							}else if(res.code==1403){
+								overTime();
+							}else{
+								//alert(res.msg);
+							}
+						}, 
+						error:function(res){ 
+							alert("服务器跑丢了......");
+						} 
+						
+					});	
+					
+					
+					
+					
+				}
+			}
+			
+			
+			
+			
+			
+			function resetData(){
+				$("#uid").val(sessionStorage.getItem("userId"));  
+				var preson2 = $("#form1").serialize();
+				var ss = sessionStorage.getItem("userId");
+				var preson3 = {
+					"userId":ss
+				}
+				//alert(sessionStorage.getItem("userId"));
+				
+				$.ajax({
+						type:"get",
+						url:$base_path+"manage/member/detail", 
+						data:preson3,
+						beforeSend: function(request) {
+		                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+		                },
+						success:function(res){ 
+							if(res.code==200){
+								
+								
+								if(res.result.headImgUrl.split("201701/jpg").length>=2){
+									$("#headImg").prop("src",$downImg + res.result.headImgUrl);
+								}else{
+									$("#headImg").prop("src",res.result.headImgUrl);
+								}
+								
+								sessionStorage.setItem("phone",res.result.phone);
+								$("#id").val(res.result.uid);
+								$("#userId").val(res.result.id);
+								$("#nickName").val(res.result.nickName);
+								$("#weixin").val(res.result.weixin);
+								$("#phone").val(res.result.phone);
+								$("#score").val(res.result.score);
+								$("#firstReferrer").val(res.result.firstReferrer);
+								$("#userName").val(res.result.userName);
+								$("#cardNo").val(res.result.cardNo);
+								$("#bankName").val(res.result.bankName);
+								$("#createTime").val(res.result.createTime);
+								$("#addr").val(res.result.addr);
+								
+								res.result.status==1?$("#status1").prop("checked",true):$("#status2").prop("checked",true);	
+								var count =  res.result.bankId;
+								$("#bankName1").val(count);
+								
+								
+								res.result.isKF==1?$("#status3").prop("checked",true):$("#status4").prop("checked",true);	
+								
+								
+							}else if(res.code==1403){
+									overTime();
+							}else{
+								//alert(res.msg);
+							}
+						}, 
+						error:function(res){ 
+							alert("服务器跑丢了......");
+						}
+						
+				});	
+				
+				
+				
+				
+				
+			}
+			
+			
+			
+			function getChannel(v){
+				return v==1?"第三方充值":"人工充值";
+			}
+			
+			function getStatusName(v){
+				if(v=='0'){
+					return "待审核";
+				}else if(v=="1"){
+					return "审核通过";
+				}else if(v=="2"){
+					return "审核不通过";
+				}else if(v=="3"){
+					return "兑换成功";
+				}else{
+					return "兑换失败";
+				}
+			}
+			
+			
+			function getStatusName2(v){
+				if(v=='0'){
+					return "竞拍中";
+				}else if(v=="1"){
+					return "已开奖";
+				}
+			}
+			
+			
+			function issueNo(v){
+				return "第"+v+"期";
+			}
+			
+			
+			
+			function getTypes(v){
+				
+				if(v=='0'){
+					return "充值";
+				}else if(v=="1"){
+					return "兑换";
+				}else if(v=="2"){
+					return "赠送";
+				}else if(v=="3"){
+					return "斗拍消费";
+				}else if(v=="4"){
+					return "斗拍中奖";
+				}else if(v=="5"){
+					return "委托出售";
+				}else if(v=='6'){
+					return "积分购买";
+				}else if(v=='7'){
+					return "退款";
+				}else if(v=='8'){
+					return "分销奖励";
+				}else if(v=='9'){
+					return "商家服务费";
+				}else if(v=='10'){
+					return "差价收益";
+				}else if(v=="11"){
+					return "直接购买";
+				}else if(v=="12"){
+					return "商家赠送EP值";
+				}else if(v=="13"){
+					return "签到领取";
+				}else if(v=='14'){
+					return "续费消费EP值";
+				}else if(v=='15'){
+					return "邀请好友赠送EP值";
+				}else if(v=='16'){
+					return "绑定手机号赠送EP值";
+				}else if(v=="18"){
+					return "EP兑换";
+				}else if(v=="19"){
+					return "商家扫码支付";
+				}else if(v=="20"){
+					return "用户扫码支付";
+				}else if(v=="21"){
+					return "扫码支付赠送EP";
+				}else{
+					return "";
+				}
+				
+				
+			}
+			
+			function getScore(v){
+				if(v>=0){
+					return "收入";
+				}else if(v<0){
+					return "支出";
+				}
+				
+			}
+			
+			function getRcSource(v){
+				if(v=='0'){
+					return "网银";
+				}else if(v=='1'){
+					return "支付宝";
+				}else if(v=='2'){
+					return "微信";
+				}else if(v=='3'){
+					return "余额支付";
+				}else if(v=='4'||v=='99'){
+					return "后台充值";
+				}else if(v=='11'){
+					return "支付宝扫码支付";
+				}else if(v=='21'){
+					return "微信扫码支付";
+				}else if(v=='31'){
+					return "余额扫码支付";
+				}else{
+					return "";
+				}
+				
+				
+			}
+			
+			
+			
+			
+			function getRcState(v,o,row){
+				if(v=='0'){
+					return "待付款";
+				}else if(v=='1'){
+					return "已付款";
+				}else if(v=='2'){
+					return "充值成功";
+				}else if(v=='3'){
+					return "扫码支付成功";
+				}else{
+					return "";
+				}
+					
+			}
+			
+			function getState(v,o,row){
+				if(v=='0'){
+					return "待审核";
+				}else if(v=='1'){
+					return "已审核";
+				}else{ 
+					return "已提现";
+				}
+			}
+			
+		function getEnState(v,o,row){
+			if(row.enState=='0'){
+				return "委托前";
+			}else if(row.enState=='1'){
+				return "委托中";
+			}else{ 
+				return "取消委托";
+			}
+		}
+		
+		function getType(v,o,row){
+			if(row.enType=='2'){
+				return '买入';
+			}else if(row.enType=='1'){
+				return '卖出';
+			}
+		}
+		
+		function getIsDelete(v,o,row){
+			if(row.enIsDelete=='0'){
+				return '否';
+			}else if(row.enIsDelete=='1'){
+				return '是';
+			}
+		}
+		//触发筛选事件
+		function _search(){
+			var underLine = $("#usIsDisable").val();
+			/*alert("dd");*/
+			//var userId = sessionStorage.getItem("userId");
+			//var token = sessionStorage.getItem("token");
+			//$.jqGrid(grid_entrust,$base_path + 'manage/member/underline?userId='+userId+"&token"+token+"&underLine=1",false,colNames_entrust, fd_entrust, grid_pager_entrust,"UID:"+sessionStorage.getItem("userId")+"&nbsp;&nbsp;&nbsp;&nbsp;手机号:"+sessionStorage.getItem("phone"),null,true,true,10);
+			$.setPostData(grid_trading, {underLine:underLine});		
+			//附加到工具栏
+			$.refresh(grid_trading);
+			
+		}
+			
+		function getWaArea(v,o,row){
+			var addressName='';
+			addressName += getSysAreaWorldInfoByAwId(row.waShengId);
+			addressName += getSysAreaWorldInfoByAwId(row.waShiId);
+			
+			return addressName;
+		}
+			
+		</script>
+			
+	</head>
+<body>
+	<div>
+		<form id="form1" style="display: none;">
+			Uid:<input id="uid"  name="uid" />
+			<input id="userId"  name="userId" />
+			
+		</form>
+		
+		
+		<div style="width:auto; ">
+			<div class="tabPanel">
+				<ul style="width: 99.5%; " >
+				   <li class="hit">修改基本信息</li>
+				   <li id="recharge">充值记录</li>
+				   <li id="withdrawalCny">提现记录</li>
+				   <li id="entrust">竞拍记录</li>
+				   <li id="trading">推荐会员</li>
+				   <li id="withdrawalAddress" style="width: 165px; ">积分记录</li>
+				</ul>
+			      <div class="panes" >
+					  <div class="pane" style="display:block;">
+					  		<form id="formdata" class="registerform" method="post">
+							            <table width="100%"  style="table-layout:fixed; width: 80%;margin-left: 10%; margin-top: 2%;  font-family: '微软雅黑'; font-weight: bold; font-size: 15px;">
+							            	<tr>
+										      <td rowspan="13" style="width: 220px;"><img id="headImg" src="/enjoyRedEnvelopeManager/image/logo1.png" style="width: 150px;height: 150px;"></td>
+							                  <td style="width:100px; ">UID：</td>
+							                  <td style="width:205px;"><input disabled="disabled" type="text" id="id" class="form form-control" style="margin-top: -5px;" value="" name="name" class="inputxt"  /></td>
+							                  <td><div class="Validform_checktip"></div></td>
+										    </tr>
+							            	<tr>
+							                  <td style="width:100px; ">昵称：</td>
+							                  <td style="width:205px;"><input type="text" class="form form-control" id="nickName" style="margin-top: -5px;" value="" name="name" class="inputxt" datatype="s2-18" errormsg="昵称至少2个字符,最多18个字符！" /></td>
+							                  <td><div class="Validform_checktip"></div></td>
+										    </tr>
+										 <!--   <tr>
+							                  <td style="width:100px; ">头像：</td>
+							                  <td style="width:205px;"><input type="file" class="form form-control" id="head" style="margin-top: -5px;" value="" name="name" class="inputxt" /></td>
+							                  <td><button class="btn btn-warning form form-control"  style="width: 60px;margin-left: 10px; height:35px; margin-top: -5px;">上传</button></td>
+										    </tr>-->
+										  
+										    <tr>
+							                  <td style="width:100px; ">微信号：</td>
+							                  <td style="width:205px;"><input type="text" class="form form-control" id="weixin" style="margin-top: -5px;" value="" name="name" class="inputxt"  /></td>
+							                  <td><div class="Validform_checktip"></div></td>
+										    </tr>
+										    
+										    <tr>
+							                  <td style="width:100px; ">手机号：</td>
+							                  <td style="width:205px;"><input type="text" class="form form-control" id="phone" style="margin-top: -5px;" value="" name="name" class="inputxt" datatype="m" errormsg="手机号码格式有误，请重新输入" /></td>
+							                  <td><div class="Validform_checktip"></div></td>
+										    </tr>
+										    
+										    <tr>
+							                  <td style="width:100px; ">积分数量：</td>
+							                  <td style="width:205px;"><input type="text" disabled="disabled" id="score" class="form form-control" style="margin-top: -5px;" value="" name="name" class="inputxt"  /></td>
+							                  <td><div class="Validform_checktip"></div></td>
+										    </tr>
+										    <tr>
+							                  <td style="width:100px; ">邀请人：</td>
+							                  <td style="width:205px;"><input type="text" disabled="disabled" id="firstReferrer" class="form form-control" style="margin-top: -5px;" value="" name="name" class="inputxt"  /></td>
+							                  <td><div class="Validform_checktip"></div></td>
+										    </tr>
+										    
+										    <tr>
+							                  <td style="width:100px; ">真实姓名：</td>
+							                  <td style="width:205px;"><input type="text" class="form form-control" id="userName" style="margin-top: -5px;" value="" name="name" class="inputxt" datatype="s2-18" errormsg="真实姓名至少2个字符,最多18个字符！" /></td>
+							                  <td><div class="Validform_checktip"></div></td>
+										    </tr>
+										    
+										    <tr>
+							                  <td style="width:100px; ">银行名称：</td>
+							                  <td style="width:205px;">
+							                  	<select class="form form-control" id="bankName1" style="margin-top: -5px;"  name="bankName" class="inputxt" >
+							                  		
+							                  	</select>
+							                  	
+							                  <td></td>
+										    </tr>
+										    
+										     <tr>
+							                  <td style="width:100px; ">银行卡号：</td>
+							                  <td style="width:205px;"><input type="text" class="form form-control" id="cardNo" style="margin-top: -5px;" value="" name="name" class="inputxt" datatype="n0-19" errormsg="银行卡号输入有误，请重新输入" /></td>
+							                  <td><div class="Validform_checktip"></div></td>
+										    </tr>
+										    
+										    <tr>
+							                  <td style="width:100px; ">注册时间：</td>
+							                  <td style="width:205px;"><input type="text" id="createTime" class="form form-control" disabled="disabled" style="margin-top: -5px;" value="" name="name" class="inputxt" /></td>
+							                  <td><div class="Validform_checktip"></div></td>
+										    </tr>
+										    
+										    <tr>
+							                  <td style="width:100px; ">收货地址：</td>
+							                  <td style="width:205px;"><input type="text" id="addr" class="form form-control" style="margin-top: -5px;" value="" name="name" class="inputxt" datatype="s0-70" errormsg="收货地址至少2个字符,最多70个字符！" /></td>
+							                  <td><div class="Validform_checktip"></div></td>
+										    </tr>				               
+							                <tr>
+							                    
+							                    <td>状态：</td>
+							                    <td><input type="radio" value="1" name="gender" id="status1" class="pr1" checked="checked"  /><label for="male">正常</label> <input type="radio" value="0"  name="gender" id="status2" class="pr1" /><label for="female">禁用</label></td>
+							                    <td><div class="Validform_checktip"></div></td>
+							                </tr>
+							                <tr>
+							                    <td>是否为客服：</td>
+							                    <td><input type="radio" value="1" name="isKF" id="status3" class="pr1" checked="checked"  /><label for="male">是</label> <input type="radio" value="0"  name="isKF" id="status4" class="pr1" /><label for="female">否</label></td>
+							                    <td><div class="Validform_checktip"></div></td>
+							                </tr>
+							               
+							                
+							                <tr>
+							                    <td class="need"></td>
+							                    <td></td>
+							                    <td colspan="2" style="padding:10px 0 18px 0;">
+							                        <input type="submit" class="btn btn-success" value="提 交" /> <input type="button" onclick="resetData()" class="btn btn-danger" value="重 置" />
+							                    </td>
+							                </tr>
+							            </table>
+							</form>
+								 
+					   </div>									   		   
+					   <div class="pane">
+					   		<table id="grid_rechargeCny"></table>
+					   		<div id="grid_pager_rechargeCny"></div>
+					   </div>
+					   <div class="pane">
+							<table id="grid_withdrawalCny"></table>
+					   		<div id="grid_pager_withdrawalCny"></div>
+					   </div>
+					   <div class="pane">
+							<table id="grid_entrust"></table>
+					   		<div id="grid_pager_entrust"></div>
+					   </div>
+					   <div class="pane">
+							<table id="grid_trading"></table>
+					   		<div id="grid_pager_trading"></div>
+					   </div>
+					   <div class="pane">
+							<table id="grid_withdrawalAddress"></table>
+					   		<div id="grid_pager_withdrawalAddress"></div>					   		
+					   </div>
+			   </div>
+			</div>
+		</div>
+	</div>
+	
+	<div id="grid_cususer_tbar" style="display:none;">
+		<div class="action-buttons" style="margin-left: 10px; padding: 5px;">
+			人脉等级:<select id="usIsDisable" onchange="_search()" style="width:90px;">
+						<option value="0">全部人脉</option>
+						<option value="1">一度人脉</option>
+						<option value="2">二度人脉</option>
+						<option value="3">三度人脉</option>
+				</select>
+			<a class="blue" id="search" href="javascript:_search()"><i class="icon-search bigger-130"></i>筛选</a>
+		</div>
+	</div>
+	
+</body>
+</html>

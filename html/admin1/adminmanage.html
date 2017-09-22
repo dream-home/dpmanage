@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>账户基本信息</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		<!-- 导入选项卡样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_tab.css" />
+
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js -->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--验证js-->
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<!--
+        	引进路径
+        -->
+        <script type="text/javascript" src="/enjoyRedEnvelopeManager/js/basepath.js" ></script>
+        <!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+
+		<script>
+		var token = sessionStorage.getItem("token");
+		var grid_user= "#grid_user";
+		var grid_pager_user = "#grid_pager_user";
+		$(function() {
+					var date = new Date();
+					var now = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+((date.getDate())<=9?("0"+date.getDate()):date.getDate());	
+					$.autoByWindow(grid_user);
+					/*url传参*/
+					$.jqGrid(grid_user, $base_path + 'manage/admin/list',false, colNames_user, fd_user, grid_pager_user, "管理员列表", gridUserComplete,true,true,15);
+					$("#t_grid_user").append($("#grid_user_tbar").html());
+					
+					$.navGrid(grid_user, grid_pager_user);
+					$.navButtonAdd(grid_user, grid_pager_user, 'icon-plus-sign purple', '<font color="purple">添加</font>', '添加', add);
+					
+					$.navButtonAdd(grid_user, grid_pager_user, 'icon-trash red', '<font color="red">删除</font>', '删除', beforeDel);
+					/*$("#datestart").val(now);		
+					$("#dateend").val(now);
+					*/
+					
+					
+					
+					
+					
+					
+					
+					$(".checkform").Validform({
+						tiptype:function(msg, o, cssctl){
+							var objtip = $("#msgspan");
+							cssctl(objtip,o.type);
+							objtip.text(msg);
+						},
+						callback: function(){
+							edit_submit();
+							return false;
+						}
+					});
+					//匿名form表单
+					
+					
+
+				
+			});
+			
+			var colNames_user = ['ID', '管理员名称', '管理员联系方式','授权','password', '状态', '操作'];
+			var fd_user = [
+				{name:'id', index:'id', width:60, sorttype:"int", key: true, hidden: true},
+				{name:'nickName', index:'nickName', width:120},
+				{name:'phone', index:'phone', width:200},
+				{name:'role', index:'role', width:200,formatter:getrole},
+				{name:'password', index:'password', width:200,hidden:true},
+				{name:'status', index:'status', width:100,formatter:getStatus},
+				{name:'func',index:'func', width:100, align: 'center'}
+			];
+			
+			
+			
+			function getrole(v){
+				
+				if(v==101){
+					return "admin";
+				}else if(v==111){
+					return "财务";
+				}else if(v==121){
+					return "客服";
+				}else if(v==122){
+					return "市场运营";
+				}else if(v==123){
+					return "操作管理";
+				}else{
+					return "";
+				}
+				
+				
+				
+			}
+			
+			
+			
+			
+			
+			
+			function getStatus(v){
+				if(v=='0'){
+					return "禁用";
+				}else if(v=='1'){
+					return "启用";
+				}
+				
+			}
+			
+			function gridUserComplete(){
+				var ids = $(grid_user).jqGrid('getDataIDs');
+				for (var i = 0; i < ids.length; i++) {
+					var paramId = ids[i];
+					
+					var paramIds = ids[i];
+					var paramIds = ids[i+1];
+					var count  =  i;
+					count++;
+					if(ids.length == count){
+						//alert("dd");
+						paramIds = ids[i];
+					}
+					
+					var rowData = $(grid_user).getRowData(paramId);
+					
+					var funcBtn = '<div class="action-buttons">';
+					var editBtn = "";
+					//var editBtn = '<a class="blue" href="javascript:_edit(&quot;'+paramId+'&quot;)"><i class="icon-search bigger-130"></i>查看</a>';
+					//var sort = '<a class="blue" href="javascript:_sort(&quot;'+paramId+'&quot;,&quot;'+paramIds+'&quot;)"><i class="icon-sort bigger-130" aria-hidden="true"></i>升序</a>';
+					
+					funcBtn += editBtn+'</div>';
+	         		$(grid_user).setRowData(paramId, {func: funcBtn});
+	      		}
+			}
+			
+		
+			
+			
+			
+			
+			
+			
+			
+			function _search(){
+				var goodsName = $("#goodsName").val().trim();
+				
+				var status = $("#status").val().trim();
+				var datestart ="";
+				var dateend ="";
+				if($("#datestart").val()!=""){
+					var datestart =new Date($("#datestart").val().trim()).Format("yyyy-MM-dd hh:mm:ss");
+					
+				}
+				if($("#dateend").val()!=""){
+					var dateend =new Date($("#dateend").val().trim()).Format1("yyyy-MM-dd hh:mm:ss");
+				}
+			
+				$.setPostData(grid_user, {goodsName: goodsName, status: status, fromTime: datestart, stopTime: dateend});
+			    $.refresh(grid_user);
+			}
+			
+			function _sort(id,ids){
+				//alert(id+ids);
+				/*if(id == ids){
+					
+				}*/
+			var person  = {
+				downId:id,
+				upId:ids
+			}
+				
+				
+			$.ajax({
+					type:"get",
+					url:$base_path+"manage/ad/exchangeOrder", 
+					async:true,
+					data:person,
+					beforeSend: function(request) {
+                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+               		 },
+					
+					success:function(data){
+						if(data.code==200){
+							alert("修改成功");
+							$.refresh(grid_user);	
+						}else if(data.code==1403){
+							overTime();
+						}else{
+							//alert(data.msg);
+						}
+						
+					}, 
+					error:function(data){ 
+						alert("服务器跑丢了......");
+					} 
+					
+			});
+				
+			
+				
+				
+			}
+			
+			
+			
+			function add(){
+				_edit('');
+				 
+				$("#form_title").html('添加管理员');
+				
+				$("#nickName").val("");
+				$("#phone").val("");
+				$("#password").val("");
+				$("#pwd").val("");
+				$("#tr_pwd").show(); 
+				//$("#mu_pwd").attr('ignore', ''); 
+				
+				
+				$.show("edit_user");
+			}
+			function beforeDel(){
+				var ids = $(grid_user).getGridParam('selarrrow');
+				if(ids == ''){
+					$.reminderDailog("div_dialog", '<i class="icon-warning-sign"></i>警告', '请选中行!');
+				}else{
+					$.openDelDailog("div_dialog", del);
+				}
+			}
+			function del(){
+				
+				var ids = $(grid_user).getGridParam('selarrrow');
+				//alert(ids);
+				if($('#div_dialog').html() != ''){
+					$.ajax({
+				        type: 'post',
+				        url: $base_path + 'manage/admin/delete',
+				        data: 'userId=' + ids,
+				        beforeSend: function(request) {
+	                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+	               		},
+				        success: function(data) {
+				        	
+				        	if(data.code==200){
+								$.refresh(grid_user);
+								$.closeDelDailog();
+					          	alert('删除成功！');
+					       	}else if(data.code==1403){
+					       		//alert(data.msg);
+								overTime();
+					       	}else if(data.code==1402){
+					       		
+					       		$.refresh(grid_user);
+								$.closeDelDailog();
+					       		alert("该管理员的权限不够,无法进行该操作");
+					       	}
+				        }
+				    });
+			   }
+			}
+			
+			function _edit(id){
+				
+				if(id==""){
+					
+				}else{
+					
+					
+					//alert(id);title  mu_rank
+					//$("#mu_img1").val(""); 
+					$("#form_title").html('查看详情');
+					$("#msgspan").text(''); 
+					var model = $(grid_user).getRowData(id); 
+					$("#nickName").val(model.nickName); 
+					$("#id").val(model.id);
+					$("#phone").val(model.phone);
+					$("#pwd").val(model.password);
+					$("#password").val(model.password);
+					
+					
+					
+				}
+				
+				$.show("edit_user");
+				
+				
+			}
+			
+			//重置
+			function resetForm(){
+				var muId=$("#id").val();
+				
+				if(muId == ''){
+					_edit(muId);
+					$("#form_title").html('添加管理员');
+					$("#msgspan").text('');
+					$("#nickName").val("");
+					$("#phone").val("");
+					$("#password").val("");
+					$("#pwd").val("");
+					$("#tr_pwd").show(); 
+				}else{
+					_edit(muId);
+					$("#form_title").html('编辑管理员');
+					$("#msgspan").text('');
+					//$("#tr_pwd").hide(); 
+					$("#mu_pwd").attr('ignore', 'ignore');
+					//$("#msgspan").text('');
+				}
+			}
+			
+			//提交编辑表单
+			function edit_submit(){
+				if($("#pwd").val()!=$("#password").val()){
+					alert("密码和确认密码不一致");
+					return;
+				}
+				
+				
+				var form = $("#edit_user").serialize();
+				if($("#nickName").val().indexOf($("#password").val())>=0){
+					 alert("密码不允许是用户名的一部分");
+						return;
+				}
+				
+				
+				var id = $("#id").val();
+				$.ajax({
+			        type: 'POST',
+			        url: $base_path + (id == '' ? 'manage/admin/add' : 'manage/goods/update'),
+			        beforeSend: function(request) {
+                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+               		},
+               		data:form,
+			        success: function(data) {
+			        	if(data.code == 200){
+						    $.hide("edit_user");
+						    $.refresh(grid_user);
+						    if(id == ''){
+						    	alert("添加成功");
+						    }else{
+						    	alert("修改成功");	
+						    }
+						    
+			        	}else if(data.code==1403){
+							overTime();
+			        	}else if(data.code==1402){
+			        			$.hide("edit_user");
+							    $.refresh(grid_user);
+					       		alert("该管理员的权限不够,无法进行该操作");
+					    }else if(data.code==1400){
+					    	alert(data.msg);
+					    	
+					    }
+			        },
+			    });
+			}
+	
+			//是否禁用
+			function _disable(id, v){
+				
+				var tishi="";
+				
+				if(v == 1){
+					tishi="是否禁用该幻灯片";
+				}else if(v == 0){
+					tishi="是否解除该禁用幻灯片";
+				}
+				
+				if(confirm(tishi)){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'ManagerUser/editSysManUser',
+				        data: 'muId=' + id + '&muIsDisable=' + v + '&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==0)
+				           		alert(v == 1 ? '已禁用！' : '禁用已解除.');
+				           	else{
+				        		alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';			           			
+			           		}
+				        }
+				    });
+				    $.refresh(grid_user);
+				}
+				
+			    $.refresh(grid_user);
+			}
+			
+			//重置密码
+			function _reset(id){
+				if(confirm("是否重置密码")){
+					$.ajax({
+				        type: 'POST',
+				        url: $base_path + 'ManagerUser/resetSysManUserPwd',
+				        data: 'muId=' + id + '&token=' + token, 
+				        success: function(data) {
+				        	if(data.code==0)
+				           		alert('密码重置成功！');
+				           	else{
+				        		alert(data.msg);
+								if(data.code==-2)//跳转到登录页面
+									top.location.href='/enjoyRedEnvelopeManager/html/login.html';				           		
+				           	}
+				        }
+				    });					
+				}
+			}
+		
+		</script>
+	</head>
+	<body>
+		
+		<div>
+			<table id="grid_user"></table>
+			<div id="grid_pager_user"></div>
+		</div>
+		<div id="grid_user_tbar" style="display:none;">
+			<div class="action-buttons" style="margin-left: 10px; padding: 5px;">
+				
+			</div>
+		</div>
+		
+		<!-- 编辑商品信息窗口 -->
+		<form id="edit_user" class="grid_from checkform">
+			<div class="widget-header">
+				<h4 id="form_title">商品信息</h4>
+				<span class="widget-toolbar">
+					<a href="#" data-action="close" onclick="closeForm('edit_user')">
+						<i class="icon-remove"></i>
+					</a>    
+				</span>
+			</div>
+			<div class="form_content">
+				<input type="hidden" id="id" name="id"/>
+				<div class="form_content_table">
+					<span id="msgspan" style="color:red;"></span>
+					<table>
+						
+						<tr id="tr_pwd">
+							<td>管理员账户</td>
+							<td><input type="text" id="nickName" name="nickName" placeholder="管理员账户" datatype="s5-20" nullmsg="请输入管理员账户！" errormsg="管理员账户最少5个字符,最多20个字符"/></td>
+						</tr>
+						<tr >
+							<td>联系方式</td>
+							<td><input type="text" id="phone" name="phone" placeholder="联系方式" datatype="m" nullmsg="请输入联系方式！" errormsg="联系方式输入有误"/></td>
+						</tr>
+						<tr >
+							<td>密码</td>
+							<td><input type="password" id="pwd" placeholder="密码" datatype="s5-20" nullmsg="请输入密码！" errormsg="密码输入有误"/></td>
+						</tr>
+						
+						<tr >
+							<td>确认密码</td>
+							<td><input type="password" id="password" name="password" placeholder="确认密码" datatype="s5-20" nullmsg="请确认密码！" errormsg="确认密码输入有误"/></td>
+						</tr>
+						<tr >
+							<td>操作密码</td>
+							<td><input type="password" id="payPassWord" name="payPassWord" placeholder="操作密码" datatype="s5-20" nullmsg="操作密码！" errormsg="操作密码输入有误"/></td>
+						</tr>
+						<tr >
+							<td>设置角色</td>
+							<td>
+								<select id="roleId" name="role">
+									<option value="101" selected="selected">admin</option>
+									<option value="111" >财务</option>
+									<option value="121">客服</option>
+									<option value="122">市场运营</option>
+									<option value="123">操作管理</option>
+								</select>	
+							</td>
+						</tr>
+					</table>
+					
+					
+					
+				</div>
+				<div>
+					<button class="btn btn-info button-left" type="submit">
+						<i class="icon-ok bigger-110"></i>
+						提交
+					</button>
+					<button class="btn button-right" type="button" onclick="resetForm()">
+						<i class="icon-undo bigger-110"></i>
+						重置
+					</button>
+				</div>
+			</div>
+		</form>
+		
+		<div id="div_dialog"></div>
+		<div id="hidebg"></div>
+	</body>
+</html>

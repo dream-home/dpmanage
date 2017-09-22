@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>财务信息</title>
+		<!-- jqgrid样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ui.jqgrid.css" />
+		<!-- bootstrap styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/bootstrap.min.css" />
+		<!-- basic styles -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/ace.min.css" />
+		<!-- 图标样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/font-awesome.min.css" />
+		<!-- 弹出框from样式 -->
+		<link rel="stylesheet" href="/enjoyRedEnvelopeManager/css/grid_form.css" />
+		
+		<link rel="stylesheet"  href="/enjoyRedEnvelopeManager/css/inputstyle.css"  />
+		<!-- 按 jquery-bootstrap-ace 顺序-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-2.0.3.min.js"></script>
+		<!-- jqgrid js -->
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/jquery.jqGrid.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/jqGrid/i18n/grid.locale-en.js"></script>
+		<!-- bootstrap js-->
+		<script src="/enjoyRedEnvelopeManager/js/bootstrap.min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/ace.min.js"></script>
+		<!--grid事件机制-->
+		<script src="/enjoyRedEnvelopeManager/js/grid.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/basepath.js"></script>
+		<!--cookiejs-->
+		<script src="/enjoyRedEnvelopeManager/js/jquery-cookie.js"></script>
+		<!--验证js-->
+		<script src="/enjoyRedEnvelopeManager/js/Validform_v5.3.2_min.js"></script>
+		<script src="/enjoyRedEnvelopeManager/js/md5.js"></script>
+		
+		<style>
+			
+			.inputyuan{
+				width: 20%; 
+				height: 3%;
+				margin-top: 0%;
+				margin-bottom: 0%;
+				
+			}
+			
+			.tiship{
+				margin-top: -22px;
+				height: 10px;
+				color:#707070;
+				opacity: 0.8;
+				text-align: center;
+			}
+			
+			
+			
+		</style>
+	</head>
+	<script>
+		$(function(){
+			$.ajax({
+			        type: 'POST',
+			        url: $base_path +"manage/statistics/financialDetail",
+			        beforeSend: function(request) {
+                        request.setRequestHeader("token", sessionStorage.getItem("token"));
+               		},
+			       
+			        success: function(data) {
+			        	if(data.code == 200){
+						   $("#rechargeCount").html(data.result.rechargeCount);
+						   $("#exchangeCount").html(data.result.exchangeCount);
+						   $("#rechaScoreCount").html(data.result.rechaScoreCount);
+						   $("#exchangeScoreCount").html(data.result.exchangeScoreCount);
+						   $("#unCheckCount").html(data.result.unCheckCount);
+						   $("#totalProfit").html(data.result.totalProfit.toFixed(2));
+						   $("#exchangeEP").html(data.result.exchangeEP.toFixed(2));
+						   $("#conSumeEPSUM").html(data.result.conSumeEPSUM.toFixed(2));
+						   $("#conSumeCount").html(data.result.conSumeCount);
+						   $("#sign").html(data.result.sign.toFixed(2));
+						   $("#sysRecord").html(data.result.sysRecord.toFixed(2));
+						   $("#scoreSUM").html(data.result.scoreSUM.toFixed(2));
+						   $("#sysScoreBalance").html(data.result.sysScoreBalance.toFixed(2));
+						   $("#sysEPBalance").html(data.result.sysEPBalance.toFixed(2));
+						   
+			        	}else if(data.code==1403){
+			        		overTime();
+			        	}else{
+			        		//alert(data.msg);
+			        	}
+			        },
+			        error:function(data){ 
+						alert("服务器跑丢了......");
+					} 
+
+			});
+			
+		})
+		
+		
+	</script>
+	
+	
+	<body>
+		<div class="widget-header" style="background:#307ECC ;">
+				<h4 id="form_title" style="color: white;" >财务信息</h4>
+		</div>
+		<div>
+			<table class="table table-striped table-hover table-bordered" style="text-align: center;  ">
+				<thead>
+					<tr style="height: 20px; ">
+						<th width="15%">参数</th>
+						<th width="35%">参数值</th>
+						<th width="15%">参数</th>
+						<th width="35%">参数值</th>
+					</tr>
+				</thead>
+				<tbody id="finalbody">
+					<tr>
+						<td>当前系统收益(积分)</td>
+						<td id="totalProfit"></td>
+						<td>会员EP总数</td>
+						<td id="exchangeEP"></td>
+						
+					</tr>
+					
+					<tr>
+						<td>系统账户积分余额</td>
+						<td id="sysScoreBalance"></td>
+						<td>系统账户EP余额</td>
+						<td id="sysEPBalance"></td>
+					</tr>
+					
+					
+					<tr>
+						<td>充值订单(笔)</td>
+						<td id="rechargeCount"></td>
+						<td>系统EP收入</td>
+						<td id="conSumeEPSUM"></td>
+					
+						
+					</tr>
+					<tr>
+						<td>充值金额(积分)</td>
+						<td id="rechaScoreCount"></td>
+						<td>系统EP支出</td>
+						<td id="sign"></td>
+					
+					
+					</tr>
+					<tr>
+						<td>提现订单(笔)</td>
+						<td id="exchangeCount"></td>
+						<td>EP兑换商品数量</td>
+						<td id="conSumeCount"></td>
+					</tr>
+					<tr>
+						<td>提现金额(积分)</td>
+						<td id="exchangeScoreCount"></td>
+						<td>积分转换ep</td>
+						<td id="sysRecord"></td>
+					</tr>
+					<tr>
+						<td>当前未审核兑换订单(笔)</td>
+						<td id="unCheckCount"></td>
+						<td>会员总余额</td>
+						<td id="scoreSUM"></td>
+					</tr>
+					
+					<!--<tr>
+						<td colspan="2"><input type="button"  value="保存" style="border-radius: 5px; background-color:#00E573 ; border: 0px; height: 40px; width: 100px; font-size: 20px; color: white;"></td>
+						
+					</tr>-->
+					
+					
+				</tbody>
+			</table>
+		</div>
+		
+	</body>
+	
+	
+	
+</html>
+
